@@ -33,10 +33,10 @@ bool FunctionHeadToElementVelocity<T>::initialize(const BaseLib::Options &option
     _dis = dis;
     _vel = new MyIntegrationPointFunctionVector();
     _vel->initialize(dis);
-    
+
     // set initial output
     OutputVariableInfo var(this->getOutputParameterName(Velocity), OutputVariableInfo::Element, OutputVariableInfo::Real, 3, _vel);
-    femData->outController.setOutput(var.name, var); 
+    femData->outController.setOutput(var.name, var);
 
     // initial output parameter
     this->setOutput(Velocity, _vel);
@@ -52,7 +52,7 @@ void FunctionHeadToElementVelocity<T>::accept(const NumLib::TimeStep &/*time*/)
     //update data for output
     Ogs6FemData* femData = Ogs6FemData::getInstance();
     OutputVariableInfo var(this->getOutputParameterName(Velocity), OutputVariableInfo::Element, OutputVariableInfo::Real, 3, _vel);
-    femData->outController.setOutput(var.name, var); 
+    femData->outController.setOutput(var.name, var);
 };
 
 template <class T>
@@ -110,7 +110,7 @@ int FunctionHeadToElementVelocity<T>::solveTimeStep(const NumLib::TimeStep &/*ti
             NumLib::LocalMatrix k;
             pm->hydraulic_conductivity->eval(pos, k);
             if (k.rows()==1) {
-                static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * local_h * (-1.0) * k(0,0);
+                static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * local_h * (-1.0 * k(0,0));
             } else {
                 static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * k * local_h * (-1.0);
             }

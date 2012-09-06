@@ -33,10 +33,10 @@ bool FunctionPressureToElementVelocity<T>::initialize(const BaseLib::Options &op
     _dis = dis;
     _vel = new MyIntegrationPointFunctionVector();
     _vel->initialize(dis);
-    
+
     // set initial output
     OutputVariableInfo var(this->getOutputParameterName(Velocity), OutputVariableInfo::Element, OutputVariableInfo::Real, 3, _vel);
-    femData->outController.setOutput(var.name, var); 
+    femData->outController.setOutput(var.name, var);
 
     // initial output parameter
     this->setOutput(Velocity, _vel);
@@ -52,7 +52,7 @@ void FunctionPressureToElementVelocity<T>::accept(const NumLib::TimeStep &/*time
     //update data for output
     Ogs6FemData* femData = Ogs6FemData::getInstance();
     OutputVariableInfo var(this->getOutputParameterName(Velocity), OutputVariableInfo::Element, OutputVariableInfo::Real, 3, _vel);
-    femData->outController.setOutput(var.name, var); 
+    femData->outController.setOutput(var.name, var);
 };
 
 template <class T>
@@ -119,7 +119,7 @@ int FunctionPressureToElementVelocity<T>::solveTimeStep(const NumLib::TimeStep &
             xx[2] = tmp_v[0];
             NumLib::TXPosition pos(&xx[0]);
 
-            static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * local_p ;
+            static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * local_p * (-1.0) * k_mu;
             //TODO grav
 
             vel->setIntegrationPointValue(i_e, ip, q);
