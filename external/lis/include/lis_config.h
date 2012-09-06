@@ -1,6 +1,6 @@
 /* include/lis_config.h.  Generated from lis_config.h.in by configure.  */
 /* include/lis_config.h.in.  Generated from configure.in by autoheader.  */
-
+#include "Configure.h"
 /* Define to dummy `main' function (if any) required to link to the Fortran
    libraries. */
 /* #undef F77_DUMMY_MAIN */
@@ -22,40 +22,40 @@
 #define HAS_X87_FPU 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+//#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H 1
+//#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <malloc.h> header file. */
-#define HAVE_MALLOC_H 1
+// #define HAVE_MALLOC_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+//#define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
+//#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
+//#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H 1
+//#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H 1
+//#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+//#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#define HAVE_SYS_TIME_H 1
+//#define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+//#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
+//#define HAVE_UNISTD_H 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -80,16 +80,16 @@
 #define PACKAGE_VERSION "1.2.97"
 
 /* Test the size of a `int', as computed by sizeof. */
-#define SIZEOF_INT 4
+//#define SIZEOF_INT 4
 
 /* Test the size of a `long', as computed by sizeof. */
-#define SIZEOF_LONG 4
+//#define SIZEOF_LONG 4
 
 /* Test the size of a `long long', as computed by sizeof. */
-#define SIZEOF_LONG_LONG 8
+//#define SIZEOF_LONG_LONG 8
 
 /* Test the size of a `void *', as computed by sizeof. */
-#define SIZEOF_VOID_P 4
+//#define SIZEOF_VOID_P 4
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

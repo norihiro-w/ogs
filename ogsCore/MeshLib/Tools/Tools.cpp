@@ -46,10 +46,10 @@ void findNodesOnPoint(IMesh const* msh, GeoLib::Point const* point, std::vector<
 void findNodesOnGeometry(IMesh const* msh, GeoLib::GeoObject const* obj, std::vector<size_t> *vec_nodes)
 {
     switch (obj->getGeoType()) {
-        case GeoLib::GEOTYPE::POINT:
+        case GeoLib::POINT:
             findNodesOnPoint(msh, static_cast<GeoLib::Point const*>(obj), vec_nodes);
             break;
-        case GeoLib::GEOTYPE::POLYLINE:
+        case GeoLib::POLYLINE:
             findNodesOnPolyline(msh, static_cast<GeoLib::Polyline const*>(obj), vec_nodes);
             break;
         default:
@@ -106,7 +106,7 @@ void findEdgeElementsOnPolyline(IMesh * msh, GeoLib::Polyline const* poly, std::
 void findBoundaryElementsOnGeometry(IMesh * msh, GeoLib::GeoObject const* obj, std::vector<IElement*> *vec_eles)
 {
     switch (obj->getGeoType()) {
-        case GeoLib::GEOTYPE::POLYLINE:
+        case GeoLib::POLYLINE:
             findEdgeElementsOnPolyline(msh, static_cast<GeoLib::Polyline const*>(obj), vec_eles);
             break;
         default:

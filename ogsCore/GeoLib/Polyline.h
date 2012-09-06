@@ -62,7 +62,7 @@ public:
 
     virtual ~Polyline() {}
 
-    virtual GEOTYPE getGeoType() const {return GEOTYPE::POLYLINE;};
+    virtual GEOTYPE getGeoType() const {return GeoLib::POLYLINE;};
 
     /** write the points to the stream */
     void write(std::ostream &os) const;

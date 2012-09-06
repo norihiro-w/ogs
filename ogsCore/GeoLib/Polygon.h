@@ -58,7 +58,7 @@ public:
 
     virtual ~Polygon();
 
-    virtual GEOTYPE getGeoType() const {return GEOTYPE::POLYGON;};
+    virtual GEOTYPE getGeoType() const {return GeoLib::POLYGON;};
 
     /**
      *

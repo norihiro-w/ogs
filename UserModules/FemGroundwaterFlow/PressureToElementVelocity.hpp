@@ -119,7 +119,7 @@ int FunctionPressureToElementVelocity<T>::solveTimeStep(const NumLib::TimeStep &
             xx[2] = tmp_v[0];
             NumLib::TXPosition pos(&xx[0]);
 
-            q.head(msh->getDimension()) = (*dN) * local_p * (-1.0) * k_mu;
+            static_cast<NumLib::LocalVector>(q.head(msh->getDimension())) = (*dN) * local_p ;
             //TODO grav
 
             vel->setIntegrationPointValue(i_e, ip, q);
