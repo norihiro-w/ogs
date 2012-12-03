@@ -59,6 +59,13 @@ namespace ogsChem
         KIN_ARB_RATE /* - kinetic reaction with arbitarily defined rate expression. */
     };
 
+	// type of kinetic reactions
+	enum KinReactType {
+		Monod,             /* - monod reaction */ 
+		// DoubleMonodDecay,  /* - double monod reaction with decay term */ 
+		NoType             /* - uninitialized type */ 
+	}; 
+
     // different thermodynamic databases
     enum DB_SOURCE {
         DB_UNKNOWN,

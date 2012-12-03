@@ -14,6 +14,7 @@
 
 #include <vector>
 
+#include "BaseLib/CodingTools.h"
 #include "GeoLib/GeoObject.h"
 #include "MeshLib/Core/IMesh.h"
 #include "NumLib/Function/ITXFunction.h"
@@ -44,6 +45,7 @@ public:
     ///
     virtual ~FemIC()
     {
+        BaseLib::releaseObjectsInStdVector( _vec_func ); 
     }
 
     /// add a distribution

@@ -44,15 +44,19 @@ GeoSys Kinetic Reactions
  $TYPE
    monod;
  $BACTERIANAME
-  Biomass
+   Biomass
  $EQUATION
-  Biomass =  Biomass ; 
+  1 Biomass =  1 Biomass; 
  $RATECONSTANT
-     -1.15741e-6  1.0   ; first- order rate , exponent
+ 1.15741e-5  1.0   ; max growth rate my_max , exponent
  $GROWTH
     1
  $MONODTERMS
-  ;0   ; Number of monod terms in kinetic equation
+  ;2   ; Number of monod terms in kinetic equation
+  Comp_A   8.33e-5  1.0 ; for each monod term: species concentration order
+  Comp_B   3.13e-5  1.0
+ $DECAYTERM
+  1.15741e-6  ; 
  $INHIBITIONTERMS
   ;0
  $PRODUCTIONTERMS

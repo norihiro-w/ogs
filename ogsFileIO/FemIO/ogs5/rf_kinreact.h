@@ -133,6 +133,7 @@ public:
 	std::vector <double> stochmet;        /* stochiometric coefficients for each reactionpartner stored here */
 	double rateconstant;                  /* rateconstant */
 	double rateorder;                     /* order of reaction */
+    double decay_rate;                    /* rate of decay */
 	int number_monod;                     /* Number of Monod terms */
 	int number_inhibit;                   /* Number of inhibition terms */
 	int number_production;                /* number of production terms */

@@ -31,7 +31,7 @@ IC2FEM::IC2FEM(const MeshLib::IMesh &msh, const GeoLib::GeoObject &geo, const Nu
         vec_values.resize(n_bc_nodes);
         for (size_t i=0; i<n_bc_nodes; i++) {
             const GeoLib::Point* x = msh.getNodeCoordinatesRef(vec_nodes[i]);
-            ic_func.eval(x->getData(), vec_values[i]);
+			ic_func.eval(NumLib::TXPosition(NumLib::TXPosition::Node, vec_nodes[i], x->getData()) , vec_values[i]);
         }
     } else {
         std::cout << "I.C. was not found." << std::endl;

@@ -34,8 +34,13 @@ public:
      * \param dx        solution increment
      * \param x_new     new solution
      */
-    template<class T_X, class F_RESIDUALS, class F_DX>
-    void doit(const T_X &/*dx*/, const T_X &/*x_new*/, F_RESIDUALS &/*f_residuals*/, F_DX &/*f_dx*/)
+	template<class T_X, class F_RESIDUALS, class F_DX>
+    void pre_process(const T_X &/*dx*/, const T_X &/*x_new*/, F_RESIDUALS &/*f_residuals*/, F_DX &/*f_dx*/)
+    {
+    }
+
+	template<class T_X, class F_RESIDUALS, class F_DX>
+    void post_process(const T_X &/*dx*/, const T_X &/*x_new*/, F_RESIDUALS &/*f_residuals*/, F_DX &/*f_dx*/)
     {
     }
 };
