@@ -38,19 +38,49 @@ public:
       * convert concentration vector to eta and xi vector
       */
 	void Conc2EtaXi(ogsChem::LocalVector &local_conc, 
-	                ogsChem::LocalVector &local_eta_mob, 
-	     			ogsChem::LocalVector &local_eta_immob, 
-		    		ogsChem::LocalVector &local_xi);
+		            ogsChem::LocalVector &local_eta_mob, 
+					ogsChem::LocalVector &local_eta_immob, 
+					ogsChem::LocalVector &local_xi_mob, 
+					ogsChem::LocalVector &local_xi_immob);
 
 	/**
       * convert eta and xi vector to concentration vector
       */
-	void EtaXi2Conc(); 
+	void EtaXi2Conc(ogsChem::LocalVector &local_eta_mob, 
+		            ogsChem::LocalVector &local_eta_immob, 
+					ogsChem::LocalVector &local_xi_mob, 
+					ogsChem::LocalVector &local_xi_immob,
+					ogsChem::LocalVector &local_conc); 
 
     /**
       * whether the reduction scheme has been initialized
       */
 	bool IsInitialized(void) {return isInitialized;}; 
+	
+	/**
+      * calculate the reaction rates of xi_mob
+      */
+	void Calc_Xi_mob_Rate(ogsChem::LocalVector &local_eta_mob, 
+		                  ogsChem::LocalVector &local_eta_immob, 
+					      ogsChem::LocalVector &local_xi_mob,
+					      ogsChem::LocalVector &local_xi_immob, 
+					      ogsChem::LocalVector &xi_mob_rate ); 
+
+    /**
+      * calculate the reaction rates of xi_mob
+      */
+	void Calc_Xi_immob_Rate(ogsChem::LocalVector &local_eta_mob, 
+		                    ogsChem::LocalVector &local_eta_immob, 
+					        ogsChem::LocalVector &local_xi_mob,
+					        ogsChem::LocalVector &local_xi_immob, 
+					        ogsChem::LocalVector &xi_immob_rate ); 
+
+	void Calc_Xi_Rate(ogsChem::LocalVector &local_eta_mob, 
+	                  ogsChem::LocalVector &local_eta_immob, 
+	                  ogsChem::LocalVector &local_xi_mob,
+					  ogsChem::LocalVector &local_xi_immob, 
+					  ogsChem::LocalVector &xi_mob_rate, 
+					  ogsChem::LocalVector &xi_immob_rate);
 
 	/**
       * get the number of components
@@ -63,20 +93,40 @@ public:
 	size_t get_n_eta(void) {return _n_eta;}; 
 
 	/**
-      * get the length of eta
+      * get the length of eta_mob
       */
 	size_t get_n_eta_mob(void) {return _n_eta_mob;}; 
+
+	/**
+      * get the length of eta_immob
+      */
+	size_t get_n_eta_immob(void) {return _n_eta - _n_eta_mob;}; 
 
 	/**
       * get the length of xi
       */
 	size_t get_n_xi(void) {return _n_xi; }; 
 
+	/**
+      * get the length of xi
+      */
+	size_t get_n_xi_mob(void) {return _n_xi_mob; }; 
+
+	/**
+      * get the length of xi
+      */
+	size_t get_n_xi_immob(void) {return _n_xi_immob; }; 
+
 private:
 	/**
       * private flag indicating initialization
       */
 	bool isInitialized; 
+
+	/**
+      * a list of all kinetic reactions
+      */
+	std::vector<ogsChem::chemReactionKin*> & _list_kin_reactions; 
 
     /**
       * stoichiometric matrix S

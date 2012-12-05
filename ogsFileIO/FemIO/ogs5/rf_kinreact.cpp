@@ -75,6 +75,7 @@ CKinReact::CKinReact(void)
 	stochmet.clear();
 	rateconstant = 0.0;
 	rateorder = 0.0;
+    decay_rate = 0.0; // HS
 	number_monod = 0;
 	number_inhibit = 0;
 	number_production = 0;
@@ -1395,6 +1396,13 @@ bool CKinReact::Read(std::ifstream* rfd_file)
 			in >> exType;
 			in.clear();
 		}
+
+        if (line_string.find("$DECAYTERM") != string::npos)
+        {
+            in.str(readNonBlankLineFromInputStream(*rfd_file)); 
+            in >> decay_rate;
+            in.clear();
+        }
 
 		//....................................................................
 		// subkeyword found

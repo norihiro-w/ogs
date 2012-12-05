@@ -10,9 +10,11 @@
  * Created on 2012-06-25 by Norihiro Watanabe
  */
 
-#pragma once
+#ifndef MATHLIB_GAUSSLEGENDRE_H
+#define MATHLIB_GAUSSLEGENDRE_H
 
 #include <vector>
+#include <cstddef>
 
 namespace MathLib
 {
@@ -56,3 +58,5 @@ public:
 
 
 }
+
+#endif

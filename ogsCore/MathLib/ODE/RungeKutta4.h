@@ -20,7 +20,7 @@ namespace MathLib
  *
  * \tparam F_DXDT   Function class evaluating F(t,X)
  */
-template <class F_DXDT>
+template <class F_DXDT, class T_VALUE>
 class RungeKutta4
 {
 public:
@@ -39,15 +39,14 @@ public:
     /**
      * solve dX/dt = F(t,X)
      */
-    template <class T_VALUE>
-    void solve(F_DXDT &f, double t0, double dt, const T_VALUE &y0, T_VALUE &y) const
+    void solve(F_DXDT &f, double t0, double dt, T_VALUE &y0, T_VALUE &y) const
     {
         T_VALUE k1 = dt*f(t0,y0);
         T_VALUE k2 = dt*f(t0+dt/2.0, y0+k1/2.0);
         T_VALUE k3 = dt*f(t0+dt/2.0, y0+k2/2.0);
         T_VALUE k4 = dt*f(t0+dt, y0+k3);
         y = y0 + (k1+2.0*k2+2.0*k3+k4)/6.0;
-    }
+    };
 };
 
 } //end

@@ -9,7 +9,7 @@
 			<M name="GROUNDWATER_FLOW">
 				<out>HEAD</out>
 			</M>
-			<M name="ELEMENT_VELOCITY">
+			<M name="HEAD_TO_ELEMENT_VELOCITY">
 				<in>HEAD</in>
 				<out>VELOCITY</out>
 			</M>

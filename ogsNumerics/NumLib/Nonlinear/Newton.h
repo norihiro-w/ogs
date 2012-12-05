@@ -61,7 +61,8 @@ public:
             _r = _dis_sys->template createVector<double>(x_0.size());
             _dx = _dis_sys->template createVector<double>(x_0.size());
         }
-        MathLib::NRCheckConvergence<VectorType, MathLib::NRErrorAbsResMNormOrRelDxMNorm> check(_option.error_tolerance);
+        MathLib::NRCheckConvergence<VectorType, MathLib::NRErrorAbsResMNormOrRelDxMNorm> check(_option.error_tolerance); 
+        // MathLib::NRCheckConvergence<VectorType, MathLib::NRErrorAbsResMNorm> check(_option.error_tolerance);  // HS
         MathLib::NewtonRaphsonMethod nr;
         nr.solve(*_f_r, *_f_dx, x_0, x_new, *_r, *_dx, _option.max_iteration, &check, _nl_step_init);
     }

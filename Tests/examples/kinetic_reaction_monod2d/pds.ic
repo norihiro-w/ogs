@@ -48,7 +48,16 @@ GeoSys-IC  Initial Conditions ------------------------------------------------
   DOMAIN
  $DIS_TYPE
   CONSTANT 1.0e-6
-   
+
+#INITIAL_CONDITION
+ $PCS_TYPE
+  KIN_REACT_GIA
+ $PRIMARY_VARIABLE 
+  ConsTracer
+ $GEO_TYPE
+  DOMAIN
+ $DIS_TYPE
+  CONSTANT 0.0
 #STOP
 
 #INITIAL_CONDITION

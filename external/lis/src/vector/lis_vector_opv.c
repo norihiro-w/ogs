@@ -515,46 +515,46 @@ LIS_INT lis_vector_cgs(LIS_INT n, LIS_VECTOR *x, LIS_VECTOR *q, LIS_VECTOR *r)
 } 
 
 /*
-#undef __FUNC__
-#define __FUNC__ "lis_array_mgs"
-LIS_INT lis_array_mgs(LIS_INT n, LIS_SCALAR *x, LIS_SCALAR *q, LIS_SCALAR *r)
-{
-  LIS_INT i, j, k; 
-  LIS_SCALAR *x_j, nrm2;
-  LIS_REAL tol;
-
-  tol = 1e-12;
-
-  x_j = (LIS_SCALAR *)lis_malloc(n*sizeof(LIS_SCALAR), "lis_array_mgs::x_j");
-
-  for (j=0;j<n;j++)
-    {
-      for (i=0;i<n;i++)
-	{
-	  x_j[i] = x[i*n+j];
-	}
-      lis_array_nrm2(n, &x_j[0], &nrm2);
-      r[j*n+j] = nrm2;
-      for (i=0;i<n;i++)
-	{
-	  if (nrm2<tol) break; 
-	  q[i*n+j] = x_j[i] / nrm2;
-	}
-      for (k=j+1;k<n;k++)
-	{
-	  r[j*n+k] = 0; 
-	  for (i=0;i<n;i++)
-	    {
-	      r[j*n+k] = r[j*n+k] + q[i*n+j] * x[i*n+k];
-	    }
-	  for (i=0;i<n;i++)
-	    {
-	      x[i*n+k] = x[i*n+k] - r[j*n+k] * q[i*n+j];
-	    }
-	}
-    }
-  lis_free(x_j);
-  return 0;
-}
+//#undef __FUNC__
+//#define __FUNC__ "lis_array_mgs"
+//LIS_INT lis_array_mgs(LIS_INT n, LIS_SCALAR *x, LIS_SCALAR *q, LIS_SCALAR *r)
+//{
+//  LIS_INT i, j, k; 
+//  LIS_SCALAR *x_j, nrm2;
+//  LIS_REAL tol;
+//
+//  tol = 1e-12;
+//
+//  x_j = (LIS_SCALAR *)lis_malloc(n*sizeof(LIS_SCALAR), "lis_array_mgs::x_j");
+//
+//  for (j=0;j<n;j++)
+//    {
+//      for (i=0;i<n;i++)
+//	{
+//	  x_j[i] = x[i*n+j];
+//	}
+//      lis_array_nrm2(n, &x_j[0], &nrm2);
+//      r[j*n+j] = nrm2;
+//      for (i=0;i<n;i++)
+//	{
+//	  if (nrm2<tol) break; 
+//	  q[i*n+j] = x_j[i] / nrm2;
+//	}
+//      for (k=j+1;k<n;k++)
+//	{
+//	  r[j*n+k] = 0; 
+//	  for (i=0;i<n;i++)
+//	    {
+//	      r[j*n+k] = r[j*n+k] + q[i*n+j] * x[i*n+k];
+//	    }
+//	  for (i=0;i<n;i++)
+//	    {
+//	      x[i*n+k] = x[i*n+k] - r[j*n+k] * q[i*n+j];
+//	    }
+//	}
+//    }
+//  lis_free(x_j);
+//  return 0;
+//}
 */
 
