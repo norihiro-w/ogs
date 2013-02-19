@@ -1,6 +1,6 @@
-# OpenGeoSys 6 #
+***This branch is obsolete. Please go to https://github.com/norihiro-w/ogs-draft-myTHMCSimulator***
 
-***This is the source code of the next generation [OpenGeoSys][ogs].***
+# OpenGeoSys 6 #
 
 ## The OpenGeoSys-project ##
 
