@@ -28,7 +28,7 @@ public:
     {
         _eqReactType = ogsChem::SORP_EQ_REACT;
     };
-	~chemReactionEqSorp(void);
+	virtual ~chemReactionEqSorp(void){};
 
     /**
       * the realization of eval function

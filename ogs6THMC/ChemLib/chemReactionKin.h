@@ -26,7 +26,7 @@ public:
       * constructor and destructor
       */
 	chemReactionKin();
-	~chemReactionKin(void);
+	virtual ~chemReactionKin(void);
 
 	/**
       * force the program to calculate the reaction rate

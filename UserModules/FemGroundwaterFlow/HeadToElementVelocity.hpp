@@ -58,7 +58,7 @@ bool FunctionHeadToElementVelocity<T>::initialize(const BaseLib::Options &option
 }
 
 template <class T>
-void FunctionHeadToElementVelocity<T>::accept(const NumLib::TimeStep &/*time*/)
+void FunctionHeadToElementVelocity<T>::accept(const NumLib::TimeStep &time)
 {
     //std::cout << "Velocity=" << std::endl;
     //_vel->printout();
@@ -67,7 +67,7 @@ void FunctionHeadToElementVelocity<T>::accept(const NumLib::TimeStep &/*time*/)
     OutputVariableInfo var(this->getOutputParameterName(Velocity), _dis->getMesh()->getID(), OutputVariableInfo::Element, OutputVariableInfo::Real, 3, _vel);
     femData->outController.setOutput(var.name, var);
 
-    _tim->accept();
+    _tim->accept(time.getTime());
 };
 
 template <class T>

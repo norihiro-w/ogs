@@ -37,9 +37,10 @@ public:
 protected:
     virtual void updateLog(BaseLib::Options &log);
 
-    virtual void accept()
+    virtual void accept(double t)
     {
-        AbstractTimeStepFunction::accept();
+        _dt_pre = t - getPrevious(); 
+        AbstractTimeStepFunction::accept(t);
     }
 
     virtual double suggestNext(double /*t_current*/);
@@ -51,6 +52,7 @@ private:
     double _min_ts; 
     double _max_ts; 
     int _iter_times;
+    double _dt_pre;    // previous time step size
 };
 
 

@@ -55,9 +55,9 @@ public:
     }
 
     ///
-    virtual void accept(const NumLib::TimeStep &)
+    virtual void accept(const NumLib::TimeStep &t)
     {
-        _tim->accept();
+        _tim->accept(t.getTime());
     };
 
 

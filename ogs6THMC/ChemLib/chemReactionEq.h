@@ -26,7 +26,7 @@ public:
       * constructor and destructor
       */
 	chemReactionEq();
-	~chemReactionEq(void);
+	virtual ~chemReactionEq(void);
 
 	/**
       * return the constant of equilibrium constant

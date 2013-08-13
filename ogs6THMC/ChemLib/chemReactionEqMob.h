@@ -28,7 +28,7 @@ public:
     {
         _eqReactType = ogsChem::MOB_EQ_REACT;
     };
-	~chemReactionEqMob(void);
+	virtual ~chemReactionEqMob(void){};
 
     /**
       * the realization of eval function

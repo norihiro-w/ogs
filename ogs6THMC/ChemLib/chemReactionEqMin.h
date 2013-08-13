@@ -28,7 +28,7 @@ public:
     {
         _eqReactType = ogsChem::MIN_EQ_REACT;
     };
-	~chemReactionEqMin(void);
+	virtual ~chemReactionEqMin(void){};
 
     /**
       * the realization of eval function

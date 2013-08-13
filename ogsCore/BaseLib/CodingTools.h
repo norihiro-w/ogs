@@ -121,15 +121,15 @@ void releaseObject(T1* &obj1, T2* &obj2, T3* &obj3, T4* &obj4, T5* &obj5, T6* &o
 template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
 void releaseObject(T1* &obj1, T2* &obj2, T3* &obj3, T4* &obj4, T5* &obj5, T6* &obj6, T7* &obj7)
 {
-    zeroObject(obj1, obj2, obj3, obj4, obj5, obj6);
-    zeroObject(obj7);
+	releaseObject(obj1, obj2, obj3, obj4, obj5, obj6);
+	releaseObject(obj7);
 }
 
 template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
 void releaseObject(T1* &obj1, T2* &obj2, T3* &obj3, T4* &obj4, T5* &obj5, T6* &obj6, T7* &obj7, T8* &obj8)
 {
-    zeroObject(obj1, obj2, obj3, obj4, obj5, obj6, obj7);
-    zeroObject(obj8);
+	releaseObject(obj1, obj2, obj3, obj4, obj5, obj6, obj7);
+	releaseObject(obj8);
 }
 
 

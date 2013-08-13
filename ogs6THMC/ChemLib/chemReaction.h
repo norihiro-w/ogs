@@ -27,7 +27,7 @@ public:
 	/**
       * destructor of the class
       */
-    ~chemReaction(void); 
+    virtual ~chemReaction(void);
 
 	/**
       * get the vector of component names 

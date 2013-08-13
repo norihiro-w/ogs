@@ -79,7 +79,7 @@ struct PorousMedia : public IMedium
 
     virtual MediumType::type getMediumType() const {return MediumType::PorousMedium;};
 
-	virtual double PorousMedia::getKrelbySw(const double Sw/*wetting saturation*/, size_t idx_phase)
+	virtual double getKrelbySw(const double Sw/*wetting saturation*/, size_t idx_phase)
     {
         double kr = 0.0; 
         bool phase_shift = false; 
@@ -105,7 +105,7 @@ struct PorousMedia : public IMedium
     /**
     * return the water saturation value by capillary pressure
     */
-    virtual double PorousMedia::getSwbyPc(double Pc)
+    virtual double getSwbyPc(double Pc)
     {	
         double Sw = 0.0;
 
@@ -123,7 +123,7 @@ struct PorousMedia : public IMedium
         return Sw; 
     }
 
-	virtual double PorousMedia::getdSwdPc (double Pc)
+	virtual double getdSwdPc (double Pc)
     {
         double dSwdPc = 0.0;
 

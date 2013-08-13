@@ -32,9 +32,9 @@ public:
     double getBeginning() const {return _t0;};
     double getEnd() const {return _tn;};
     void setEnd(double t) {_tn = t;};
-    virtual void accept()
+    virtual void accept(double t_current)
     {
-        if (_t_previous < _t_next) {
+        if (t_current == _t_next && _t_previous < _t_next) {
             _t_previous = _t_next;
             _steps++;
         }

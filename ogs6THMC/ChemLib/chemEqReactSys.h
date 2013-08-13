@@ -218,7 +218,7 @@ private:
       * calcuate one particular mineral concentration 
       * by the amount of basis concentration and total mass constrain
       */
-    double chemEqReactSys::cal_cbarmin_by_total_mass(size_t idx_min, LocalVector & c_basis, LocalVector & tot_mass);
+    double cal_cbarmin_by_total_mass(size_t idx_min, LocalVector & c_basis, LocalVector & tot_mass);
 
     /**
       * update all concentrations based on p
