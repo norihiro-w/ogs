@@ -21,17 +21,18 @@ namespace SolutionLib
 class TimeSteppingProblem
 {
 public:
-    TimeSteppingProblem() : _tim(0) {};
+    TimeSteppingProblem() : _tim(nullptr) {};
 
     virtual ~TimeSteppingProblem()
     {
-        BaseLib::releaseObject(_tim);
+        //BaseLib::releaseObject(_tim);
     }
 
     /// set  a time stepping function
     void setTimeSteppingFunction(NumLib::ITimeStepFunction &f)
     {
-        _tim = f.clone();
+        _tim = &f;
+        //_tim = f.clone();
     }
 
     /// get this time stepping function

@@ -7,7 +7,7 @@
  *
  * \file TimeStepFunctionNewtonAdaptive.cpp
  *
- * Created on 2013-08-07 by Haibing Shao
+ * Created on 2013-08-07 by Haibing Shao and Norihiro Watanabe
  */
 
 #include "TimeStepFunctionNewtonAdaptive.h"
@@ -50,17 +50,19 @@ TimeStepFunctionNewtonAdaptive* TimeStepFunctionNewtonAdaptive::clone()
 
 void TimeStepFunctionNewtonAdaptive::updateLog(BaseLib::Options &log)
 {
-	BaseLib::Options* optNR = log.getSubGroup("NewtonRaphson");
-   if (optNR==nullptr) return;
-
-   this->_iter_times = optNR->getOptionAsNum<size_t>("iterations");
+    BaseLib::Options* optNR = log.getSubGroup("NewtonRaphson");
+    if (optNR==nullptr) return;
+    
+    this->_iter_times = optNR->getOptionAsNum<size_t>("iterations");
 };
 
 double TimeStepFunctionNewtonAdaptive::suggestNext(double /*t_current*/)
 {
 	double t=0.0;
 
-	if ( getStep() == 0 )  // the first time step
+    // the this is the first time step
+    // then we use the minimum time step size
+	if ( getStep() == 0 )  
 	{
 		t = getPrevious() + _min_ts;
 	}
@@ -68,18 +70,21 @@ double TimeStepFunctionNewtonAdaptive::suggestNext(double /*t_current*/)
 	{
 		double tmp_dt = 0.0;
 		double tmp_multiplier; 
+        double t_pre  = getPrevious();
+        size_t i; 
+        // get the first multiplier by default        
         if ( _multiplier_vector.size() > 0 )
             tmp_multiplier = _multiplier_vector[0];
-		double t_pre  = getPrevious();
-
+		
 		// number of iterations must be provided externally from the solver class
 		int iter_times = this->_iter_times;  
 		// finding the right multiplier
-		for ( size_t i=0; i<_iter_times_vector.size(); i++ )
+		for ( i=0; i<_iter_times_vector.size(); i++ )
 			if ( iter_times > _iter_times_vector[i] )
 				tmp_multiplier = _multiplier_vector[i];
-		// times the muliplier
+		// multiply the the muliplier
 		tmp_dt = _dt_pre * tmp_multiplier;
+
 		// check whether out of the boundary
 		if ( tmp_dt < _min_ts )
 			tmp_dt = _min_ts;
