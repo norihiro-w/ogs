@@ -72,6 +72,12 @@ struct ShapeData
      */
     void setZero(const ShapeFieldType fields = SHAPE_ALL);
 
+    /**
+     * writes the matrix entries into the output stream
+     * @param out the output stream
+     */
+    void write (std::ostream& out) const;
+
 private:
     template<class T>
     void setZero(T &mat)
@@ -97,6 +103,24 @@ void ShapeData<T_N, T_DN, T_J>::setZero(const ShapeFieldType fields)
     setZero(J);
     setZero(invJ);
     detJ = .0;
+}
+
+template <class T_N, class T_DN, class T_J>
+void ShapeData<T_N, T_DN, T_J>::write(std::ostream& out) const
+{
+    out << "N   :\n" << N << "\n";
+    out << "dNdr:\n" << dNdr << "\n";
+    out << "J   :\n" << J << "\n";
+    out << "invJ:\n" << invJ << "\n";
+    out << "|J| : " << detJ << "\n";
+    out << "dNdx:\n" << dNdx << "\n";
+}
+
+template <class T_N, class T_DN, class T_J>
+std::ostream& operator<< (std::ostream &os, const ShapeData<T_N, T_DN, T_J> &shape)
+{
+    shape.write (os);
+    return os;
 }
 
 } // NumLib
