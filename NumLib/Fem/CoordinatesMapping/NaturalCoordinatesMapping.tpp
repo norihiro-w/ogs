@@ -63,9 +63,11 @@ void NaturalCoordinatesMapping<T_MESH_ELEMENT,T_SHAPE_FUNC,T_SHAPE_DATA>::comput
     if (prop.detJ>.0) {
         prop.invJ = prop.J.inverse();
         prop.dNdx = prop.invJ * prop.dNdr;
-    } else {
-        ERR("***error: det_j=%e is not positive.\n", prop.detJ);
     }
+#ifndef NDEBUG
+    if (prop.detJ<=.0)
+        ERR("***error: det|J|=%e is not positive.\n", prop.detJ);
+#endif
 };
 
 template <class T_MESH_ELEMENT, class T_SHAPE_FUNC, class T_SHAPE_DATA>
