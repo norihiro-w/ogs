@@ -40,7 +40,7 @@ Orientation getOrientation(const double& p0_x, const double& p0_y, const double&
 	double h1((p1_x - p0_x) * (p2_y - p0_y));
 	double h2((p2_x - p0_x) * (p1_y - p0_y));
 
-	double tol(sqrt( std::numeric_limits<double>::min()));
+	double tol(sqrt( std::numeric_limits<double>::epsilon()));
 	if (fabs(h1 - h2) <= tol * std::max(fabs(h1), fabs(h2)))
 		return COLLINEAR;
 	if (h1 - h2 > 0.0)
@@ -65,7 +65,7 @@ bool lineSegmentIntersect(const GeoLib::Point& a, const GeoLib::Point& b, const 
 	mat(1,1) = c[1] - d[1];
 
 	// check if vectors are parallel
-	double eps (sqrt(std::numeric_limits<double>::min()));
+	double eps (sqrt(std::numeric_limits<double>::epsilon()));
 	if (fabs(mat(1,1)) < eps) {
 		// vector (D-C) is parallel to x-axis
 		if (fabs(mat(0,1)) < eps) {
@@ -223,7 +223,7 @@ void getNewellPlane(const std::vector<GeoLib::Point*>& pnts, MathLib::Vector3 &p
 
 void rotatePointsToXY(MathLib::Vector3 &plane_normal, std::vector<GeoLib::Point*> &pnts)
 {
-	double small_value(sqrt( std::numeric_limits<double>::min()));
+	double small_value(sqrt( std::numeric_limits<double>::epsilon()));
 	if (fabs(plane_normal[0]) < small_value && fabs(plane_normal[1]) < small_value)
 		return;
 
@@ -240,7 +240,7 @@ void rotatePointsToXY(MathLib::Vector3 &plane_normal, std::vector<GeoLib::Point*
 
 void rotatePointsToXZ(MathLib::Vector3 &n, std::vector<GeoLib::Point*> &pnts)
 {
-	double small_value(sqrt( std::numeric_limits<double>::min()));
+	double small_value(sqrt( std::numeric_limits<double>::epsilon()));
 	if (fabs(n[0]) < small_value && fabs(n[1]) < small_value)
 		return;
 
