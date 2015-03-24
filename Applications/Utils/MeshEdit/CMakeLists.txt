@@ -139,4 +139,19 @@ TARGET_LINK_LIBRARIES( extrudeLayers
 SET_TARGET_PROPERTIES(extrudeLayers
 	PROPERTIES FOLDER Utilities)
 ADD_CATALYST_DEPENDENCY(extrudeLayers)
-	
+
+
+ADD_EXECUTABLE( addInletAndOutlet addInletAndOutlet.cpp )
+TARGET_LINK_LIBRARIES( addInletAndOutlet
+	BaseLib
+	GeoLib
+	MeshLib
+	MeshGeoToolsLib
+	FileIO
+	InSituLib
+	${CATALYST_LIBRARIES}
+)
+
+SET_TARGET_PROPERTIES(addInletAndOutlet
+	PROPERTIES FOLDER Utilities)
+ADD_CATALYST_DEPENDENCY(addInletAndOutlet)
