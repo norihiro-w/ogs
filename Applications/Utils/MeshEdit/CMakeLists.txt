@@ -126,3 +126,17 @@ target_link_libraries(ResetPropertiesInPolygonalRegion
 
 set_target_properties(ResetPropertiesInPolygonalRegion
 	PROPERTIES FOLDER Utilities)
+
+ADD_EXECUTABLE( extrudeLayers extrude.cpp )
+TARGET_LINK_LIBRARIES( extrudeLayers
+	BaseLib
+	FileIO
+	MeshLib
+	InSituLib
+	${CATALYST_LIBRARIES}
+)
+
+SET_TARGET_PROPERTIES(extrudeLayers
+	PROPERTIES FOLDER Utilities)
+ADD_CATALYST_DEPENDENCY(extrudeLayers)
+	
