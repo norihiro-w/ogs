@@ -53,28 +53,17 @@ bool lessEq(const MathLib::Point3d& p0,
  * @param p   a point to be transformed
  * @return a rotated point
  */
-inline MathLib::Point3d operator*(const MathLib::DenseMatrix<double> &mat, const MathLib::Point3d &p)
+template <typename MATRIX>
+inline MathLib::Point3d operator*(MATRIX const& mat, MathLib::Point3d const& p)
 {
-    double* new_coords(mat*p.getCoords());
-    MathLib::Point3d new_p(new_coords);
-    delete [] new_coords;
+    MathLib::Point3d new_p;
+    for (std::size_t i(0); i<3; ++i) {
+        for (std::size_t j(0); j<3; ++j) {
+            new_p[i] += mat(i,j)*p[j];
+        }
+    }
     return new_p;
 }
-
-#ifdef OGS_USE_EIGEN
-/**
- * rotation of points
- * @param mat a rotation matrix
- * @param p   a point to be transformed
- * @return a rotated point
- */
-template <typename T_DERIVED>
-MathLib::Point3d operator*(const Eigen::MatrixBase<T_DERIVED> &mat, const MathLib::Point3d &p)
-{
-    Eigen::Vector3d  x_new = mat * Eigen::Map<Eigen::Vector3d>(const_cast<double*>(p.getCoords()));
-    return MathLib::Point3d(x_new.data());
-}
-#endif
 
 #endif /* POINT3D_H_ */
 
