@@ -86,6 +86,39 @@ std::string propertyTreeToString(boost::property_tree::ptree const& tree)
 	return ss.str();
 }
 
+
+std::string leftPadding(const std::string &src, size_t total_len, const char paddingChar)
+{
+    std::string str(src);
+    if(total_len > str.size())
+        str.insert(0, total_len - str.size(), paddingChar);
+
+    return str;
+}
+
+std::string rightPadding(const std::string &src, size_t total_len, const char paddingChar)
+{
+    std::string str(src);
+    if(total_len > str.size())
+        str.insert(str.size(), total_len - str.size(), paddingChar);
+
+    return str;
+}
+
+std::string bothPadding(const std::string &src, size_t total_len, const char paddingChar)
+{
+    std::string str(src);
+    if(total_len == str.size())
+        return str;
+
+    size_t pad_len = total_len - str.size();
+    str = leftPadding(str, pad_len / 2 + str.size(), paddingChar);
+    str = rightPadding(str, total_len, paddingChar);
+
+    return str;
+}
+
+
 } // end namespace BaseLib
 
 #ifdef MSVC
@@ -150,3 +183,4 @@ void correctScientificNotation(std::string filename, size_t precision)
 	rename(tmpFilename.c_str(), filename.c_str());
 }
 #endif
+

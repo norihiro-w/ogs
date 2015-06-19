@@ -76,6 +76,34 @@ std::string padLeft(std::string const& str, int maxlen, char ch=' ');
  */
 std::string propertyTreeToString(boost::property_tree::ptree const& tree);
 
+
+/**
+ * Left padding
+ * @param src
+ * @param total_len
+ * @param paddingChar
+ * @return
+ */
+std::string leftPadding(const std::string &src, size_t total_len, const char paddingChar =' ');
+
+/**
+ * Right padding
+ * @param src
+ * @param total_len
+ * @param paddingChar
+ * @return
+ */
+std::string rightPadding(const std::string &src, size_t total_len, const char paddingChar =' ');
+
+/**
+ * Left and right padding and make string at center
+ * @param src
+ * @param total_len
+ * @param paddingChar
+ * @return
+ */
+std::string bothPadding(const std::string &src, size_t total_len, const char paddingChar = ' ');
+
 } // end namespace BaseLib
 
 #ifdef MSVC
