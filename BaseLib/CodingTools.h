@@ -19,4 +19,7 @@
     TypeName(const TypeName&);   \
     TypeName &operator=(const TypeName&)
 
+#define RETURN_ENUM_IF_SAME_STRING(TypeName,str) \
+    if (str.compare(#TypeName)==0) return TypeName;
+
 #endif
