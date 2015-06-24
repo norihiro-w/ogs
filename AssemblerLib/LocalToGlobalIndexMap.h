@@ -78,6 +78,8 @@ public:
     LineIndex rowIndices(std::size_t const mesh_item_id) const;
     LineIndex columnIndices(std::size_t const mesh_item_id) const;
 
+    const AssemblerLib::MeshComponentMap& getMeshComponentMap() const {return _mesh_component_map; }
+
 private:
 
     /// Private constructor used by internally created local-to-global index
