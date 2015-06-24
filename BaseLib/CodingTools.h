@@ -15,11 +15,18 @@
 #ifndef CODINGTOOLS_H
 #define CODINGTOOLS_H
 
+#include <cstdlib>
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName&);   \
     TypeName &operator=(const TypeName&)
 
 #define RETURN_ENUM_IF_SAME_STRING(TypeName,str) \
     if (str.compare(#TypeName)==0) return TypeName;
+
+namespace BaseLib
+{
+const std::size_t index_npos = -1;
+}
 
 #endif
