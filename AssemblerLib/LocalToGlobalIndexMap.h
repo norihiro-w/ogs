@@ -77,6 +77,7 @@ public:
 
     LineIndex rowIndices(std::size_t const mesh_item_id) const;
     LineIndex columnIndices(std::size_t const mesh_item_id) const;
+    RowColumnIndices rowColumnIndices(std::size_t const mesh_id, MeshLib::Element const& e, std::size_t const comp_id) const;
 
     const AssemblerLib::MeshComponentMap& getMeshComponentMap() const {return _mesh_component_map; }
 
@@ -138,6 +139,8 @@ private:
     /// For non-parallel implementations the columns are equal to the rows.
     /// \todo This is to be overriden by any parallel implementation.
     std::vector<LineIndex> const& _columns = _rows;
+
+    AssemblerLib::ComponentOrder const _order;
 
 #ifndef NDEBUG
     /// Prints first rows of the table, every line, and the mesh component map.

@@ -21,6 +21,7 @@ LocalToGlobalIndexMap::LocalToGlobalIndexMap(
     std::vector<MeshLib::MeshSubsets*> const& mesh_subsets,
     AssemblerLib::ComponentOrder const order)
     : _mesh_subsets(mesh_subsets), _mesh_component_map(_mesh_subsets, order)
+      , _order(order)
 {
     // For all MeshSubsets and each of their MeshSubset's and each element
     // of that MeshSubset save a line of global indices.
@@ -41,6 +42,7 @@ LocalToGlobalIndexMap::LocalToGlobalIndexMap(
     AssemblerLib::MeshComponentMap&& mesh_component_map,
     AssemblerLib::ComponentOrder const order)
     : _mesh_subsets(mesh_subsets), _mesh_component_map(std::move(mesh_component_map))
+      , _order(order)
 {
     // For all MeshSubsets and each of their MeshSubset's and each element
     // of that MeshSubset save a line of global indices.
@@ -84,6 +86,35 @@ LocalToGlobalIndexMap::RowColumnIndices
 LocalToGlobalIndexMap::operator[](std::size_t const mesh_item_id) const
 {
     return RowColumnIndices(_rows[mesh_item_id], _columns[mesh_item_id]);
+}
+
+LocalToGlobalIndexMap::RowColumnIndices
+LocalToGlobalIndexMap::rowColumnIndices(std::size_t const mesh_id, MeshLib::Element const& e, std::size_t const comp_id) const
+{
+    std::vector<MeshLib::Location> vec_items;
+    std::size_t const nnodes = e.getNNodes();
+    vec_items.reserve(nnodes);
+
+    for (unsigned n = 0; n < nnodes; n++)
+    {
+        vec_items.emplace_back(
+            mesh_id,
+            MeshLib::MeshItemType::Node,
+            e.getNode(n)->getID());
+    }
+
+    LineIndex rows;
+    switch (_order)
+    {
+        case AssemblerLib::ComponentOrder::BY_LOCATION:
+        	rows = _mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_LOCATION>(vec_items, comp_id);
+            break;
+        case AssemblerLib::ComponentOrder::BY_COMPONENT:
+        	rows = _mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_COMPONENT>(vec_items, comp_id);
+            break;
+    }
+
+    return RowColumnIndices(rows, rows); //TODO cols
 }
 
 LocalToGlobalIndexMap::LineIndex
