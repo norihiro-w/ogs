@@ -15,9 +15,8 @@
 
 #include <ostream>
 
-#ifdef OGS_USE_EIGEN
-#include <Eigen/Eigen>
-#endif
+#include "MathLib/DataType.h"
+
 namespace NumLib
 {
 
@@ -129,5 +128,10 @@ struct ShapeMatrices
 } // NumLib
 
 #include "ShapeMatrices-impl.h"
+
+namespace NumLib
+{
+typedef ShapeMatrices<MathLib::LocalVector, MathLib::LocalMatrix, MathLib::LocalMatrix, MathLib::LocalMatrix> DynamicShapeMatrices;
+}
 
 #endif //SHAPEMATRICES_H_

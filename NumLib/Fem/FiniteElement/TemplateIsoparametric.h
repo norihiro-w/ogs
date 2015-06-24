@@ -19,6 +19,7 @@
 
 #include "../CoordinatesMapping/ShapeMatrices.h"
 #include "../CoordinatesMapping/NaturalCoordinatesMapping.h"
+#include "IFemElement.h"
 
 namespace NumLib
 {
@@ -33,7 +34,7 @@ template <
     class ShapeFunctionType_,
     class ShapeMatrixTypes_
     >
-class TemplateIsoparametric
+class TemplateIsoparametric : public IFiniteElement
 {
 public:
     using ShapeFunctionType = ShapeFunctionType_;
@@ -70,12 +71,25 @@ public:
     ~TemplateIsoparametric() {}
 
     /// return current mesh element
-    const MeshElementType* getMeshElement() const {return _ele;}
+    const MeshLib::Element* getMeshElement() const {return _ele;}
 
     /// Sets the mesh element
-    void setMeshElement(const MeshElementType &e)
+    void setMeshElement(const MeshLib::Element &e)
     {
-        this->_ele = &e;
+        this->_ele = static_cast<const MeshElementType*>(&e);
+    }
+
+    /**
+     * compute shape functions
+     *
+     * @param natural_pt    position in natural coordinates
+     * @param shape         evaluated shape function matrices
+     */
+    void computeShapeFunctionsd(const double *natural_pt, DynamicShapeMatrices &shape) const
+    {
+        shape.setZero(); //TODO could be done in NaturalCoordinatesMapping
+    	NaturalCoordinatesMapping<
+    	            MeshElementType, ShapeFunctionType, DynamicShapeMatrices>::computeShapeMatrices(*_ele, natural_pt, shape);
     }
 
     /**
