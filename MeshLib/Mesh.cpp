@@ -16,6 +16,8 @@
 
 #include "BaseLib/RunTime.h"
 
+#include "GeoLib/AABB.h"
+
 #include "Elements/Element.h"
 #include "Elements/Tri.h"
 #include "Elements/Quad.h"
@@ -37,7 +39,7 @@ Mesh::Mesh(const std::string &name,
 	  _node_distance(std::numeric_limits<double>::max(), 0),
 	  _name(name), _nodes(nodes), _elements(elements),
 	  _n_base_nodes(n_base_nodes==0 ? nodes.size() : n_base_nodes),
-	  _properties(properties)
+	  _properties(properties), _coord_system(GeoLib::AABB<Node>(nodes.begin(), nodes.end()))
 {
 	assert(n_base_nodes <= nodes.size());
 	this->resetNodeIDs();
@@ -58,7 +60,7 @@ Mesh::Mesh(const Mesh &mesh)
 	  _node_distance(mesh._node_distance.first, mesh._node_distance.second),
 	  _name(mesh.getName()), _nodes(mesh.getNNodes()), _elements(mesh.getNElements()),
 	  _n_base_nodes(mesh.getNBaseNodes()),
-	  _properties(mesh._properties)
+	  _properties(mesh._properties), _coord_system(mesh._coord_system)
 {
 	const std::vector<Node*> nodes (mesh.getNodes());
 	const size_t nNodes (nodes.size());

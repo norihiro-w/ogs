@@ -23,6 +23,7 @@
 
 #include "MeshEnums.h"
 #include "Properties.h"
+#include "CoordinateSystem.h"
 
 namespace MeshLib
 {
@@ -65,6 +66,9 @@ public:
 
 	/// Returns the dimension of the mesh (determined by the maximum dimension over all elements).
 	unsigned getDimension() const { return _mesh_dimension; }
+
+	/// Returns the coordinate system of the mesh
+	CoordinateSystem getCoordinateSystem() const { return _coord_system; }
 
 	/// Get the node with the given index.
 	const Node* getNode(unsigned idx) const { return _nodes[idx]; }
@@ -165,6 +169,7 @@ protected:
 	std::vector<Element*> _elements;
 	std::size_t _n_base_nodes;
 	Properties _properties;
+	CoordinateSystem _coord_system;
 }; /* class */
 
 } /* namespace */
