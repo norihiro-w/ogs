@@ -24,8 +24,8 @@ public:
     using ShapeFunction = NumLib::ShapePyra5;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FePYRA5<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FePYRA5<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Pyramid MeshElementType;
     static const unsigned dim = 3; //MeshElementType::dimension;

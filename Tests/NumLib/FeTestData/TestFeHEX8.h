@@ -25,8 +25,8 @@ public:
     using ShapeFunction = NumLib::ShapeHex8;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FeHEX8<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FeHEX8<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Hex MeshElementType;
     static const unsigned dim = 3; //MeshElementType::dimension;

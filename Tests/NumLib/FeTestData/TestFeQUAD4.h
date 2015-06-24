@@ -25,8 +25,8 @@ public:
     using ShapeFunction = NumLib::ShapeQuad4;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FeQUAD4<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FeQUAD4<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Quad MeshElementType;
     static const unsigned dim = 2; //MeshElementType::dimension;

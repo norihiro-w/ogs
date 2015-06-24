@@ -24,8 +24,8 @@ public:
     using ShapeFunction = NumLib::ShapeLine3;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FeLINE3<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FeLINE3<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Line3 MeshElementType;
     static const unsigned dim = MeshElementType::dimension;

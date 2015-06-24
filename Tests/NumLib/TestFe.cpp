@@ -48,8 +48,8 @@ struct TestCase
     typedef TestFeType_ TestFeType;
     static const unsigned GlobalDim = TestFeType::global_dim;
     using ShapeMatrixTypes = ShapeMatrixPolicy_<typename TestFeType::ShapeFunction, GlobalDim>;
-    template <typename X>
-    using ShapeMatrixPolicy = ShapeMatrixPolicy_<X, GlobalDim>;
+    template <typename X, unsigned DIM>
+    using ShapeMatrixPolicy = ShapeMatrixPolicy_<X, DIM>;
 };
 
 typedef ::testing::Types<
@@ -86,9 +86,9 @@ class NumLibFemIsoTest : public ::testing::Test, public T::TestFeType
     typedef typename ShapeMatrixTypes::GlobalDimMatrixType GlobalDimMatrixType;
 
     // Finite element type
-    template <typename X>
-    using ShapeMatrixPolicy = typename T::template ShapeMatrixPolicy<X>;
-    typedef typename TestFeType::template FeType<ShapeMatrixPolicy>::type FeType;
+    template <typename X, unsigned DIM>
+    using ShapeMatrixPolicy = typename T::template ShapeMatrixPolicy<X, DIM>;
+    typedef typename TestFeType::template FeType<ShapeMatrixPolicy, T::GlobalDim>::type FeType;
 
     // Shape matrix data type
     typedef typename ShapeMatrixTypes::ShapeMatrices ShapeMatricesType;

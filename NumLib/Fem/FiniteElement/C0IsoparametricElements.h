@@ -35,94 +35,94 @@
 namespace NumLib
 {
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeLINE2
 {
-    typedef TemplateIsoparametric<ShapeLine2, T_SHAPE_MATRIX_POLICY<ShapeLine2>> type;
+    typedef TemplateIsoparametric<ShapeLine2, T_SHAPE_MATRIX_POLICY<ShapeLine2, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeLINE3
 {
-    typedef TemplateIsoparametric<ShapeLine3, T_SHAPE_MATRIX_POLICY<ShapeLine3>> type;
+    typedef TemplateIsoparametric<ShapeLine3, T_SHAPE_MATRIX_POLICY<ShapeLine3, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeTRI3
 {
-    typedef TemplateIsoparametric<ShapeTri3, T_SHAPE_MATRIX_POLICY<ShapeTri3>> type;
+    typedef TemplateIsoparametric<ShapeTri3, T_SHAPE_MATRIX_POLICY<ShapeTri3, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeTRI6
 {
-    typedef TemplateIsoparametric<ShapeTri6, T_SHAPE_MATRIX_POLICY<ShapeTri6>> type;
+    typedef TemplateIsoparametric<ShapeTri6, T_SHAPE_MATRIX_POLICY<ShapeTri6, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeQUAD4
 {
-    typedef TemplateIsoparametric<ShapeQuad4, T_SHAPE_MATRIX_POLICY<ShapeQuad4>> type;
+    typedef TemplateIsoparametric<ShapeQuad4, T_SHAPE_MATRIX_POLICY<ShapeQuad4, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeQUAD8
 {
-    typedef TemplateIsoparametric<ShapeQuad8, T_SHAPE_MATRIX_POLICY<ShapeQuad8>> type;
+    typedef TemplateIsoparametric<ShapeQuad8, T_SHAPE_MATRIX_POLICY<ShapeQuad8, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeQUAD9
 {
-    typedef TemplateIsoparametric<ShapeQuad9, T_SHAPE_MATRIX_POLICY<ShapeQuad9>> type;
+    typedef TemplateIsoparametric<ShapeQuad9, T_SHAPE_MATRIX_POLICY<ShapeQuad9, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeHEX8
 {
-    typedef TemplateIsoparametric<ShapeHex8, T_SHAPE_MATRIX_POLICY<ShapeHex8>> type;
+    typedef TemplateIsoparametric<ShapeHex8, T_SHAPE_MATRIX_POLICY<ShapeHex8, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeHEX20
 {
-    typedef TemplateIsoparametric<ShapeHex20, T_SHAPE_MATRIX_POLICY<ShapeHex20>> type;
+    typedef TemplateIsoparametric<ShapeHex20, T_SHAPE_MATRIX_POLICY<ShapeHex20, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeTET4
 {
-    typedef TemplateIsoparametric<ShapeTet4, T_SHAPE_MATRIX_POLICY<ShapeTet4>> type;
+    typedef TemplateIsoparametric<ShapeTet4, T_SHAPE_MATRIX_POLICY<ShapeTet4, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FeTET10
 {
-    typedef TemplateIsoparametric<ShapeTet10, T_SHAPE_MATRIX_POLICY<ShapeTet10>> type;
+    typedef TemplateIsoparametric<ShapeTet10, T_SHAPE_MATRIX_POLICY<ShapeTet10, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FePRISM6
 {
-    typedef TemplateIsoparametric<ShapePrism6, T_SHAPE_MATRIX_POLICY<ShapePrism6>> type;
+    typedef TemplateIsoparametric<ShapePrism6, T_SHAPE_MATRIX_POLICY<ShapePrism6, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FePRISM15
 {
-    typedef TemplateIsoparametric<ShapePrism15, T_SHAPE_MATRIX_POLICY<ShapePrism15>> type;
+    typedef TemplateIsoparametric<ShapePrism15, T_SHAPE_MATRIX_POLICY<ShapePrism15, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FePYRA5
 {
-    typedef TemplateIsoparametric<ShapePyra5, T_SHAPE_MATRIX_POLICY<ShapePyra5>> type;
+    typedef TemplateIsoparametric<ShapePyra5, T_SHAPE_MATRIX_POLICY<ShapePyra5, DIM>> type;
 };
 
-template <template <typename> class T_SHAPE_MATRIX_POLICY>
+template <template <typename, unsigned> class T_SHAPE_MATRIX_POLICY, unsigned DIM>
 struct FePYRA13
 {
-    typedef TemplateIsoparametric<ShapePyra13, T_SHAPE_MATRIX_POLICY<ShapePyra13>> type;
+    typedef TemplateIsoparametric<ShapePyra13, T_SHAPE_MATRIX_POLICY<ShapePyra13, DIM>> type;
 };
 
 } // NumLib

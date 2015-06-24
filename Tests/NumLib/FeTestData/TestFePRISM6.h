@@ -24,8 +24,8 @@ public:
     using ShapeFunction = NumLib::ShapePrism6;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FePRISM6<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FePRISM6<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Prism MeshElementType;
     static const unsigned dim = 3;

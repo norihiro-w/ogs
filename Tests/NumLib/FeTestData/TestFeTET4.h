@@ -24,8 +24,8 @@ public:
     using ShapeFunction = NumLib::ShapeTet4;
 
     // Fe type information
-    template <template <typename> class ShapeMatrixPolicy_>
-    using FeType = NumLib::FeTET4<ShapeMatrixPolicy_>;
+    template <template <typename, unsigned> class ShapeMatrixPolicy_, unsigned DIM>
+    using FeType = NumLib::FeTET4<ShapeMatrixPolicy_,DIM>;
 
     typedef MeshLib::Tet MeshElementType;
     static const unsigned dim = 3;
