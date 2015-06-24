@@ -72,6 +72,15 @@ public:
     /// has z dimension
     bool hasZ() const { return (_type & CoordinateSystemType::type::Z) != 0; }
 
+    /// returns index of x dimension
+    unsigned getIndexOfX() const { return hasX() ? 0 : -1; }
+
+    /// returns index of y dimension
+    unsigned getIndexOfY() const { return hasY() ? (hasX() ? 1 : 0) : -1; }
+
+    /// returns index of z dimension
+    unsigned getIndexOfZ() const { return hasZ() ? (getDimension()-1) : -1; }
+
 private:
     template <class T>
     unsigned char getCoordinateSystem(const GeoLib::AABB<T> &bbox) const;
