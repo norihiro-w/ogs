@@ -115,6 +115,10 @@ public:
     template <ComponentOrder ORDER>
     std::vector<std::size_t> getGlobalIndices(const std::vector<Location> &ls) const;
 
+    /// Global indices for the given componet
+    template <ComponentOrder ORDER>
+    std::vector<std::size_t> getGlobalIndices(const std::vector<Location> &ls, std::size_t const comp_id) const;
+
     /// A value returned if no global index was found for the requested
     /// location/component. The value is implementation dependent.
     static std::size_t const nop;
