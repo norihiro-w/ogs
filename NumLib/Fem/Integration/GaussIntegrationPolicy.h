@@ -10,6 +10,9 @@
 #ifndef NUMLIB_GAUSSINTEGRATIONPOLICY_H_
 #define NUMLIB_GAUSSINTEGRATIONPOLICY_H_
 
+#include "MeshLib/Elements/Line.h"
+#include "MeshLib/Elements/Quad.h"
+#include "MeshLib/Elements/Hex.h"
 #include "MeshLib/Elements/Tri.h"
 #include "MeshLib/Elements/Tet.h"
 #include "MeshLib/Elements/Prism.h"
@@ -95,6 +98,26 @@ struct GaussIntegrationPolicy<MeshLib::Pyramid13>
     using MeshElement = MeshLib::Pyramid13;
     using IntegrationMethod = NumLib::IntegrationGaussPyramid;
 };
+
+inline IIntegration* getIntegrationMethod(MeshLib::CellType cellType)
+{
+	switch (cellType)
+	{
+	case MeshLib::CellType::LINE2:
+		return new GaussIntegrationPolicy<MeshLib::Line>::IntegrationMethod();
+	case MeshLib::CellType::TRI3:
+		return new GaussIntegrationPolicy<MeshLib::Tri>::IntegrationMethod();
+	case MeshLib::CellType::QUAD4:
+		return new GaussIntegrationPolicy<MeshLib::Quad>::IntegrationMethod();
+	case MeshLib::CellType::TET4:
+		return new GaussIntegrationPolicy<MeshLib::Tet>::IntegrationMethod();
+	case MeshLib::CellType::HEX8:
+		return new GaussIntegrationPolicy<MeshLib::Hex>::IntegrationMethod();
+	default:
+		ERR("unsupported element type %s in generateIntegrationMethod()", MeshLib::CellType2String(cellType).c_str());
+		return nullptr;
+	}
+}
 
 }   // namespace NumLib
 

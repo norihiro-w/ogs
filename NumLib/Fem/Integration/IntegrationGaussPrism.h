@@ -13,13 +13,15 @@
 #include "MathLib/Integration/GaussLegendre.h"
 #include "MathLib/Integration/GaussLegendreTri.h"
 
+#include "IIntegration.h"
+
 namespace NumLib
 {
 
 /**
  * \brief Gauss quadrature rule for prisms
  */
-class IntegrationGaussPrism
+class IntegrationGaussPrism : public IIntegration
 {
     typedef MathLib::TemplateWeightedPoint<double, double, 3>
         WeightedPoint;
@@ -54,7 +56,7 @@ public:
      * @param igp      The integration point index
      * @return a weighted point
      */
-    WeightedPoint getWeightedPoint(std::size_t igp)
+    WeightedPoint getWeightedPoint(std::size_t igp) const
     {
         return getWeightedPoint(getIntegrationOrder(), igp);
     }

@@ -17,6 +17,8 @@
 
 #include "MathLib/Integration/GaussLegendreTri.h"
 
+#include "IIntegration.h"
+
 namespace NumLib
 {
 
@@ -34,9 +36,9 @@ namespace NumLib
  * \f]
  * by defining the new weight \f$ w'=\frac{1}{2} w \f$.
  */
-class IntegrationGaussTri
+class IntegrationGaussTri : public IIntegration
 {
-    typedef MathLib::TemplateWeightedPoint<double, double, 2>
+    typedef MathLib::TemplateWeightedPoint<double, double, 3>
         WeightedPoint;
 public:
     /**
@@ -69,7 +71,7 @@ public:
      * @param igp      The integration point index
      * @return a weighted point
      */
-    WeightedPoint getWeightedPoint(std::size_t igp)
+    WeightedPoint getWeightedPoint(std::size_t igp) const
     {
         return getWeightedPoint(getIntegrationOrder(), igp);
     }
@@ -90,7 +92,7 @@ public:
             case 2: return getWeightedPoint<MathLib::GaussLegendreTri<2> >(igp);
             case 3: return getWeightedPoint<MathLib::GaussLegendreTri<3> >(igp);
         }
-        return WeightedPoint(std::array<double, 2>(), 0);
+        return WeightedPoint(std::array<double, 3>(), 0);
     }
 
     template <typename Method>

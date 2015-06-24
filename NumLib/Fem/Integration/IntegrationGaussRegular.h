@@ -19,6 +19,7 @@
 #include "MathLib/Integration/GaussLegendre.h"
 #include "MathLib/TemplateWeightedPoint.h"
 
+#include "IIntegration.h"
 
 namespace NumLib
 {
@@ -27,9 +28,9 @@ namespace NumLib
 ///
 /// \tparam N_DIM    Spatial dimension
 template <std::size_t N_DIM>
-class IntegrationGaussRegular
+class IntegrationGaussRegular : public IIntegration
 {
-    typedef typename MathLib::TemplateWeightedPoint<double, double, N_DIM>
+    typedef typename MathLib::TemplateWeightedPoint<double, double, 3>
         WeightedPoint;
 public:
     /// Create IntegrationGaussRegular of the given Gauss-Legendre integration

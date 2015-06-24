@@ -51,7 +51,7 @@ IntegrationGaussRegular<3>::getPositionIndices(std::size_t order, std::size_t ig
 
 template <std::size_t N_DIM>
 inline
-MathLib::TemplateWeightedPoint<double,double,N_DIM>
+MathLib::TemplateWeightedPoint<double,double,3>
 IntegrationGaussRegular<N_DIM>::getWeightedPoint(std::size_t order, std::size_t igp)
 {
     assert(igp < std::pow(order, N_DIM));
@@ -65,16 +65,16 @@ IntegrationGaussRegular<N_DIM>::getWeightedPoint(std::size_t order, std::size_t 
         case 4: return getWeightedPoint<MathLib::GaussLegendre<4>>(pos);
     }
 
-    return MathLib::TemplateWeightedPoint<double, double, N_DIM>(std::array<double, N_DIM>(), 0);
+    return MathLib::TemplateWeightedPoint<double, double, 3>(std::array<double, 3>(), 0);
 }
 
 template <std::size_t N_DIM>
 template <typename Method>
 inline
-MathLib::TemplateWeightedPoint<double, double, N_DIM>
+MathLib::TemplateWeightedPoint<double, double, 3>
 IntegrationGaussRegular<N_DIM>::getWeightedPoint(std::array<std::size_t, N_DIM> const& pos)
 {
-    std::array<double, N_DIM> coords;
+    std::array<double, 3> coords;
     double weight = 1;
     for (unsigned d = 0; d < N_DIM; d++)
     {
@@ -82,7 +82,7 @@ IntegrationGaussRegular<N_DIM>::getWeightedPoint(std::array<std::size_t, N_DIM> 
         weight *= Method::W[pos[d]];
     }
 
-    return MathLib::TemplateWeightedPoint<double, double, N_DIM>(coords, weight);
+    return MathLib::TemplateWeightedPoint<double, double, 3>(coords, weight);
 }
 } //namespace
 
