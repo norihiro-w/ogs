@@ -26,10 +26,15 @@ namespace BaseLib
  */
 bool IsFileExisting(const std::string &strFilename)
 {
+#if 0
 	if(boost::filesystem::exists(strFilename))
 		return true;
 	else
 		return false;
+#else
+	std::ifstream infile(strFilename);
+	return infile.good();
+#endif
 }
 
 double swapEndianness(double const& v)
