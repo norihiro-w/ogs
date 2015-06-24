@@ -42,7 +42,7 @@ MeshLib::Mesh* readMeshFromFile(const std::string &file_name)
 {
 #ifdef USE_MPI
 	NodePartitionedMeshReader read_pmesh(PETSC_COMM_WORLD);
-	return read_pmesh.read(file_name);
+	return read_pmesh.read(BaseLib::dropFileExtension(file_name));
 #else
 	if (BaseLib::hasFileExtension("msh", file_name))
 	{
