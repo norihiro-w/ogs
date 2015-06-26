@@ -18,6 +18,7 @@
 #endif
 
 #include "MathLib/Point3d.h"
+#include "MathLib/DataType.h"
 
 #include "MeshLib/CoordinateSystem.h"
 
@@ -28,11 +29,6 @@ namespace MeshLib
 
 namespace MeshLib
 {
-#ifdef OGS_USE_EIGEN
-typedef Eigen::Matrix<double, 3u, 3u, Eigen::RowMajor> RotationMatrix;
-#else
-typedef MathLib::DenseMatrix<double> RotationMatrix;
-#endif
 
 /**
  * This class maps node coordinates on intrinsic coordinates of the given element.
@@ -57,12 +53,12 @@ public:
     }
 
     /// return a rotation matrix converting to global coordinates
-    const RotationMatrix& getRotationMatrixToGlobal() const {return _matR2global;}
+    const MathLib::RotationMatrix& getRotationMatrixToGlobal() const {return _matR2global;}
 
 private:
     const CoordinateSystem _coords;
     std::vector<MathLib::Point3d> _points;
-    RotationMatrix _matR2global;
+    MathLib::RotationMatrix _matR2global;
 };
 
 }

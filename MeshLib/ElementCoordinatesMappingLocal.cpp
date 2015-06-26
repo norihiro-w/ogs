@@ -24,7 +24,7 @@ namespace detail
 
 /// rotate points to local coordinates
 void rotateToLocal(
-    const MeshLib::RotationMatrix &matR2local,
+    const MathLib::RotationMatrix &matR2local,
     std::vector<MathLib::Point3d> &points)
 {
     for (auto& p : points)
@@ -37,7 +37,7 @@ void getRotationMatrixToGlobal(
     const unsigned element_dimension,
     const unsigned global_dim,
     const std::vector<MathLib::Point3d> &points,
-    MeshLib::RotationMatrix &matR)
+    MathLib::RotationMatrix &matR)
 {
     // compute R in x=R*x' where x are original coordinates and x' are local coordinates
     if (element_dimension == 1) {
