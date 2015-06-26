@@ -24,8 +24,9 @@ class IIntegration;
 class IFiniteElement
 {
 public:
-	IFiniteElement() : _integration(nullptr) {}
-    virtual ~IFiniteElement() {}
+    IFiniteElement() : _integration(nullptr) {}
+
+    virtual ~IFiniteElement();
 
     /// return current mesh element
     virtual const MeshLib::Element* getMeshElement() const = 0;
@@ -33,9 +34,7 @@ public:
     /// Sets the mesh element
     virtual void setMeshElement(const MeshLib::Element &e) = 0;
 
-    void setIntegrationMethod(IIntegration* integrate) {_integration = integrate;}
-
-    IIntegration* getIntegrationMethod() {return _integration;}
+    IIntegration& getIntegrationMethod() const;
 
     /**
      * compute shape functions
@@ -46,7 +45,7 @@ public:
     virtual void computeShapeFunctionsd(const double *natural_pt, DynamicShapeMatrices &shape) const = 0;
 
 private:
-    IIntegration* _integration;
+    mutable IIntegration* _integration;
 };
 
 } //end

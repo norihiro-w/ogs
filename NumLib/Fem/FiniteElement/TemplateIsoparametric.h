@@ -68,7 +68,7 @@ public:
     {
     }
 
-    ~TemplateIsoparametric() {}
+    virtual ~TemplateIsoparametric() {}
 
     /// return current mesh element
     const MeshLib::Element* getMeshElement() const {return _ele;}
