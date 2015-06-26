@@ -151,8 +151,7 @@ inline void NaturalCoordinatesMapping<
         const double* natural_pt,
         T_SHAPE_MATRICES &shapemat)
 {
-    const MeshLib::CoordinateSystem coords(ele);
-    const MeshLib::ElementCoordinatesMappingLocal ele_local_coord(ele, coords);
+    const MeshLib::ElementCoordinatesMappingLocal& ele_local_coord(ele.getMappedLocalCoordinates());
 
     detail::computeMappingMatrices<
         T_MESH_ELEMENT,
@@ -176,8 +175,7 @@ inline void NaturalCoordinatesMapping<
         const double* natural_pt,
         T_SHAPE_MATRICES &shapemat)
 {
-    const MeshLib::CoordinateSystem coords(ele);
-    const MeshLib::ElementCoordinatesMappingLocal ele_local_coord(ele, coords);
+    const MeshLib::ElementCoordinatesMappingLocal& ele_local_coord(ele.getMappedLocalCoordinates());
 
     detail::computeMappingMatrices<
         T_MESH_ELEMENT,
