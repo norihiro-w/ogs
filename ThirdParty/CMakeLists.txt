@@ -14,39 +14,39 @@ set_property(TARGET logog PROPERTY FOLDER "logog")
 set_property(TARGET test-logog PROPERTY FOLDER "logog")
 set_target_properties(test-logog PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-add_subdirectory(zlib)
+#add_subdirectory(zlib)
 
 add_subdirectory(gtest)
 
-add_subdirectory(shape)
+#add_subdirectory(shape)
 
 # This is a workaround for Travis builds.
 option(OGS_USE_OPTIONAL_SUBMODULES "Option for enabling optional submodules" OFF)
 
 # VtkFbxConverter
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VtkFbxConverter/CMakeLists.txt
-	AND OGS_USE_OPTIONAL_SUBMODULES)
-	add_subdirectory(VtkFbxConverter)
-endif()
-
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VtkFbxConverter/CMakeLists.txt
+#	AND OGS_USE_OPTIONAL_SUBMODULES)
+#	add_subdirectory(VtkFbxConverter)
+#endif()
+#
 # VtkOsgConverter
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VtkOsgConverter/CMakeLists.txt
-	AND OGS_USE_OPTIONAL_SUBMODULES)
-	add_subdirectory(VtkOsgConverter)
-endif()
-
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/VtkOsgConverter/CMakeLists.txt
+#	AND OGS_USE_OPTIONAL_SUBMODULES)
+#	add_subdirectory(VtkOsgConverter)
+#endif()
+#
 # tetgen
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tetgen/CMakeLists.txt)
-	add_subdirectory(tetgen)
-	if(APPLE AND OGS_BUILD_GUI)
-		install (PROGRAMS $<TARGET_FILE:tetgen> DESTINATION DataExplorer.app/Contents/MacOS COMPONENT ogs_extras)
-	else()
-		install (PROGRAMS $<TARGET_FILE:tetgen> DESTINATION bin COMPONENT ogs_extras)
-	endif()
-endif()
-
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tetgen/CMakeLists.txt)
+#	add_subdirectory(tetgen)
+#	if(APPLE AND OGS_BUILD_GUI)
+#		install (PROGRAMS $<TARGET_FILE:tetgen> DESTINATION DataExplorer.app/Contents/MacOS COMPONENT ogs_extras)
+#	else()
+#		install (PROGRAMS $<TARGET_FILE:tetgen> DESTINATION bin COMPONENT ogs_extras)
+#	endif()
+#endif()
+#
 # vtkdiff
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vtkdiff/CMakeLists.txt)
-	add_subdirectory(vtkdiff)
-	install (PROGRAMS $<TARGET_FILE:vtkdiff> DESTINATION bin COMPONENT ogs_extras)
-endif()
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vtkdiff/CMakeLists.txt)
+#	add_subdirectory(vtkdiff)
+#	install (PROGRAMS $<TARGET_FILE:vtkdiff> DESTINATION bin COMPONENT ogs_extras)
+#endif()

@@ -9,5 +9,6 @@ if(OGS_BUILD_GUI)
 endif() # OGS_BUILD_GUI
 
 if(OGS_BUILD_CLI)
-    add_subdirectory(CLI)
+#    add_subdirectory(CLI)
+    add_subdirectory(Cui)
 endif() # OGS_BUILD_CLI
