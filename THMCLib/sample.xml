@@ -1,0 +1,24 @@
+xml
+	domain
+		domaingroup, id=0
+			mesh, id=0, file=test0.msh
+		domaingroup, id=1
+			mesh, id=0, file=test1.msh
+	time
+		timegroup, id=0, unit=DAY, start=0, end=99, control=STEPS
+			timestep
+				2	1
+				10	10
+				20	100
+		timegroup, id=1, unit=DAY, start=0, end=99, control=AUTO, error=1e-3
+	processes
+		process, type=gw, name=gw1, domain=0, time=0
+		process, type=element_velocity, name=ev, domain=0, time=-1
+		process, type=well, name=w1, domain=1, time=1
+	coupling
+		P
+			M, pcs=gw1
+				out, name=p
+			M, pcs=ev
+				in, name=p
+				out, name=v
