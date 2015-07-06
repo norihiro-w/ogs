@@ -1,0 +1,27 @@
+#POINTS
+0  0.0  0.0 0.0  0.0 0.0 0.0 0.0
+1 20.0  0.0 0.0  0.0 0.0 0.0 0.0
+2 20.0 10.0 0.0  0.0 0.0 0.0 0.0
+3  0.0 10.0 0.0  0.0 0.0 0.0 0.0
+4  0.0 5.0 0.0  0.0 0.0 0.0 0.0 $NAME POINT4
+#POLYLINE
+ $NAME
+  Channel
+ $TYPE
+  -1
+ $EPSILON
+  0.01
+ $POINTS
+ 0
+ 3
+#POLYLINE
+ $NAME
+  BC
+ $TYPE
+  -1
+ $EPSILON
+  0.01
+ $POINTS
+ 1
+ 2 
+#STOP

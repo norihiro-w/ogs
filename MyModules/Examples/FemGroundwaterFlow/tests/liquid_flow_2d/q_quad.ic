@@ -1,0 +1,13 @@
+GeoSys-IC  Initial Conditions ------------------------------------------------
+#INITIAL_CONDITION
+ $PCS_TYPE
+  LIQUID_FLOW
+ $PRIMARY_VARIABLE
+  PRESSURE1
+ $GEO_TYPE
+  DOMAIN
+ $DIS_TYPE
+  CONSTANT 0
+#STOP
+ 
+
