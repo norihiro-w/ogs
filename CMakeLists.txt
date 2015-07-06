@@ -150,6 +150,7 @@ add_subdirectory( MeshLib )
 add_subdirectory( MeshGeoToolsLib )
 add_subdirectory( NumLib )
 add_subdirectory( ProcessLib )
+add_subdirectory( SolutionLib )
 if( OGS_BUILD_TESTS AND NOT IS_SUBPROJECT )
 	add_subdirectory( Tests )
 
