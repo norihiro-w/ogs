@@ -40,7 +40,7 @@ if(QT4_FOUND)
 endif()
 
 # It could be used for other MPI based DDC approach in future.
-if(OGS_USE_PETSC)
+if(OGS_USE_MPI)
 	GET_SOURCE_FILES(SOURCES_MPI_IO MPI_IO)
 	set(SOURCES ${SOURCES} ${SOURCES_MPI_IO})
 endif()

@@ -31,7 +31,7 @@
 #include "FileIO/Legacy/MeshIO.h"
 #include "FileIO/VtkIO/VtuInterface.h"
 
-#ifdef USE_PETSC
+#ifdef USE_MPI
 #include "FileIO/MPI_IO/NodePartitionedMeshReader.h"
 #include "MeshLib/NodePartitionedMesh.h"
 #endif
@@ -40,7 +40,7 @@ namespace FileIO
 {
 MeshLib::Mesh* readMeshFromFile(const std::string &file_name)
 {
-#ifdef USE_PETSC
+#ifdef USE_MPI
 	NodePartitionedMeshReader read_pmesh(PETSC_COMM_WORLD);
 	return read_pmesh.read(file_name);
 #else

@@ -118,7 +118,6 @@ endif()
 # Use PETSc package for global assembly and linear sover for parallel computing
 if(OGS_USE_PETSC)
     add_definitions(-DUSE_PETSC)
-    set(OGS_USE_MPI ON)
 endif()
 
 # Use MPI
