@@ -3,11 +3,6 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file NonlinearSolverOption.h
- *
- * Created on 2012-08-03 by Norihiro Watanabe
  */
 
 #pragma once
@@ -26,6 +21,9 @@ struct NonlinerSolverOption
         LINEAR,
         PICARD,
         NEWTON,
+#ifdef USE_PETSC
+        SNES,
+#endif
         INVALID
     };
 
@@ -45,6 +43,9 @@ struct NonlinerSolverOption
         RETURN_ENUM_IF_SAME_STRING(LINEAR, str);
         RETURN_ENUM_IF_SAME_STRING(PICARD, str);
         RETURN_ENUM_IF_SAME_STRING(NEWTON, str);
+#ifdef USE_PETSC
+        RETURN_ENUM_IF_SAME_STRING(SNES, str);
+#endif
 
         return INVALID;
     }

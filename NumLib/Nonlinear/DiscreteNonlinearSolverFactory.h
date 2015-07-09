@@ -11,6 +11,9 @@
 #include "Linear.h"
 #include "Picard.h"
 #include "Newton.h"
+#ifdef USE_PETSC
+#include "PETSc/PETScSNES.h"
+#endif
 
 namespace NumLib
 {
@@ -36,6 +39,11 @@ public:
         case NonlinerSolverOption::NEWTON:
             solver = new NewtonRaphson<F_R, F_DX>(f_r, f_dx, J, r);
             break;
+#ifdef USE_PETSC
+        case NonlinerSolverOption::SNES:
+            solver = new PETScSNES<F_R, F_DX>(f_r, f_dx, J, r);
+            break;
+#endif
         default:
             break;
         }
