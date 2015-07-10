@@ -1,7 +1,4 @@
 /**
- * \author Norihiro Watanabe
- * \date   2012-06-25
- *
  * \copyright
  * Copyright (c) 2012-2015, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
@@ -11,8 +8,14 @@
  */
 
 #include <limits>
+#include <memory>
 
-#include "logog/include/logog.hpp"
+#include <logog/include/logog.hpp>
+
+#include "MathLib/LinAlg/IVector.h"
+#include "MathLib/LinAlg/IMatrix.h"
+#include "MathLib/LinAlg/ILinearSolver.h"
+#include "MathLib/LinAlg/LinAlgBuilder.h"
 
 namespace MathLib
 {
@@ -20,15 +23,8 @@ namespace MathLib
 namespace Nonlinear
 {
 
-NewtonRaphson::NewtonRaphson()
-: _normType(VecNormType::INFINITY_N),
-  _r_abs_tol(std::numeric_limits<double>::max()), _r_rel_tol(1e-6), _dx_rel_tol(.0),
-  _max_itr(25), _printErrors(true), _n_iterations(0), _r_abs_error(.0), _r_rel_error(.0), _dx_rel_error(.0)
-{
-}
-
 template<class F_RESIDUAL, class F_DX, class T_VALUE>
-bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0, T_VALUE &x_new)
+bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
 {
     const bool checkAbsResidualError = (_r_abs_tol < std::numeric_limits<double>::max());
     const bool checkRelResidualError = (_r_rel_tol < std::numeric_limits<double>::max());
@@ -40,19 +36,18 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0,
     INFO("-> iteration started");
 
     // evaluate initial residual
-    x_new = x0;
-    T_VALUE r(x0);
-    f_residual(x_new, r);
+    T_VALUE r(x);
+    f_residual(x, r);
 
     // check convergence
     double r_norm = norm(r, _normType);
 
-    T_VALUE dx(x0);
+    T_VALUE dx(x);
     double dx_norm = norm(dx, _normType);
 
     double x_norm = -1.;
     if (needXNorm)
-        x_norm = norm(x_new, _normType);
+        x_norm = norm(x, _normType);
 
     bool converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                      || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
@@ -63,10 +58,10 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0,
     if (!converged) {
         for (itr_cnt=1; itr_cnt<_max_itr; itr_cnt++) {
             // solve dx=-J^-1*r
-            f_dx(x_new, r, dx);
-            x_new += dx;
+            f_dx(x, r, dx);
+            x += dx;
             // evaluate residual
-            f_residual(x_new, r);
+            f_residual(x, r);
 #ifdef DEBUG_NEWTON_RAPHSON
             printout(std::cout, itr_cnt, x_new, r, dx);
 #endif
@@ -74,7 +69,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0,
             r_norm = norm(r, _normType);
             dx_norm = norm(dx, _normType);
             if (needXNorm)
-                x_norm = norm(x_new, _normType);
+                x_norm = norm(x, _normType);
             converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                         || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
             if (_printErrors)
@@ -109,6 +104,96 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0,
     return converged;
 }
 
+template<class F_RESIDUAL, class F_J>
+bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
+{
+    const bool checkAbsResidualError = (_r_abs_tol < std::numeric_limits<double>::max());
+    const bool checkRelResidualError = (_r_rel_tol < std::numeric_limits<double>::max());
+    const bool checkRelDxError = (_dx_rel_tol > .0);
+    const bool needXNorm =  (checkRelResidualError || checkRelDxError);
+
+    INFO("------------------------------------------------------------------");
+    INFO("*** NEWTON-RAPHSON nonlinear solver");
+    INFO("-> iteration started");
+
+    // evaluate initial residual
+    if (_r == nullptr)
+        _r = x.duplicate();
+    IVector &r(*_r);
+    f_residual(x, r);
+
+    // check convergence
+    double r_norm = norm(r, _normType);
+
+    std::unique_ptr<IVector> dxx(x.duplicate());
+    IVector &dx(*dxx);
+    double dx_norm = norm(dx, _normType);
+
+    double x_norm = -1.;
+    if (needXNorm)
+        x_norm = norm(x, _normType);
+
+    bool converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
+                     || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
+    if (_printErrors)
+        INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", 0, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
+
+    std::size_t itr_cnt = 0;
+    if (!converged) {
+        for (itr_cnt=1; itr_cnt<_max_itr; itr_cnt++) {
+            // form J
+            f_jacobian(x, *_J);
+            // solve dx=-J^-1*r
+            *_b = r;
+            *_b *= -1;
+            auto ls = LinAlgBuilder::generateLinearSolver(x.getLinAlgLibType(), _J, _option);
+            ls->solve(*_b, dx);
+            delete ls;
+
+            x += dx;
+            // evaluate residual
+            f_residual(x, r);
+#ifdef DEBUG_NEWTON_RAPHSO
+            printout(std::cout, itr_cnt, x_new, r, dx);
+#endif
+            // check convergence
+            r_norm = norm(r, _normType);
+            dx_norm = norm(dx, _normType);
+            if (needXNorm)
+                x_norm = norm(x, _normType);
+            converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
+                        || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
+            if (_printErrors)
+                INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
+
+            if (converged)
+                break;
+        }
+    }
+
+    INFO("-> iteration finished");
+    if (_max_itr==1) {
+        INFO("status    : iteration not required");
+    } else {
+        INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+    }
+    INFO("iteration : %d/%d", itr_cnt, _max_itr);
+    if (checkAbsResidualError)
+        INFO("abs. res. : %1.3e (tolerance=%1.3e)", r_norm, _r_abs_tol);
+    if (checkRelResidualError)
+        INFO("rel. res. : %1.3e (tolerance=%1.3e)", x_norm==0?r_norm:r_norm/x_norm, _r_rel_tol);
+    if (checkRelDxError)
+        INFO("dx        : %1.3e (tolerance=%1.3e)", x_norm==0?dx_norm:dx_norm/x_norm, _dx_rel_tol);
+    INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
+    INFO("------------------------------------------------------------------");
+
+    this->_n_iterations = itr_cnt;
+    this->_r_abs_error = r_norm;
+    this->_r_rel_error = (x_norm==0 ? r_norm : r_norm / x_norm);
+    this->_dx_rel_error = (x_norm==0 ? dx_norm : dx_norm / x_norm);
+
+    return converged;
+}
 
 #ifdef DEBUG_NEWTON_RAPHSON
 template<class T_VALUE>

@@ -13,10 +13,12 @@
 #ifndef MATHLIB_NONLINEAR_PICARD_H_
 #define MATHLIB_NONLINEAR_PICARD_H_
 
-#include "LinAlg/VectorNorms.h"
+#include "MathLib/LinAlg/VectorNorms.h"
 
 namespace MathLib
 {
+
+class IVector;
 
 namespace Nonlinear
 {
@@ -63,7 +65,10 @@ public:
      * \return true if converged
      */
     template<class T_FUNCTOR, class T_VALUE>
-    bool solve(T_FUNCTOR &functor,  const T_VALUE &x0, T_VALUE &x_new);
+    bool solve(T_FUNCTOR &functor, T_VALUE &x);
+
+    template<class T_FUNCTOR>
+    bool solve(T_FUNCTOR &functor, MathLib::IVector &x);
 
     /// return the number of iterations
     std::size_t getNIterations() const {return _n_iterations; }

@@ -86,12 +86,14 @@ TEST(MathLib, NonlinearPicard_double)
     picard.setMaxIterations(3);
     picard.setAbsTolerance(1e-5);
     picard.setRelTolerance(std::numeric_limits<double>::max());
-    ASSERT_FALSE(picard.solve(f1, x0, x));
+    x = x0;
+    ASSERT_FALSE(picard.solve(f1, x));
     ASSERT_EQ(3u, picard.getNIterations());
 
     // abs tol, converge
     picard.setMaxIterations(10);
-    ASSERT_TRUE(picard.solve(f1, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f1, x));
     ASSERT_NEAR(2.0, x, 1e-5);
     ASSERT_EQ(5u, picard.getNIterations());
 
@@ -99,7 +101,8 @@ TEST(MathLib, NonlinearPicard_double)
     picard.setMaxIterations(100);
     picard.setAbsTolerance(std::numeric_limits<double>::max());
     picard.setRelTolerance(1e-5);
-    ASSERT_TRUE(picard.solve(f1, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f1, x));
     ASSERT_NEAR(2.0, x, 1e-5);
     ASSERT_EQ(5u, picard.getNIterations());
 }
@@ -112,17 +115,17 @@ TEST(MathLib, NonlinearPicard_vector_x0)
     // initial guess1
     x0[0] = 2.;
     x0[1] = 9.;
-    x = 0.0;
     MathLib::Nonlinear::Picard picard;
-    ASSERT_TRUE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f2, x));
 
     double my_expect1[] = {2., 8.};
     ASSERT_ARRAY_NEAR(my_expect1, x, 2, 1e-5);
 
     // initial guess2
     x0 = 6.0;
-    x = 0.0;
-    picard.solve(f2, x0, x);
+    x = x0;
+    picard.solve(f2, x);
 
     double my_expect2[] = {-0.5, 0.5};
     ASSERT_ARRAY_NEAR(my_expect2, x, 2, 1e-5);
@@ -137,37 +140,42 @@ TEST(MathLib, NonlinearPicard_vector_norms)
 
     x0[0] = 2.;
     x0[1] = 9.;
-    x = 0.0;
     double my_expect1[] = {2., 8.};
 
     // check relative errors with different norm types
     picard.setMaxIterations(1);
     picard.setNormType(MathLib::VecNormType::NORM1);
-    ASSERT_FALSE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_FALSE(picard.solve(f2, x));
     ASSERT_NEAR(0.1, picard.getRelError(), 1e-3);
 
     picard.setNormType(MathLib::VecNormType::NORM2);
     picard.setMaxIterations(1);
-    ASSERT_FALSE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_FALSE(picard.solve(f2, x));
     ASSERT_NEAR(0.1213, picard.getRelError(), 1e-3);
 
     picard.setNormType(MathLib::VecNormType::INFINITY_N);
     picard.setMaxIterations(1);
-    ASSERT_FALSE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_FALSE(picard.solve(f2, x));
     ASSERT_NEAR(0.125, picard.getRelError(), 1e-3);
 
     // solution should be converged with any norm types
     picard.setMaxIterations(5);
     picard.setNormType(MathLib::VecNormType::NORM1);
-    ASSERT_TRUE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f2, x));
     ASSERT_ARRAY_NEAR(my_expect1, x, 2, 1e-5);
 
     picard.setNormType(MathLib::VecNormType::NORM2);
-    ASSERT_TRUE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f2, x));
     ASSERT_ARRAY_NEAR(my_expect1, x, 2, 1e-5);
 
     picard.setNormType(MathLib::VecNormType::INFINITY_N);
-    ASSERT_TRUE(picard.solve(f2, x0, x));
+    x = x0;
+    ASSERT_TRUE(picard.solve(f2, x));
     ASSERT_ARRAY_NEAR(my_expect1, x, 2, 1e-5);
 
 }

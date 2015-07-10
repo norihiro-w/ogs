@@ -228,9 +228,10 @@ TEST(MathLib, NonlinearNR_double)
     Example1::Jacobian f_j;
     ScalarDx<Example1::Jacobian> f_dx(f_j);
     double x0 = 6.0;
-    double x = .0;
+    double x = x0;
     MathLib::Nonlinear::NewtonRaphson nr;
-    nr.solve(f_r, f_dx, x0, x);
+    x = x0;
+    nr.solve(f_r, f_dx, x);
 
     ASSERT_NEAR(2.0, x, 1e-5);
 }
@@ -245,7 +246,8 @@ TEST(MathLib, NonlinearNR_dense)
     x0 = 6.0;
     x = .0;
     MathLib::Nonlinear::NewtonRaphson nr;
-    nr.solve(f_r, f_dx, x0, x);
+    x = x0;
+    nr.solve(f_r, f_dx, x);
 
     double my_expect[] = {2., 8.};
     ASSERT_ARRAY_NEAR(my_expect, x, 2, 1e-5);
@@ -262,7 +264,8 @@ TEST(MathLib, NonlinearNR_dense2)
     x0 = 1.;
     x = 0.;
     MathLib::Nonlinear::NewtonRaphson nr;
-    nr.solve(f_r, f_dx, x0, x);
+    x = x0;
+    nr.solve(f_r, f_dx, x);
 
     double my_expect[] = {3.39935, 3.70074e-018, -1.42576e-017, 1.4903e-021, 4.35602e-018, 0.325, -1.08167, -5.61495e-018, 7.58394e-018, -3.79368e-021};
     ASSERT_ARRAY_NEAR(my_expect, x, n, 1e-5);

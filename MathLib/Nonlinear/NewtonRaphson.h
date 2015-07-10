@@ -13,10 +13,14 @@
 #ifndef MATHLIB_NONLINEAR_NEWTONRAPHSON_H_
 #define MATHLIB_NONLINEAR_NEWTONRAPHSON_H_
 
-#include "LinAlg/VectorNorms.h"
+#include <boost/property_tree/ptree.hpp>
+#include "MathLib/LinAlg/VectorNorms.h"
 
 namespace MathLib
 {
+
+class IMatrix;
+class IVector;
 
 namespace Nonlinear
 {
@@ -30,6 +34,10 @@ public:
     /// Default constructor with norm type INFINITY_N, relative tolerance 1e-6
     /// for residual, and the maximum number of iterations 25
     NewtonRaphson();
+
+    NewtonRaphson(IMatrix* J, IVector* r, boost::property_tree::ptree const*const option=nullptr);
+
+    ~NewtonRaphson();
 
     /// set a vector norm type
     void setNormType(VecNormType normType) {_normType = normType;}
@@ -72,7 +80,10 @@ public:
      * \return true if converged
      */
     template<class F_RESIDUAL, class F_DX, class T_VALUE>
-    bool solve(F_RESIDUAL &f_residual, F_DX &f_dx, const T_VALUE &x0, T_VALUE &x_new);
+    bool solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x);
+
+    template<class F_RESIDUAL, class F_J>
+    bool solve(F_RESIDUAL &f_residual, F_J &f_J, IVector &x);
 
     /// return the number of iterations
     std::size_t getNIterations() const {return _n_iterations; }
@@ -113,6 +124,11 @@ private:
     double _r_rel_error;
     /// relative dx error in the last calculation
     double _dx_rel_error;
+
+    IMatrix* _J;
+    IVector* _r;
+    IVector* _b;
+    boost::property_tree::ptree const*const _option;
 };
 
 } // Nonlinear
