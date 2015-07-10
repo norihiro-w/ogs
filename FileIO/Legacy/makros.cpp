@@ -5,15 +5,7 @@
  *              http://www.opengeosys.com/LICENSE.txt
  */
 
+#include "makros.h"
 
-#ifndef makros_INC
-#define makros_INC
+int myrank;
 
-#define DOF_NUMBER_MAX 5
-#define MAX_ZEILE 2048
-
-#ifdef USE_MPI
-extern int myrank;
-#endif
-
-#endif
