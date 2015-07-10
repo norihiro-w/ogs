@@ -17,14 +17,16 @@
 #ifndef PETSCLINEARSOLVER_H_
 #define PETSCLINEARSOLVER_H_
 
-#include<string>
+#include <string>
 
-#include "logog/include/logog.hpp"
+#include <logog/include/logog.hpp>
+#include <petscksp.h>
 
-#include "petscksp.h"
+#include "MathLib/LinAlg/ILinearSolver.h"
 
 #include "PETScMatrix.h"
 #include "PETScVector.h"
+#include "PETScOption.h"
 
 namespace MathLib
 {
@@ -34,18 +36,11 @@ namespace MathLib
 
      All options for KSP and PC must given in the command line.
 */
-class PETScLinearSolver
+class PETScLinearSolver : public ILinearSolver
 {
     public:
 
-        /*!
-            Constructor
-            \param A       Matrix, cannot be constant.
-            \param prefix  Name used to distinguish the options in the command
-                           line for this solver. It can be the name of the PDE
-                           that owns an instance of this class.
-        */
-        PETScLinearSolver(PETScMatrix &A, const std::string &prefix="");
+        PETScLinearSolver(PETScMatrix &A, const boost::property_tree::ptree* option=nullptr);
 
         ~PETScLinearSolver()
         {
@@ -55,16 +50,28 @@ class PETScLinearSolver
             KSPDestroy(&_solver);
         }
 
+        LinAlgLibType getLinAlgLibType() const { return LinAlgLibType::PETSc; }
+
+        /**
+         * configure linear solvers
+         * @param option
+         */
+        void setOption(const boost::property_tree::ptree &option);
+
         /*!
             Solve a system of equations.
             \param b The right hand side of the equations.
             \param x The solutions to be solved.
             \return  true: converged, false: diverged.
         */
-        bool solve(const PETScVector &b, PETScVector &x);
+        void solve(MathLib::IVector &b, MathLib::IVector &x);
+
+        /// apply prescribed values to a system of linear equations
+        void imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+                const std::vector<double> &vec_knownX_x, double penalty_scaling = 1e+10);
 
         /// Get number of iterations.
-        PetscInt getNumberOfIterations() const
+        PetscInt getNIterations() const
         {
             PetscInt its = 0;
             KSPGetIterationNumber(_solver, &its);
@@ -85,6 +92,7 @@ class PETScLinearSolver
         KSP _solver; ///< Solver type.
         PC _pc;      ///< Preconditioner type.
 
+        PETScOption _option;
         double _elapsed_ctime; ///< Clock time
 };
 

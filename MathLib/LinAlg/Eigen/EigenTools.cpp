@@ -52,6 +52,55 @@ void applyKnownSolution(EigenMatrix &A_, EigenVector &b_, const std::vector<std:
     }
 }
 
+void buildCRSMatrixFromEigenMatrix(const EigenMatrix &A_, int &nonzero, int*& row_ptr, int*& col_idx, double*& data)
+{
+    auto &A = A_.getRawMatrix();
+    const size_t dimension = A.rows();
+
+    for (size_t i=0; i<A.outerSize(); ++i)
+      for (EigenMatrix::RawMatrixType::InnerIterator it(A,i); it; ++it)
+        nonzero++;
+
+    data = new double [nonzero];
+    size_t temp_cnt = 0;
+    for (size_t i=0; i<A.outerSize(); ++i)
+      for (EigenMatrix::RawMatrixType::InnerIterator it(A,i); it; ++it)
+        data[temp_cnt++] = it.value();
+
+    assert(temp_cnt==nonzero);
+    row_ptr = new int[A.rows()+1];
+    col_idx = new int[nonzero];
+    long counter_ptr = 0, counter_col_idx = 0;
+    long cnt_row = 0;
+
+    for (size_t i=0; i<A.outerSize(); ++i)
+    {
+        row_ptr[cnt_row++] = counter_ptr;         // starting point of the row
+      for (EigenMatrix::RawMatrixType::InnerIterator it(A,i); it; ++it)
+      {
+        col_idx[counter_col_idx] = it.col();
+        ++counter_ptr;
+        ++counter_col_idx;
+      }
+    }
+    row_ptr[A.rows()] = counter_ptr;
+#if 0
+    //output CRS
+    cout << "PTR:" << endl;
+    for (size_t i=0; i<A.rows()+1; i++)
+        cout << ptr[i] << ", ";
+    cout << endl;
+    cout << "ColID:" << endl;
+    for (size_t i=0; i<nonzero; i++)
+        cout << col_idx[i] << ", ";
+    cout << endl;
+    cout << "Data:" << endl;
+    for (size_t i=0; i<nonzero; i++)
+        cout << crs_data[i] << ", ";
+    cout << endl;
+#endif
+}
+
 } // MathLib
 
 

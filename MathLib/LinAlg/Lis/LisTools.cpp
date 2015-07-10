@@ -35,7 +35,7 @@ void applyKnownSolution(LisMatrix &A, LisVector &b, const std::vector<std::size_
         const std::size_t rowId = vec_knownX_id[i_bc];
         const double x = vec_knownX_x[i_bc];
         //A(k, k) = penalty
-        A.setValue(rowId, rowId, penalty);
+        A.set(rowId, rowId, penalty);
         //b(k) = x*penalty
         b.set(rowId, x*penalty);
     }

@@ -65,7 +65,7 @@ void setMatrix9x9(T_Mat &mat)
     };
     for (unsigned i = 0; i < 9; i++)
         for (unsigned j = 0; j < 9; j++)
-            mat.setValue(i, j, d_mat[i*9+j]);
+            mat.set(i, j, d_mat[i*9+j]);
 }
 
 struct Example1
@@ -140,14 +140,14 @@ void checkLinearSolverInterface(T_MATRIX &A, T_VECTOR &b, const std::string &pre
     int mrank;
     MPI_Comm_rank(PETSC_COMM_WORLD, &mrank);
     // Add entries
-    MathLib::DenseMatrix<double> loc_m(2, 2);
+    MathLib::LocalMatrix loc_m(2, 2);
     loc_m(0, 0) = 1. +  mrank;
     loc_m(0, 1) = 2. +  mrank;
     loc_m(1, 0) = 3. +  mrank;
     loc_m(1, 1) = 4. +  mrank;
 
-    std::vector<int> row_pos(2);
-    std::vector<int> col_pos(2);
+    std::vector<std::size_t> row_pos(2);
+    std::vector<std::size_t> col_pos(2);
     row_pos[0] = 2 * mrank;
     row_pos[1] = 2 * mrank + 1;
     col_pos[0] = row_pos[0];
@@ -172,7 +172,7 @@ void checkLinearSolverInterface(T_MATRIX &A, T_VECTOR &b, const std::string &pre
     A.multiply(x, b);
 
     // apply BC
-    std::vector<int> bc_id;  // Type must be int to match Petsc_Int
+    std::vector<std::size_t> bc_id;  // Type must be int to match Petsc_Int
     std::vector<double> bc_value;
 
     if(mrank == 1)
@@ -183,15 +183,16 @@ void checkLinearSolverInterface(T_MATRIX &A, T_VECTOR &b, const std::string &pre
         bc_value[0] = mrank+1;
     }
 
-    MathLib::applyKnownSolution(A, b, x, bc_id, bc_value);
+    MathLib::applyKnownSolution(A, b, bc_id, bc_value);
 
     MathLib::finalizeMatrixAssembly(A);
 
     // solve
-    T_LINEAR_SOVLER ls(A, prefix_name);
-    EXPECT_TRUE(ls.solve(b, x));
+    T_LINEAR_SOVLER ls(A); //, prefix_name);
+    ls.solve(b, x);
+    //EXPECT_TRUE(ls.solve(b, x));
     
-    EXPECT_GT(ls.getNumberOfIterations(), 0u);
+    EXPECT_GT(ls.getNIterations(), 0u);
     
     x.getGlobalVector(x1);
     ASSERT_ARRAY_NEAR(x0, x1, 6, 1e-5);        

@@ -15,28 +15,72 @@
 */
 
 #include "PETScLinearSolver.h"
+
 #include "BaseLib/RunTime.h"
+#include "PETScTools.h"
 
 namespace MathLib
 {
-PETScLinearSolver::PETScLinearSolver(PETScMatrix &A, const std::string &prefix)
-    : _A(A), _elapsed_ctime(0.)
+
+using boost::property_tree::ptree;
+
+PETScLinearSolver::PETScLinearSolver(PETScMatrix &A, const boost::property_tree::ptree* option)
+: _A(A), _elapsed_ctime(0.)
 {
     KSPCreate(PETSC_COMM_WORLD, &_solver);
-
     KSPGetPC(_solver, &_pc);
 
-    //
+    if (option)
+        setOption(*option);
+
+    const std::string prefix;
     if ( !prefix.empty() )
     {
         KSPSetOptionsPrefix(_solver, prefix.c_str());
     }
-
-    KSPSetFromOptions(_solver);  // set running time option
+    KSPSetFromOptions(_solver);
 }
 
-bool PETScLinearSolver::solve(const PETScVector &b, PETScVector &x)
+void PETScLinearSolver::setOption(const boost::property_tree::ptree &option)
 {
+    boost::optional<ptree> ptSolver = option.get_child("LinearSolver");
+     if (!ptSolver)
+         return;
+
+     boost::optional<std::string> solver_type = ptSolver->get_optional<std::string>("solver_type");
+     if (solver_type) {
+         _option.solver_type = _option.getSolverType(*solver_type);
+     }
+     boost::optional<std::string> precon_type = ptSolver->get_optional<std::string>("precon_type");
+     if (precon_type) {
+         _option.precon_type = _option.getPreconType(*precon_type);
+     }
+     boost::optional<double> error_tolerance = ptSolver->get_optional<double>("error_tolerance");
+     if (error_tolerance) {
+         _option.error_tolerance = *error_tolerance;
+     }
+     boost::optional<int> max_iteration_step = ptSolver->get_optional<int>("max_iteration_step");
+     if (max_iteration_step) {
+         _option.max_iterations = *max_iteration_step;
+     }
+
+}
+
+void PETScLinearSolver::imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+        const std::vector<double> &vec_knownX_x, double /*penalty_scaling*/)
+{
+    applyKnownSolution(static_cast<PETScMatrix&>(A), static_cast<PETScVector&>(b), vec_knownX_id, vec_knownX_x);
+}
+
+void PETScLinearSolver::solve(MathLib::IVector &b_, MathLib::IVector &x_)
+{
+    Mat &A = _A.getRawMatrix();
+    Vec &b = static_cast<PETScVector&>(b_).getData();
+    Vec &x = static_cast<PETScVector&>(x_).getData();
+
+    PetscPrintf(PETSC_COMM_WORLD, "------------------------------------------------------------------\n");
+    PetscPrintf(PETSC_COMM_WORLD, "*** PETSc solver computation\n");
+
     BaseLib::RunTime wtimer;
     wtimer.start();
     	
@@ -47,59 +91,52 @@ bool PETScLinearSolver::solve(const PETScVector &b, PETScVector &x)
 #endif
 
 #if (PETSC_VERSION_NUMBER > 3040)
-    KSPSetOperators(_solver, _A.getRawMatrix(), _A.getRawMatrix());
+    KSPSetOperators(_solver, A, A);
 #else
-    KSPSetOperators(_solver, _A.getRawMatrix(), _A.getRawMatrix(), DIFFERENT_NONZERO_PATTERN);
+    KSPSetOperators(_solver, A, A, DIFFERENT_NONZERO_PATTERN);
 #endif
+    KSPSetType(_solver, _option.solver_type.c_str());
+    PCSetType(_pc, _option.precon_type.c_str());
+    KSPSetTolerances(_solver, _option.error_tolerance, PETSC_DEFAULT, PETSC_DEFAULT, _option.max_iterations);
+    KSPSetFromOptions(_solver);
 
-    KSPSolve(_solver, b.getData(), x.getData());
+    KSPSolve(_solver, b, x);
 
+//    _A.write("A.txt");
+//    b_.write("b.txt");
+//    x_.write("x.txt");
+
+
+    //-------------------------------------------------------------------------
+    // check result
+    PetscPrintf(PETSC_COMM_WORLD, "solver    : %s\n", _option.solver_type.c_str());
+    PetscPrintf(PETSC_COMM_WORLD, "precon    : %s\n", _option.precon_type.c_str());
     KSPConvergedReason reason;
-    KSPGetConvergedReason(_solver, &reason);
+    KSPGetConvergedReason(_solver,&reason); //CHKERRQ(ierr);
 
-    bool converged = true;
-    if(reason > 0)
+    if (reason == KSP_DIVERGED_INDEFINITE_PC)
     {
-        const char *ksp_type;
-        const char *pc_type;
-        KSPGetType(_solver, &ksp_type);
-        PCGetType(_pc, &pc_type);
-
-        PetscPrintf(PETSC_COMM_WORLD,"\n================================================");
-        PetscPrintf(PETSC_COMM_WORLD, "\nLinear solver %s with %s preconditioner",
-                    ksp_type, pc_type);
-
-        PetscInt its;
-        KSPGetIterationNumber(_solver, &its);
-        PetscPrintf(PETSC_COMM_WORLD,"\nConvergence in %d iterations.\n", its);
-        PetscPrintf(PETSC_COMM_WORLD,"\n================================================\n");
+        PetscPrintf(PETSC_COMM_WORLD, "status    : Divergence because of indefinite preconditioner. Run the executable again but with -pc_factor_shift_positive_definite option.");
     }
     else if(reason == KSP_DIVERGED_ITS)
     {
-        PetscPrintf(PETSC_COMM_WORLD, "\nWarning: maximum number of iterations reached.\n");
+        PetscPrintf(PETSC_COMM_WORLD, "status    : maximum number of iterations reached\n");
+    }
+    else if (reason < 0)
+    {
+        PetscPrintf(PETSC_COMM_WORLD, "status    : Other kind of divergence (reason=%d)\n", reason);
     }
     else
     {
-        converged = false;
-        if(reason == KSP_DIVERGED_INDEFINITE_PC)
-        {
-            PetscPrintf(PETSC_COMM_WORLD, "\nDivergence because of indefinite preconditioner,");
-            PetscPrintf(PETSC_COMM_WORLD, "\nTry to run again with -pc_factor_shift_positive_definite option.\n");
-        }
-        else if(reason == KSP_DIVERGED_BREAKDOWN_BICG)
-        {
-            PetscPrintf(PETSC_COMM_WORLD, "\nKSPBICG method was detected so the method could not continue to enlarge the Krylov space.");
-            PetscPrintf(PETSC_COMM_WORLD, "\nTry to run again with another solver.\n");
-        }
-        else if(reason == KSP_DIVERGED_NONSYMMETRIC)
-        {
-            PetscPrintf(PETSC_COMM_WORLD, "\nMatrix or preconditioner is unsymmetric but KSP requires symmetric.\n");
-        }
-        else
-        {
-            PetscPrintf(PETSC_COMM_WORLD, "\nDivergence detected, use command option -ksp_monitor or -log_summary to check the details.\n");
-        }
+        PetscPrintf(PETSC_COMM_WORLD, "status    : converged\n");
+        PetscInt its;
+        double res;
+        KSPGetIterationNumber(_solver,&its); //CHKERRQ(ierr);
+        KSPGetResidualNorm(_solver, &res);
+        PetscPrintf(PETSC_COMM_WORLD, "iteration : %d/%d\n", (int)its, _option.max_iterations);
+        PetscPrintf(PETSC_COMM_WORLD, "residual  : %e\n", res);
     }
+    PetscPrintf(PETSC_COMM_WORLD, "------------------------------------------------------------------\n");
 
 #ifdef TEST_MEM_PETSC
     PetscMemoryGetCurrentUsage(&mem2);
@@ -108,7 +145,7 @@ bool PETScLinearSolver::solve(const PETScVector &b, PETScVector &x)
 
     _elapsed_ctime += wtimer.elapsed();
 
-    return converged;
+    //return converged;
 }
 
 } //end of namespace

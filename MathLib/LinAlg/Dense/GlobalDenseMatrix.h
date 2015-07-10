@@ -58,7 +58,7 @@ public:
 	 * @param val The value that shoud be set.
 	 * @return False if row index or column index are to large, else true.
 	 */
-	virtual bool setValue(IDX_TYPE row, IDX_TYPE col, FP_TYPE val);
+	virtual bool set(IDX_TYPE row, IDX_TYPE col, FP_TYPE val);
 
 	/**
 	 * Method adds a value to the entry at position (row,col).

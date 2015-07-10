@@ -132,12 +132,21 @@ void EigenLinearSolver::setOption(const ptree &option)
     }
 }
 
-void EigenLinearSolver::solve(EigenVector &b, EigenVector &x)
+void EigenLinearSolver::solve(IVector &b_, IVector &x_)
 {
+    auto &b = static_cast<EigenVector&>(b_);
+    auto &x = static_cast<EigenVector&>(x_);
+
     INFO("------------------------------------------------------------------");
     INFO("*** Eigen solver computation");
     _solver->solve(b.getRawVector(), x.getRawVector(), _option);
     INFO("------------------------------------------------------------------");
+}
+
+void EigenLinearSolver::imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+		const std::vector<double> &vec_knownX_x, double penalty_scaling)
+{
+	applyKnownSolution(static_cast<EigenMatrix&>(A), static_cast<EigenVector&>(b), vec_knownX_id, vec_knownX_x, penalty_scaling);
 }
 
 } //MathLib

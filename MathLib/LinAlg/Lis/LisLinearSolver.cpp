@@ -22,6 +22,7 @@
 #include "logog/include/logog.hpp"
 
 #include "LisCheck.h"
+#include "LisTools.h"
 
 namespace MathLib
 {
@@ -63,8 +64,10 @@ void LisLinearSolver::setOption(const ptree &option)
     }
 }
 
-void LisLinearSolver::solve(LisVector &b, LisVector &x)
+void LisLinearSolver::solve(MathLib::IVector &bb, MathLib::IVector &xx)
 {
+    LisVector &b = static_cast<LisVector&>(bb);
+    LisVector &x = static_cast<LisVector&>(xx);
     finalizeMatrixAssembly(_A);
 
     INFO("------------------------------------------------------------------");
@@ -128,6 +131,12 @@ void LisLinearSolver::solve(LisVector &b, LisVector &x)
     ierr = lis_solver_destroy(solver);
     checkLisError(ierr);
     INFO("------------------------------------------------------------------");
+}
+
+void LisLinearSolver::imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+		const std::vector<double> &vec_knownX_x, double penalty_scaling)
+{
+	applyKnownSolution(static_cast<LisMatrix&>(A), static_cast<LisVector&>(b), vec_knownX_id, vec_knownX_x, penalty_scaling);
 }
 
 } //MathLib

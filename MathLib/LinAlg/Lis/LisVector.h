@@ -20,13 +20,15 @@
 
 #include <lis.h>
 
+#include "MathLib/LinAlg/IVector.h"
+
 namespace MathLib
 {
 
 /**
  * \brief Lis vector wrapper class
  */
-class LisVector
+class LisVector : public IVector
 {
 public:
 	/**
@@ -50,6 +52,11 @@ public:
      */
     virtual ~LisVector();
 
+    virtual LinAlgLibType getLinAlgLibType() const {return LinAlgLibType::Lis;}
+
+    /// duplicate this vector
+    IVector* duplicate() const;
+
     /// return a vector length
     std::size_t size() const;
 
@@ -60,7 +67,10 @@ public:
     std::size_t getRangeEnd() const { return this->size(); }
 
     /// set all values in this vector
-    LisVector& operator= (double v);
+    IVector& operator= (double v);
+
+    /// set all values in this vector
+    IVector& operator*= (double v);
 
     /// access entry
     double operator[] (std::size_t rowId) const { return get(rowId); }
@@ -92,13 +102,13 @@ public:
     LIS_VECTOR& getRawVector() {return _vec; }
 
     /// vector operation: set data
-    LisVector& operator= (const LisVector &src);
+    IVector& operator= (const IVector &src);
 
     /// vector operation: add
-    void operator+= (const LisVector& v);
+    void operator+= (const IVector& v);
 
     /// vector operation: subtract
-    void operator-= (const LisVector& v);
+    void operator-= (const IVector& v);
 
     ///
     template<class T_SUBVEC>
@@ -108,9 +118,45 @@ public:
             this->add(pos[i], sub_vec[i]);
         }
     }
+
+    double norm1() const
+    {
+    	double n = .0;
+    	lis_vector_nrm1(_vec, &n);
+    	return n;
+    }
+    double norm2() const
+    {
+    	double n = .0;
+    	lis_vector_nrm2(_vec, &n);
+    	return n;
+    }
+    double norm_max() const
+    {
+    	double n = .0;
+    	lis_vector_nrmi(_vec, &n);
+    	return n;
+    }
+
 private:
     LIS_VECTOR _vec;
 };
+
+
+inline double norm_1(const LisVector &v)
+{
+	return v.norm1();
+}
+
+inline double norm_2(const LisVector &v)
+{
+	return v.norm2();
+}
+
+inline double norm_max(const LisVector &v)
+{
+	return v.norm_max();
+}
 
 } // MathLib
 

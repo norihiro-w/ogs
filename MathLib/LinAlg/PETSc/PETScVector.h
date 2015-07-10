@@ -21,9 +21,9 @@
 #include <vector>
 
 #include <petscvec.h>
-#include "MathLib/LinAlg/VectorNorms.h"
 
-typedef Vec PETSc_Vec;
+#include "MathLib/LinAlg/VectorNorms.h"
+#include "MathLib/LinAlg/IVector.h"
 
 namespace MathLib
 {
@@ -32,8 +32,10 @@ namespace MathLib
 
    \brief Wrapper class for PETSc vector
 */
-class PETScVector
+class PETScVector : public IVector
 {
+    typedef Vec PETSc_Vec;
+
     public:
 
         /*!
@@ -52,9 +54,22 @@ class PETScVector
         */
         PETScVector(const PETScVector &existing_vec, const bool deep_copy = true);
 
+        explicit PETScVector(Vec &vec);
+
         ~PETScVector()
         {
-            VecDestroy(&_v);
+            if (!_external_data)
+                VecDestroy(&_v);
+        }
+
+        LinAlgLibType getLinAlgLibType() const
+        {
+            return LinAlgLibType::PETSc;
+        }
+
+        IVector* duplicate() const
+        {
+            return new PETScVector(*this);
         }
 
         /// Perform MPI collection of assembled entries in buffer
@@ -65,25 +80,25 @@ class PETScVector
         }
 
         /// Get the global size of the vector
-        PetscInt size() const
+        std::size_t size() const
         {
             return _size;
         }
 
         /// Get the number of entries in the same rank
-        PetscInt getLocalSize() const
+        std::size_t getLocalSize() const
         {
             return _size_loc;
         }
 
         /// Get the start index of the local vector
-        PetscInt getRangeBegin() const
+        std::size_t getRangeBegin() const
         {
             return _start_rank;
         }
 
         /// Get the end index of the local vector
-        PetscInt getRangeEnd() const
+        std::size_t getRangeEnd() const
         {
             return _end_rank;
         }
@@ -100,7 +115,7 @@ class PETScVector
            \param value Entry value
 
         */
-        void set(const PetscInt i, const PetscScalar value)
+        void set(const std::size_t i, const PetscScalar value)
         {
             VecSetValue(_v, i, value, INSERT_VALUES);
         }
@@ -110,7 +125,7 @@ class PETScVector
            \param i     Number of the entry
            \param value Value.
         */
-        void add(const PetscInt i, const PetscScalar value)
+        void add(const std::size_t i, const PetscScalar value)
         {
             VecSetValue(_v, i, value,  ADD_VALUES);
         }
@@ -121,10 +136,10 @@ class PETScVector
                           Note: size_t cannot be the type of e_idxs template argument
            \param sub_vec Entries to be added
         */
-        template<class T_SUBVEC> void add(const std::vector<PetscInt> &e_idxs,
+        template<class T_SUBVEC> void add(const std::vector<std::size_t> &e_idxs,
                                           const T_SUBVEC &sub_vec)
         {
-            VecSetValues(_v, e_idxs.size(), &e_idxs[0], &sub_vec[0], ADD_VALUES);
+            VecSetValues(_v, e_idxs.size(), (PetscInt*)&e_idxs[0], &sub_vec[0], ADD_VALUES);
         }
 
         /*!
@@ -133,10 +148,10 @@ class PETScVector
                           Note: size_t cannot be the type of e_idxs template argument
            \param sub_vec Entries to be added
         */
-        template<class T_SUBVEC> void set(const std::vector<PetscInt> &e_idxs,
+        template<class T_SUBVEC> void set(const std::vector<std::size_t> &e_idxs,
                                           const T_SUBVEC &sub_vec)
         {
-            VecSetValues(_v, e_idxs.size(), &e_idxs[0], &sub_vec[0], INSERT_VALUES);
+            VecSetValues(_v, e_idxs.size(), (PetscInt*)&e_idxs[0], &sub_vec[0], INSERT_VALUES);
         }
 
         /*!
@@ -145,7 +160,7 @@ class PETScVector
                           Note: size_t cannot be the type of e_idxs template argument
            \param sub_vec Values of entries
         */
-        template<class T_SUBVEC> void get(const std::vector<PetscInt> &e_idxs,
+        template<class T_SUBVEC> void get(const std::vector<std::size_t> &e_idxs,
                                           T_SUBVEC &sub_vec)
         {
             VecGetValues(_v, e_idxs.size(), &e_idxs[0], &sub_vec[0]);
@@ -169,12 +184,16 @@ class PETScVector
         */
         void getGlobalVector(PetscScalar u[]);
 
+        /// access entry
+        double operator[] (std::size_t rowId) const { return get(rowId); }
+
         /// Get an entry value. This is an expensive operation,
         /// and it only get local value. Use it for only test purpose
-        PetscScalar get(const PetscInt idx) const
+        PetscScalar get(std::size_t idx) const
         {
+            PetscInt idx_(idx);
             PetscScalar x;
-            VecGetValues(_v, 1, &idx, &x);
+            VecGetValues(_v, 1, &idx_, &x);
             return x;
         }
 
@@ -184,27 +203,45 @@ class PETScVector
             return _v;
         }
 
+        /// Get PETsc vector. Use it only for test purpose
+        PETSc_Vec &getData()
+        {
+            return _v;
+        }
+
         /// Initialize the vector with a constant value
-        void operator = (const PetscScalar val)
+        IVector& operator = (const PetscScalar val)
         {
             VecSet(_v, val);
+            return *this;
         }
         /// Overloaded operator: assign
-        void operator = (const PETScVector &v_in)
+        IVector& operator = (const IVector &v_in_)
         {
-            VecCopy(_v, v_in._v);
+            const PETScVector &v_in(static_cast<const PETScVector &>(v_in_));
+            VecCopy(v_in._v, _v);
+            return *this;
         }
 
         ///  Overloaded operator: add
-        void operator += (const PETScVector& v_in)
+        void operator += (const IVector& v_in_)
         {
+            const PETScVector &v_in(static_cast<const PETScVector &>(v_in_));
             VecAXPY(_v, 1.0, v_in._v);
         }
 
         ///  Overloaded operator: subtract
-        void operator -= (const PETScVector& v_in)
+        void operator -= (const IVector& v_in_)
         {
+            const PETScVector &v_in(static_cast<const PETScVector &>(v_in_));
             VecAXPY(_v, -1.0, v_in._v);
+        }
+
+        /// set all values in this vector
+        IVector& operator*= (double v)
+        {
+            VecScale(_v, v);
+            return *this;
         }
 
         /*! View the global vector for test purpose. Do not use it for output a big vector.
@@ -233,6 +270,30 @@ class PETScVector
         void viewer(const std::string &file_name,
                     const PetscViewerFormat vw_format = PETSC_VIEWER_ASCII_MATLAB ) const;
 
+        /// printout this equation for debugging
+        void write (const std::string &filename) const { viewer(filename); }
+
+        double norm1() const
+        {
+            double norm = .0;
+            VecNorm(_v, NORM_1, &norm);
+            return norm;
+        }
+
+        double norm2() const
+        {
+            double norm = .0;
+            VecNorm(_v, NORM_2, &norm);
+            return norm;
+        }
+
+        double norm_max() const
+        {
+            double norm = .0;
+            VecNorm(_v, NORM_INFINITY, &norm);
+            return norm;
+        }
+
     private:
         PETSc_Vec _v;
 
@@ -245,6 +306,8 @@ class PETScVector
         PetscInt _size;
         /// Size of local entries
         PetscInt _size_loc;
+
+        bool _external_data;
 
         /*!
               \brief  Collect local vectors

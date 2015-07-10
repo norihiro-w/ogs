@@ -22,6 +22,9 @@
 
 #include "MathLib/LinAlg/RowColumnIndices.h"
 #include "MathLib/LinAlg/SetMatrixSparsity.h"
+#include "MathLib/LinAlg/IMatrix.h"
+#include "MathLib/LinAlg/IVector.h"
+
 
 #include "LisOption.h"
 #include "LisCheck.h"
@@ -42,7 +45,7 @@ struct SetMatrixSparsity<LisMatrix, SPARSITY_PATTERN>;
  * LisMatrix only supports square matrices, i.e. the number of
  * rows have to be equal to the number of columns.
  */
-class LisMatrix
+class LisMatrix : public IMatrix
 {
 public:
     /**
@@ -69,6 +72,8 @@ public:
      */
     virtual ~LisMatrix();
 
+    virtual LinAlgLibType getLinAlgLibType() const {return LinAlgLibType::Lis;}
+
     /// return the number of rows
     std::size_t getNRows() const { return _n_rows; }
 
@@ -85,7 +90,7 @@ public:
     void setZero();
 
     /// set entry
-    int setValue(std::size_t rowId, std::size_t colId, double v);
+    int set(std::size_t rowId, std::size_t colId, double v);
 
     /// add value
     int add(std::size_t rowId, std::size_t colId, double v);
@@ -100,7 +105,7 @@ public:
     LIS_MATRIX& getRawMatrix() { return _AA; }
 
     /// y = mat * x
-    void multiply(const LisVector &x, LisVector &y) const;
+    void multiply(const IVector &x, IVector &y) const;
 
     /// Add sub-matrix at positions \c row_pos and same column positions as the
     /// given row positions.
@@ -132,6 +137,15 @@ public:
 
     /// return if this matrix is already assembled or not
     bool isAssembled() const { return _is_assembled; }
+
+    /// assemble the matrix
+    void assemble()
+    {
+        finalizeMatrixAssembly(*this);
+    }
+
+    /// zeros all entries of a set of rows of a matrix (not supported in LisMatrix)
+    void zeroRows(const std::vector<std::size_t> &/*vec_knownX_id*/) {}
 
 private:
     std::size_t const _n_rows;

@@ -45,7 +45,7 @@ GlobalDenseMatrix<FP_TYPE, IDX_TYPE>::setZero()
 
 template<typename FP_TYPE, typename IDX_TYPE>
 bool
-GlobalDenseMatrix<FP_TYPE, IDX_TYPE>::setValue(IDX_TYPE row, IDX_TYPE col, FP_TYPE val)
+GlobalDenseMatrix<FP_TYPE, IDX_TYPE>::set(IDX_TYPE row, IDX_TYPE col, FP_TYPE val)
 {
 	if (row >= this->_n_rows || col >= this->_n_cols)
 		return false;

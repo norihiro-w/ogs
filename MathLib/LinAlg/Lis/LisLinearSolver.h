@@ -17,9 +17,9 @@
 
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
+#include <lis.h>
 
-#include "lis.h"
-
+#include "MathLib/LinAlg/ILinearSolver.h"
 #include "LisOption.h"
 #include "LisVector.h"
 #include "LisMatrix.h"
@@ -31,7 +31,7 @@ namespace MathLib
  * \brief Linear solver using Lis (http://www.ssisc.org/lis/)
  *
  */
-class LisLinearSolver
+class LisLinearSolver :public ILinearSolver
 {
 public:
     /**
@@ -44,6 +44,8 @@ public:
     LisLinearSolver(LisMatrix &A, boost::property_tree::ptree const*const option = nullptr);
 
     virtual ~LisLinearSolver() {}
+
+    LinAlgLibType getLinAlgLibType() const {return LinAlgLibType::Lis;}
 
     /**
      * configure linear solvers
@@ -69,8 +71,11 @@ public:
      * @param b     RHS vector
      * @param x     Solution vector
      */
-    void solve(LisVector &b, LisVector &x);
+    void solve(MathLib::IVector &b, MathLib::IVector &x);
 
+    /// apply prescribed values to a system of linear equations
+    void imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+    		const std::vector<double> &vec_knownX_x, double penalty_scaling = 1e+10);
 
 private:
     LisMatrix& _A;

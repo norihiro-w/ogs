@@ -34,9 +34,9 @@ namespace MathLib
    \param penalty_scaling value for scaling some matrix and right hand side
         entries to enforce some conditions
 */
-void applyKnownSolution(PETScMatrix &A, PETScVector &b, PETScVector &x,
-                        const std::vector<PetscInt> &vec_knownX_id,
-                        const std::vector<PetscScalar> &vec_knownX_x);
+void applyKnownSolution(PETScMatrix &A, PETScVector &b,
+                        const std::vector<std::size_t> &vec_knownX_id,
+                        const std::vector<double> &vec_knownX_x);
 } // end of namespace MathLib
 
 #endif //end  of PETSCTOOLS_H_

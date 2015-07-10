@@ -24,6 +24,7 @@
 namespace MathLib
 {
 PETScVector::PETScVector(const PetscInt vec_size, const bool is_global_size)
+: _external_data(false)
 {
     if( is_global_size )
     {
@@ -42,9 +43,12 @@ PETScVector::PETScVector(const PetscInt vec_size, const bool is_global_size)
 
     VecGetLocalSize(_v, &_size_loc);
     VecGetSize(_v, &_size);
+
+    assert(sizeof(PetscInt) == sizeof(std::size_t)); // to cast size_t* to PetscInt*
 }
 
 PETScVector::PETScVector(const PETScVector &existing_vec, const bool deep_copy)
+: _external_data(false)
 {
     VecDuplicate(existing_vec._v, &_v);
 
@@ -57,6 +61,15 @@ PETScVector::PETScVector(const PETScVector &existing_vec, const bool deep_copy)
     {
         VecCopy(existing_vec._v, _v);
     }
+}
+
+
+PETScVector::PETScVector(Vec &vec)
+: _v(vec), _external_data(true)
+{
+    VecGetOwnershipRange(_v, &_start_rank,&_end_rank);
+    VecGetLocalSize(_v, &_size_loc);
+    VecGetSize(_v, &_size);
 }
 
 void PETScVector::gatherLocalVectors( PetscScalar local_array[],

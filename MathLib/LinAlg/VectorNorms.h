@@ -23,6 +23,7 @@
 #include "MathLib/MathTools.h"
 
 #include "LinAlgEnums.h"
+#include "IVector.h"
 
 namespace MathLib
 {
@@ -104,6 +105,21 @@ inline double norm_2(const double &v) { return norm_1(v); }
 /// \param  v   a vector object
 template<>
 inline double norm_max(const double &v) { return norm_1(v); }
+
+/// return absolute value
+/// \param  v   value
+template<>
+inline double norm_1(const MathLib::IVector &v) { return v.norm1(); }
+
+/// return absolute value
+/// \param  v   a vector object
+template<>
+inline double norm_2(const MathLib::IVector &v) { return v.norm2(); }
+
+/// return absolute value
+/// \param  v   a vector object
+template<>
+inline double norm_max(const MathLib::IVector &v) { return v.norm_max(); }
 
 /**
  * return norm

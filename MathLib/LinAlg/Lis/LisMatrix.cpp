@@ -1,9 +1,4 @@
 /**
- * \file
- * \author Norihiro Watanabe
- * \date   2013-04-16
- * \brief  Implementation of the LisMatrix class.
- *
  * \copyright
  * Copyright (c) 2012-2015, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
@@ -81,7 +76,7 @@ void LisMatrix::setZero()
     _is_assembled = false;
 }
 
-int LisMatrix::setValue(std::size_t rowId, std::size_t colId, double v)
+int LisMatrix::set(std::size_t rowId, std::size_t colId, double v)
 {
     lis_matrix_set_value(LIS_INS_VALUE, rowId, colId, v, _AA);
     if (rowId==colId)
@@ -111,7 +106,7 @@ void LisMatrix::write(const std::string &filename) const
 
 double LisMatrix::getMaxDiagCoeff()
 {
-    double abs_max_entry;
+    double abs_max_entry = .0;
     int ierr = lis_vector_get_value(_diag, 0, &abs_max_entry);
     checkLisError(ierr);
     abs_max_entry = std::abs(abs_max_entry);
@@ -127,14 +122,14 @@ double LisMatrix::getMaxDiagCoeff()
     return abs_max_entry;
 }
 
-void LisMatrix::multiply(const LisVector &x, LisVector &y) const
+void LisMatrix::multiply(const IVector &x, IVector &y) const
 {
     if (!_is_assembled)
     {
         ERR("LisMatrix::multiply(): matrix not assembled.");
         std::abort();
     }
-    int ierr = lis_matvec(_AA, const_cast<LisVector*>(&x)->getRawVector(), y.getRawVector());
+    int ierr = lis_matvec(_AA, static_cast<LisVector&>(const_cast<IVector&>(x)).getRawVector(), static_cast<LisVector&>(y).getRawVector());
     checkLisError(ierr);
 }
 

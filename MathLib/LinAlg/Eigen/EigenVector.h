@@ -18,11 +18,13 @@
 
 #include <Eigen/Eigen>
 
+#include "MathLib/LinAlg/IVector.h"
+
 namespace MathLib
 {
 
 /// Global vector based on Eigen vector
-class EigenVector final
+class EigenVector final : public IVector
 {
 public:
     using RawVectorType = Eigen::VectorXd;
@@ -34,6 +36,19 @@ public:
     /// copy constructor
     EigenVector(EigenVector const &src) : _vec(src._vec) {}
 
+    /**
+     *
+     */
+    virtual ~EigenVector() {}
+
+    virtual LinAlgLibType getLinAlgLibType() const
+    {
+        return LinAlgLibType::Eigen;
+    }
+
+    /// duplicate this vector
+    IVector* duplicate() const { return new EigenVector(*this); }
+
     /// return a vector length
     std::size_t size() const { return _vec.size(); }
 
@@ -44,10 +59,10 @@ public:
     std::size_t getRangeEnd() const { return this->size(); }
 
     /// set all values in this vector
-    EigenVector& operator= (double v) { _vec.setConstant(v); return *this; }
+    IVector& operator= (double v) { _vec.setConstant(v); return *this; }
 
     /// set all values in this vector
-    EigenVector& operator*= (double v) { _vec *= v; return *this; }
+    IVector& operator*= (double v) { _vec *= v; return *this; }
 
     /// access entry
     double operator[] (std::size_t rowId) const { return get(rowId); }
@@ -70,19 +85,8 @@ public:
         _vec[rowId] += v;
     }
 
-    /// add entries
-    template<class T_SUBVEC>
-    void add(const std::vector<std::size_t> &pos, const T_SUBVEC &sub_vec)
-    {
-        for (std::size_t i=0; i<pos.size(); ++i) {
-            this->add(pos[i], sub_vec[i]);
-        }
-    }
-
-#ifndef NDEBUG
     /// printout this equation for debugging
     void write (const std::string &filename) const { std::ofstream os(filename); os << _vec; }
-#endif
 
     /// return a raw Eigen vector object
     RawVectorType& getRawVector() {return _vec; }
@@ -91,17 +95,55 @@ public:
     const RawVectorType& getRawVector() const {return _vec; }
 
     /// vector operation: set data
-    EigenVector& operator= (const EigenVector &src) { _vec = static_cast<const EigenVector&>(src)._vec; return *this; }
+    IVector& operator= (const IVector &src) { _vec = static_cast<const EigenVector&>(src)._vec; return *this; }
 
     /// vector operation: add
-    void operator+= (const EigenVector& v) { _vec += static_cast<const EigenVector&>(v)._vec; }
+    void operator+= (const IVector& v) { _vec += static_cast<const EigenVector&>(v)._vec; }
 
     /// vector operation: subtract
-    void operator-= (const EigenVector& v) { _vec -= static_cast<const EigenVector&>(v)._vec; }
+    void operator-= (const IVector& v) { _vec -= static_cast<const EigenVector&>(v)._vec; }
+
+    ///
+    template<class T_SUBVEC>
+    void add(const std::vector<std::size_t> &pos, const T_SUBVEC &sub_vec)
+    {
+        for (std::size_t i=0; i<pos.size(); ++i) {
+            this->add(pos[i], sub_vec[i]);
+        }
+    }
+
+    double norm1() const
+    {
+        return _vec.lpNorm<1>();
+    }
+    double norm2() const
+    {
+        return _vec.lpNorm<2>();
+    }
+    double norm_max() const
+    {
+        return _vec.lpNorm<Eigen::Infinity>();
+    }
 
 private:
     RawVectorType _vec;
 };
+
+
+inline double norm_1(const EigenVector &v)
+{
+	return v.norm1();
+}
+
+inline double norm_2(const EigenVector &v)
+{
+	return v.norm2();
+}
+
+inline double norm_max(const EigenVector &v)
+{
+	return v.norm_max();
+}
 
 } // MathLib
 

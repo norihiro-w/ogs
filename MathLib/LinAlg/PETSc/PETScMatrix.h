@@ -18,12 +18,12 @@
 #include <string>
 #include <vector>
 
+#include "MathLib/LinAlg/IMatrix.h"
+#include "MathLib/LinAlg/RowColumnIndices.h"
+
 #include "PETScMatrixOption.h"
 #include "PETScVector.h"
 
-#include "MathLib/LinAlg/RowColumnIndices.h"
-
-typedef Mat PETSc_Mat;
 
 namespace MathLib
 {
@@ -31,8 +31,10 @@ namespace MathLib
 /*!
    \brief Wrapper class for PETSc matrix routines for matrix.
 */
-class PETScMatrix
+class PETScMatrix : public IMatrix
 {
+    typedef Mat PETSc_Mat;
+
     public:
         /*!
           \brief        Constructor for a square matrix partitioning with more options
@@ -50,55 +52,60 @@ class PETScMatrix
         PETScMatrix(const PetscInt nrows, const PetscInt ncols,
                     const PETScMatrixOption &mat_op = PETScMatrixOption() );
 
+        explicit PETScMatrix(Mat &mat);
+
         ~PETScMatrix()
         {
-            MatDestroy(&_A);
+            if (!_external_data)
+                MatDestroy(&_A);
         }
+
+        LinAlgLibType getLinAlgLibType() const { return LinAlgLibType::PETSc; }
 
         /*!
            \brief          Perform MPI collection of assembled entries in buffer
            \param asm_type Assmebly type, either MAT_FLUSH_ASSEMBLY
                            or MAT_FINAL_ASSEMBLY
         */
-        void finalizeAssembly(const MatAssemblyType asm_type = MAT_FINAL_ASSEMBLY)
+        void finalizeAssembly(const MatAssemblyType asm_type = MAT_FINAL_ASSEMBLY) const
         {
             MatAssemblyBegin(_A, asm_type);
             MatAssemblyEnd(_A, asm_type);
         }
 
         /// Get the number of rows.
-        PetscInt getNRows() const
+        std::size_t getNRows() const
         {
             return _nrows;
         }
 
         /// Get the number of columns.
-        PetscInt getNCols() const
+        std::size_t getNCols() const
         {
             return _ncols;
         }
 
 
         /// Get the number of local rows.
-        PetscInt getNLocalRows() const
+        std::size_t getNLocalRows() const
         {
             return _n_loc_rows;
         }
 
         /// Get the number of local columns.
-        PetscInt getNLocalColumns() const
+        std::size_t getNLocalColumns() const
         {
             return _n_loc_cols;
         }
 
         /// Get the start global index of the rows of the same rank.
-        PetscInt getRangeBegin() const
+        std::size_t getRangeBegin() const
         {
             return _start_rank;
         }
 
         /// Get the end global index of the rows in the same rank.
-        PetscInt getRangeEnd() const
+        std::size_t getRangeEnd() const
         {
             return _end_rank;
         }
@@ -124,7 +131,7 @@ class PETScMatrix
                   This function must be called by all ranks.
            \param row_pos The row indicies of the specified rows.
         */
-        void setRowsColumnsZero(std::vector<PetscInt> const& row_pos);
+        void setRowsColumnsZero(std::vector<std::size_t> const& row_pos);
 
         /*
            \brief       Perform operation \f$ y = A x \f$
@@ -132,9 +139,9 @@ class PETScMatrix
            \param vec_r The result vector, e.g. \f$ y \f$
             Both of the two arguments must be created prior to be used.
         */
-        void multiply(const PETScVector &vec, PETScVector &vec_r)
+        void multiply(const MathLib::IVector &vec, MathLib::IVector &vec_r) const
         {
-            MatMult(_A, vec.getData(), vec_r.getData() );
+            MatMult(_A, dynamic_cast<const PETScVector&>(vec).getData(), dynamic_cast<const PETScVector&>(vec_r).getData() );
         }
 
         /*!
@@ -143,9 +150,9 @@ class PETScMatrix
            \param j     The column index.
            \param value The entry value.
         */
-        void set(const PetscInt i, const PetscInt j, const PetscScalar value)
+        int set(const std::size_t i, const std::size_t j, const double value)
         {
-            MatSetValue(_A, i, j, value, INSERT_VALUES);
+            return MatSetValue(_A, i, j, value, INSERT_VALUES);
         }
 
         /*!
@@ -154,9 +161,17 @@ class PETScMatrix
            \param j     The column index.
            \param value The entry value.
         */
-        void add(const PetscInt i, const PetscInt j, const PetscScalar value)
+        int add(std::size_t i, std::size_t j, const double value)
         {
-            MatSetValue(_A, i, j, value, ADD_VALUES);
+            return MatSetValue(_A, i, j, value, ADD_VALUES);
+        }
+
+        /// Add sub-matrix at positions given by \c indices.
+        template<class T_DENSE_MATRIX>
+        void add(RowColumnIndices<std::size_t> const& indices,
+                 const T_DENSE_MATRIX &sub_matrix)
+        {
+            this->add(indices.rows, indices.columns, sub_matrix);
         }
 
         /*!
@@ -166,8 +181,8 @@ class PETScMatrix
           \param sub_mat A dense matrix to be added on.
         */
         template <class T_DENSE_MATRIX>
-        void add(std::vector<PetscInt> const& row_pos,
-                 std::vector<PetscInt> const& col_pos,
+        void add(std::vector<std::size_t> const& row_pos,
+                 std::vector<std::size_t> const& col_pos,
                  const T_DENSE_MATRIX &sub_mat );
 
         /*! View the global vector for test purpose. Do not use it for output a big vector.
@@ -194,11 +209,34 @@ class PETScMatrix
              PETSC_VIEWER_DRAW_CONTOUR       Views the vector with a contour plot
         */
         void viewer(const std::string &file_name,
-                    const PetscViewerFormat vw_format = PETSC_VIEWER_ASCII_MATLAB );
+                    const PetscViewerFormat vw_format = PETSC_VIEWER_ASCII_MATLAB ) const;
+
+        /// printout this equation for debugging
+        void write(const std::string &filename) const { viewer(filename); }
+
+        /// get a maximum value in diagonal entries
+        double getMaxDiagCoeff() { return 0; }
+
+        /// return if this matrix is already assembled or not
+        bool isAssembled() const { return true; }
+
+        /// assemble the matrix
+        void assemble() { finalizeAssembly(); }
+
+        void zeroRows(const std::vector<std::size_t> &vec_knownX_id)
+        {
+            PetscScalar one = 1.0;
+            // Each process indicates only rows it owns that are to be zeroed
+            // MatSetOption(A, MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE);
+            if (!vec_knownX_id.empty())
+              MatZeroRows (_A, vec_knownX_id.size(), (PetscInt*)&vec_knownX_id[0], one, PETSC_NULL, PETSC_NULL);
+            else
+              MatZeroRows(_A, 0, PETSC_NULL, one, PETSC_NULL, PETSC_NULL);
+        }
 
     private:
         /// PETSc matrix
-        PETSc_Mat _A;
+        mutable PETSc_Mat _A;
 
         /// Number of the global rows
         PetscInt _nrows;
@@ -217,6 +255,9 @@ class PETScMatrix
 
         /// Ending index in a rank
         PetscInt _end_rank;
+
+        /// is externally given data
+        bool _external_data;
 
         /*!
           \brief Create the matrix, configure memory allocation and set the related member data.
@@ -237,14 +278,14 @@ class PETScMatrix
     \param sub_mat  A dense sub-matrix to be added.
 */
 template<class T_DENSE_MATRIX>
-void PETScMatrix::add(std::vector<PetscInt> const& row_pos,
-                      std::vector<PetscInt> const& col_pos,
+void PETScMatrix::add(std::vector<std::size_t> const& row_pos,
+                      std::vector<std::size_t> const& col_pos,
                       const T_DENSE_MATRIX &sub_mat)
 {
     const PetscInt nrows = static_cast<PetscInt> (row_pos.size());
     const PetscInt ncols = static_cast<PetscInt> (col_pos.size());
 
-    MatSetValues(_A, nrows, &row_pos[0], ncols, &col_pos[0], &sub_mat(0,0), ADD_VALUES);
+    MatSetValues(_A, nrows, (PetscInt*)&row_pos[0], ncols, (PetscInt*)&col_pos[0], &sub_mat(0,0), ADD_VALUES);
 };
 
 /*!

@@ -20,8 +20,16 @@ namespace MathLib
 
 LisVector::LisVector(std::size_t length)
 {
+	lis_vector_create(0, &_vec);
+	lis_vector_set_size(_vec, 0, length);
+}
+
+LisVector::LisVector(std::size_t length, double* data)
+{
     lis_vector_create(0, &_vec);
     lis_vector_set_size(_vec, 0, length);
+    for (std::size_t i=0; i<length; i++)
+        lis_vector_set_value(LIS_INS_VALUE, i, data[i], _vec);
 }
 
 LisVector::LisVector(std::size_t length, double* data)
@@ -40,29 +48,40 @@ LisVector::LisVector(LisVector const &src)
 
 LisVector::~LisVector()
 {
-    lis_vector_destroy(_vec);
+	lis_vector_destroy(_vec);
 }
 
-LisVector& LisVector::operator= (const LisVector &src)
+IVector* LisVector::duplicate() const
 {
-	lis_vector_copy(src._vec, _vec);
-    return *this;
+	return new LisVector(*this);
 }
 
-void LisVector::operator+= (const LisVector& v)
+IVector& LisVector::operator= (const IVector &src)
 {
-	lis_vector_axpy(1.0, v._vec, _vec);
+	lis_vector_copy(static_cast<const LisVector&>(src)._vec, _vec);
+	return *this;
 }
 
-void LisVector::operator-= (const LisVector& v)
+void LisVector::operator+= (const IVector& v)
 {
-	lis_vector_axpy(-1.0, v._vec, _vec);
+	lis_vector_axpy(1.0, static_cast<const LisVector&>(v)._vec, _vec);
 }
 
-LisVector& LisVector::operator= (double v)
+void LisVector::operator-= (const IVector& v)
 {
-    lis_vector_set_all(v, _vec);
-    return *this;
+	lis_vector_axpy(-1.0, static_cast<const LisVector&>(v)._vec, _vec);
+}
+
+IVector& LisVector::operator= (double v)
+{
+	lis_vector_set_all(v, _vec);
+	return *this;
+}
+
+IVector& LisVector::operator*= (double v)
+{
+	lis_vector_scale(v, _vec);
+	return *this;
 }
 
 std::size_t LisVector::size() const

@@ -14,6 +14,7 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
+#include "MathLib/LinAlg/ILinearSolver.h"
 #include "EigenVector.h"
 #include "EigenOption.h"
 
@@ -22,15 +23,17 @@ namespace MathLib
 
 class EigenMatrix;
 
-class EigenLinearSolver final
+class EigenLinearSolver final :public ILinearSolver
 {
 public:
     EigenLinearSolver(EigenMatrix &A, boost::property_tree::ptree const*const option = nullptr);
 
-    ~EigenLinearSolver()
+    virtual ~EigenLinearSolver()
     {
         delete _solver;
     }
+
+    LinAlgLibType getLinAlgLibType() const {return LinAlgLibType::Eigen;}
 
     /**
      * parse linear solvers configuration
@@ -53,7 +56,11 @@ public:
      * @param b     RHS vector
      * @param x     Solution vector
      */
-    void solve(EigenVector &b, EigenVector &x);
+    void solve(IVector &b, IVector &x);
+
+    /// apply prescribed values to a system of linear equations
+    void imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+    		const std::vector<double> &vec_knownX_x, double penalty_scaling = 1e+10);
 
 protected:
     class IEigenSolver

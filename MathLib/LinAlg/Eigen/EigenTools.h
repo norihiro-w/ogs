@@ -30,6 +30,8 @@ class EigenVector;
 void applyKnownSolution(EigenMatrix &A, EigenVector &b, const std::vector<std::size_t> &_vec_knownX_id,
 		const std::vector<double> &_vec_knownX_x, double penalty_scaling = 1e+10);
 
+void buildCRSMatrixFromEigenMatrix(const EigenMatrix &A_, int &nonzero, int*& row_ptr, int*& col_idx, double*& data);
+
 } // MathLib
 
 #endif //EIGENTOOLS_H_
