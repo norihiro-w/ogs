@@ -29,6 +29,7 @@
 namespace MeshLib {
 
 class Node;
+class ElementCoordinatesMappingLocal;
 
 /**
  * Virtual base class for mesh elements.
@@ -214,6 +215,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, Element const& e);
 #endif  // NDEBUG
 
+	const ElementCoordinatesMappingLocal& getMappedLocalCoordinates() const;
+
 protected:
 	/// Constructor for a generic mesh element without an array of mesh nodes.
 	/// @param value  element value
@@ -235,6 +238,8 @@ protected:
 	/// Sets the neighbor over the face with \c face_id to the given \c
 	/// neighbor.
 	void setNeighbor(Element* neighbor, unsigned const face_id);
+
+	mutable ElementCoordinatesMappingLocal* _local_coords;
 
 }; /* class */
 

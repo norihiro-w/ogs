@@ -18,13 +18,14 @@
 
 #include "MathLib/MathTools.h"
 #include "MeshLib/Node.h"
+#include "MeshLib/ElementCoordinatesMappingLocal.h"
 
 #include "Line.h"
 
 namespace MeshLib {
 
 Element::Element(unsigned value, std::size_t id)
-	: _nodes(nullptr), _id(id), _content(-1.0), _value(value), _neighbors(nullptr)
+	: _nodes(nullptr), _id(id), _content(-1.0), _value(value), _neighbors(nullptr), _local_coords(nullptr)
 {
 }
 
@@ -32,6 +33,7 @@ Element::~Element()
 {
 	delete [] this->_nodes;
 	delete [] this->_neighbors;
+	delete _local_coords;
 }
 
 void Element::setNeighbor(Element* neighbor, unsigned const face_id)
@@ -185,6 +187,13 @@ bool Element::isBoundaryElement() const
 {
     return std::any_of(_neighbors, _neighbors + this->getNNeighbors(),
         [](MeshLib::Element const*const e){ return e == nullptr; });
+}
+
+const ElementCoordinatesMappingLocal& Element::getMappedLocalCoordinates() const
+{
+	if (_local_coords == nullptr)
+		_local_coords = new ElementCoordinatesMappingLocal(*this, CoordinateSystem(*this));
+	return *_local_coords;
 }
 
 #ifndef NDEBUG
