@@ -27,7 +27,7 @@ template <unsigned ORDER>
 struct GaussLegendreTri {
     static const unsigned Order = ORDER;
     static const unsigned NPoints = ORDER;
-    static const std::array<std::array<double, 2>, NPoints> X;
+    static const std::array<std::array<double, 3>, NPoints> X;
     static const double W[NPoints];
 };
 
@@ -35,7 +35,7 @@ template <>
 struct GaussLegendreTri<2> {
     static const unsigned Order = 2;
     static const unsigned NPoints = 3;
-    static const std::array<std::array<double, 2>, NPoints> X;
+    static const std::array<std::array<double, 3>, NPoints> X;
     static const double W[NPoints];
 };
 
@@ -43,7 +43,7 @@ template <>
 struct GaussLegendreTri<3> {
     static const unsigned Order = 3;
     static const unsigned NPoints = 4;
-    static const std::array<std::array<double, 2>, NPoints> X;
+    static const std::array<std::array<double, 3>, NPoints> X;
     static const double W[NPoints];
 };
 

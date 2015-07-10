@@ -17,13 +17,13 @@
 namespace MathLib
 {
 
-template <> const std::array<std::array<double, 2>, GaussLegendreTri<1>::NPoints> GaussLegendreTri<1>::X = {{{{1./3., 1./3.}}}};
+template <> const std::array<std::array<double, 3>, GaussLegendreTri<1>::NPoints> GaussLegendreTri<1>::X = {{{{1./3., 1./3., 0.}}}};
 template <> double const GaussLegendreTri<1>::W[1] = {1.0};
 
-const std::array<std::array<double, 2>, GaussLegendreTri<2>::NPoints> GaussLegendreTri<2>::X = {{{{1./6., 1./6.}}, {{2./3., 1./6.}}, {{1./6., 2./3.}}}};
+const std::array<std::array<double, 3>, GaussLegendreTri<2>::NPoints> GaussLegendreTri<2>::X = {{{{1./6., 1./6., 0.}}, {{2./3., 1./6., 0.}}, {{1./6., 2./3., 0.}}}};
 double const GaussLegendreTri<2>::W[3] = {1./3., 1./3., 1./3.};
 
-const std::array<std::array<double, 2>, GaussLegendreTri<3>::NPoints> GaussLegendreTri<3>::X = {{{{1./3., 1./3.}}, {{1./5., 3./5.}}, {{1./5., 1./5.}}, {{3./5., 1./5.}}}};
+const std::array<std::array<double, 3>, GaussLegendreTri<3>::NPoints> GaussLegendreTri<3>::X = {{{{1./3., 1./3., 0.}}, {{1./5., 3./5., 0.}}, {{1./5., 1./5., 0.}}, {{3./5., 1./5., 0.}}}};
 double const GaussLegendreTri<3>::W[4] = {-27./48., 25./48., 25./48., 25./48.};
 
 }
