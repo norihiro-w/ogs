@@ -15,6 +15,9 @@
 #include "MathLib/LinAlg/Dense/DenseVector.h"
 #include "MathLib/LinAlg/Solvers/GaussAlgorithm.h"
 #include "MathLib/Nonlinear/NewtonRaphson.h"
+#ifdef USE_PETSC
+#include "MathLib/Nonlinear/PETSc/PETScNonlinear.h"
+#endif
 #include "Tests/TestTools.h"
 
 namespace
@@ -270,4 +273,22 @@ TEST(MathLib, NonlinearNR_dense2)
     double my_expect[] = {3.39935, 3.70074e-018, -1.42576e-017, 1.4903e-021, 4.35602e-018, 0.325, -1.08167, -5.61495e-018, 7.58394e-018, -3.79368e-021};
     ASSERT_ARRAY_NEAR(my_expect, x, n, 1e-5);
 }
+
+#ifdef USE_PETSC
+TEST(MathLib, NonlinearPETSc_dense)
+{
+    Example2::Residual f_r;
+    Example2::Jacobian f_j;
+    MatrixType matJ(2, 2);
+    VectorDx<Example2::Jacobian> f_dx(f_j, matJ);
+    VectorType x0(2), x(2);
+    x0 = 6.0;
+    x = x0;
+    MathLib::PETScNonlinear nr;
+    nr.solve<Example2::Residual, Example2::Jacobian, VectorType, MatrixType>(f_r, f_j, x);
+
+    double my_expect[] = {2., 8.};
+    ASSERT_ARRAY_NEAR(my_expect, x, 2, 1e-5);
+}
+#endif
 
