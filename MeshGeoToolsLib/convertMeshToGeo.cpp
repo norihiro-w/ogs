@@ -26,7 +26,8 @@
 #include "MeshInformation.h"
 #include "MeshEditing/MeshRevision.h"
 
-namespace MeshLib {
+namespace MeshGeoToolsLib
+{
 
 bool convertMeshToGeo(const MeshLib::Mesh &mesh, GeoLib::GEOObjects &geo_objects, double eps)
 {
@@ -49,7 +50,7 @@ bool convertMeshToGeo(const MeshLib::Mesh &mesh, GeoLib::GEOObjects &geo_objects
 	const std::vector<std::size_t> id_map (geo_objects.getPointVecObj(mesh_name)->getIDMap());
 
 	// elements to surface triangles conversion
-	const std::pair<unsigned, unsigned> bounds (MeshInformation::getValueBounds(mesh));
+	const std::pair<unsigned, unsigned> bounds (MeshLib::MeshInformation::getValueBounds(mesh));
 	const unsigned nMatGroups(bounds.second-bounds.first+1);
 	std::vector<GeoLib::Surface*> *sfcs = new std::vector<GeoLib::Surface*>;
 	sfcs->reserve(nMatGroups);
@@ -62,9 +63,9 @@ bool convertMeshToGeo(const MeshLib::Mesh &mesh, GeoLib::GEOObjects &geo_objects
 	for (unsigned i=0; i<nElems; ++i)
 	{
 		MeshLib::Element* e (elements[i]);
-		if (e->getGeomType() == MeshElemType::TRIANGLE)
+		if (e->getGeomType() == MeshLib::MeshElemType::TRIANGLE)
 			(*sfcs)[e->getValue()-bounds.first]->addTriangle(id_map[e->getNodeIndex(0)], id_map[e->getNodeIndex(1)], id_map[e->getNodeIndex(2)]);
-		if (e->getGeomType() == MeshElemType::QUAD)
+		if (e->getGeomType() == MeshLib::MeshElemType::QUAD)
 		{
 			(*sfcs)[e->getValue()-bounds.first]->addTriangle(id_map[e->getNodeIndex(0)], id_map[e->getNodeIndex(1)], id_map[e->getNodeIndex(2)]);
 			(*sfcs)[e->getValue()-bounds.first]->addTriangle(id_map[e->getNodeIndex(0)], id_map[e->getNodeIndex(2)], id_map[e->getNodeIndex(3)]);

@@ -26,9 +26,11 @@ class Surface;
 
 namespace MeshLib
 {
+class Mesh;
+}
 
-	class Mesh;
-
+namespace MeshGeoToolsLib
+{
 	/**
 	 * Converts a 2D mesh into a geometry.
 	 * A new geometry with the name of the mesh will be inserted into geo_objects, consisting
