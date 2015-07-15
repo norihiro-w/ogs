@@ -36,6 +36,10 @@
 #include <QApplication>
 #endif
 
+#ifdef USE_PETSC
+#include "MPIPrettyUnitTestResultPrinter.h"
+#endif
+
 /// Implementation of the googletest testrunner
 int main(int argc, char* argv[])
 {
@@ -66,6 +70,17 @@ int main(int argc, char* argv[])
 #endif
             // start google test
             testing::InitGoogleTest ( &argc, argv );
+//#ifdef USE_MPI
+//            // Gets hold of the event listener list.
+//            ::testing::TestEventListeners& listeners =
+//                  ::testing::UnitTest::GetInstance()->listeners();
+//            delete listeners.Release(listeners.default_result_printer());
+//            // Adds a listener to the end.  Google Test takes the ownership.
+//            int mpi_rank;
+//            MPI_Comm_rank(PETSC_COMM_WORLD, &mpi_rank);
+//            listeners.Append(new testing::MPIPrettyUnitTestResultPrinter(mpi_rank));
+//#endif
+
             ret = RUN_ALL_TESTS();
         }
         catch (char* e)
