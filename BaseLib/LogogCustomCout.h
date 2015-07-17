@@ -38,8 +38,8 @@ public:
 	virtual int Receive( const logog::Topic &topic )
 	{
 #ifdef USE_MPI
-		if (topic.Level() > _all_rank_output_level && !_is_rank0)
-			return 0;
+//		if (topic.Level() > _all_rank_output_level && !_is_rank0)
+//			return 0;
 #endif
 		return logog::Target::Receive(topic);
 	}
