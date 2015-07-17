@@ -17,13 +17,18 @@
 
 #include <logog/include/logog.hpp>
 
+#include "BaseLib/MPITools.h"
+
 #include "PVDWriter.h"
 #include "VtuWriter.h"
+#include "PVtuWriter.h"
 
 
 void PVDOutput::write(  const NumLib::TimeStep &current_time, 
                         BaseLib::OrderedMap<std::string, OutputVariableInfo> &data)
 {
+    BaseLib::MPIEnvironment mpi;
+
     // prepare vtu data
     std::vector<VtuWriter::PointData> node_values;
     std::vector<VtuWriter::CellData> ele_values;
@@ -53,27 +58,42 @@ void PVDOutput::write(  const NumLib::TimeStep &current_time,
         return;
     }
 
+    // set base file name for output
+    const std::string vtk_file_basename = getOutputBaseName() + "_" + std::to_string(current_time.steps());
+    std::string vtk_file_path = getOutputDir();
+    if (vtk_file_path.length()>0) vtk_file_path += "/";
+
     // write VTU file
-    std::string vtk_file_name_relative = getOutputBaseName() + "_";
-    vtk_file_name_relative += std::to_string(current_time.steps()) + ".vtu";
-    std::string vtk_file_name_absolute = getOutputDir();
-    if (vtk_file_name_absolute.length()>0) vtk_file_name_absolute += "/";
-    vtk_file_name_absolute += vtk_file_name_relative;
-
-    INFO("Writing results...: %s", vtk_file_name_absolute.c_str());
-
+    std::string vtu_file_name_base = vtk_file_basename;
+    if (mpi.isParallel())
+        vtu_file_name_base += "_part" + std::to_string(mpi.rank());
+    vtu_file_name_base += ".vtu";
+    std::string vtu_file_name = vtk_file_path + vtu_file_name_base;
+    INFO("Writing results...: %s", vtu_file_name.c_str());
     VtuWriter vtuWriter(false);
-    vtuWriter.write(vtk_file_name_absolute, *getMesh(), node_values, ele_values, true);
+    vtuWriter.write(vtu_file_name, *getMesh(), node_values, ele_values, true);
     
-    // update PVD file
-    if (_pvd==NULL) {
-        _pvd = new PVDWriter();
-        std::string pvd_name = getOutputDir();
-        if (pvd_name.length()>0) pvd_name += "/";
-        pvd_name += getOutputBaseName() + ".pvd";
-        //std::string pvd_name = getOutputDir()+"\\"+getOutputBaseName() + ".pvd";
-        _pvd->initialize(pvd_name);
+    if (mpi.rank() == 0)
+    {
+        std::string vtkfile = vtu_file_name;
+        if (mpi.isParallel())
+        {
+            vtkfile = vtk_file_basename + ".pvtu";
+            std::string pvtu_file_name = vtk_file_path + vtk_file_basename + ".pvtu";
+            PVtuWriter pvtu;
+            pvtu.write(pvtu_file_name, *getMesh(), node_values, ele_values, true);
+        }
+
+        // update PVD file
+        if (_pvd==NULL) {
+            _pvd = new PVDWriter();
+            std::string pvd_name = getOutputDir();
+            if (pvd_name.length()>0) pvd_name += "/";
+            pvd_name += getOutputBaseName() + ".pvd";
+            //std::string pvd_name = getOutputDir()+"\\"+getOutputBaseName() + ".pvd";
+            _pvd->initialize(pvd_name);
+        }
+
+        _pvd->update(current_time.current(), vtkfile);
     }
-    
-    _pvd->update(current_time.current(), vtk_file_name_relative);
 }
