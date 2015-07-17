@@ -36,7 +36,8 @@ public:
     /// elements of the vector.
     MeshSubset(const Mesh& msh, std::vector<Node*> const* vec_items,
         bool const delete_ptr = false)
-        : _msh(msh), _nodes(vec_items), _eles(nullptr), _delete_ptr(delete_ptr)
+        : _msh(msh), _nodes(vec_items), _eles(nullptr), _delete_ptr(delete_ptr),
+          _n_non_ghost_nodes(computeNNonGhostNodes(msh, *vec_items)), _n_non_ghost_elements(0)
     {}
 
     /// Construct a mesh subset from vector of elements on the given mesh.
@@ -47,7 +48,8 @@ public:
     /// elements of the vector.
     MeshSubset(const Mesh& msh, std::vector<Element*> const* vec_items,
         bool const delete_ptr = false)
-        : _msh(msh), _nodes(nullptr), _eles(vec_items), _delete_ptr(delete_ptr)
+        : _msh(msh), _nodes(nullptr), _eles(vec_items), _delete_ptr(delete_ptr),
+          _n_non_ghost_nodes(0), _n_non_ghost_elements(computeNNonGhostElements(msh, *vec_items))
     {}
 
     /// construct from both nodes and elements
@@ -61,7 +63,9 @@ public:
     /// elements of the vectors.
     MeshSubset(const Mesh& msh, std::vector<Node*> const* vec_nodes,
         std::vector<Element*> const* vec_eles, bool const delete_ptr = false)
-        : _msh(msh), _nodes(vec_nodes), _eles(vec_eles), _delete_ptr(delete_ptr)
+        : _msh(msh), _nodes(vec_nodes), _eles(vec_eles), _delete_ptr(delete_ptr),
+          _n_non_ghost_nodes(computeNNonGhostNodes(msh, *vec_nodes)),
+          _n_non_ghost_elements(computeNNonGhostElements(msh, *vec_eles))
     {}
 
     ~MeshSubset()
@@ -79,6 +83,12 @@ public:
         return getNNodes() + getNElements();
     }
 
+    /// return the total number of mesh items
+    std::size_t getNTotalNonGhostItems() const
+    {
+        return getNNonGhostNodes() + getNNonGhostElements();
+    }
+
     /// return this mesh ID
     std::size_t getMeshID() const
     {
@@ -89,6 +99,18 @@ public:
     std::size_t getNNodes() const
     {
         return (_nodes==nullptr) ? 0 : _nodes->size();
+    }
+
+    /// return the number of registered non-ghost nodes
+    std::size_t getNNonGhostNodes() const
+    {
+        return _n_non_ghost_nodes;
+    }
+
+    /// return the number of registered ghost nodes
+    std::size_t getNGhostNodes() const
+    {
+        return (getNNodes() - getNNonGhostNodes());
     }
 
     /// Returns the global node id Node::getID() of i-th node in the mesh
@@ -105,6 +127,13 @@ public:
     {
         return (_eles==nullptr) ? 0 : _eles->size();
     }
+
+    /// return the number of registered non-ghost elements
+    std::size_t getNNonGhostElements() const
+    {
+        return _n_non_ghost_elements;
+    }
+
 
     /// Returns the global element id Element::getID() of i-th element in the
     /// mesh subset.
@@ -150,12 +179,72 @@ public:
         return new MeshSubset(_msh, active_nodes, true);
     }
 
+    const Mesh &getMesh() const
+    {
+        return _msh;
+    }
+
+    std::vector<std::size_t> getGhostNodeIDs() const
+    {
+        std::vector<std::size_t> ghost_ids;
+        for (auto node : *_nodes)
+            if (_msh.isGhostNode(node->getID()))
+                ghost_ids.push_back(node->getID());
+        return ghost_ids;
+    }
+
+    bool hasNode(Node const* node) const
+    {
+        return (std::find(_nodes->begin(), _nodes->end(), node)!=_nodes->end());
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, MeshSubset const& ms)
+    {
+        os << "Mesh ID = " << ms._msh.getID() << ", NNodes = " << (ms._nodes ? ms._nodes->size() : 0) << ", NElements = " << (ms._eles ? ms._eles->size() : 0) << "\n";
+        if (ms._nodes) {
+            os << "Node local IDs: ";
+            for (std::size_t i=0; i< ms._nodes->size(); i++)
+                os << (*ms._nodes)[i]->getID() << " ";
+            os << "\n";
+            os << "Node global IDs: ";
+            for (std::size_t i=0; i< ms._nodes->size(); i++)
+                os << ms.getMesh().getGlobalNodeID((*ms._nodes)[i]->getID()) << " ";
+            os << "\n";
+        }
+        if (ms._eles) {
+            os << "Elements: ";
+            for (std::size_t i=0; i< ms._eles->size(); i++)
+                os << (*ms._eles)[i]->getID() << " ";
+            os << "\n";
+        }
+        return os;
+    }
+
 private:
     Mesh const& _msh;
     std::vector<Node*> const* _nodes;
     std::vector<Element*> const* _eles;
     bool const _delete_ptr = false;
+    std::size_t _n_non_ghost_nodes;
+    std::size_t _n_non_ghost_elements;
 
+    static std::size_t computeNNonGhostNodes(Mesh const& msh, std::vector<Node*> const& nodes)
+    {
+        std::size_t n = 0;
+        for (auto node : nodes)
+            if (!msh.isGhostNode(node->getID()))
+                n++;
+        return n;
+    }
+
+    static std::size_t computeNNonGhostElements(Mesh const& msh, std::vector<Element*> const& elements)
+    {
+        std::size_t n = 0;
+        for (auto e : elements)
+            if (!msh.isGhostElement(e->getID()))
+                n++;
+        return n;
+    }
 };
 
 }   // namespace MeshLib

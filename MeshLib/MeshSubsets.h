@@ -36,6 +36,7 @@ public:
     {
         _mesh_subsets.push_back(mesh_subset);
         _n_total_items = mesh_subset->getNTotalItems();
+        _n_total_nonghost_items = mesh_subset->getNTotalNonGhostItems();
     }
 
     /// Construct MeshSubsets from a range of MeshSubset. InputIterator must
@@ -57,12 +58,23 @@ public:
             {
                 return sum + mesh_subset->getNTotalItems();
             });
+        _n_total_nonghost_items = std::accumulate(first, last, 0u,
+            [](std::size_t const& sum, MeshSubset const* const mesh_subset)
+            {
+                return sum + mesh_subset->getNTotalNonGhostItems();
+            });
     }
 
     /// return the total number of mesh items (in all meshes) where this component is assigned
     std::size_t getNMeshItems() const
     {
         return _n_total_items;
+    }
+
+    /// return the total number of mesh items (in all meshes) where this component is assigned
+    std::size_t getNNonGhostMeshItems() const
+    {
+        return _n_total_nonghost_items;
     }
 
     /// Number of saved mesh subsets.
@@ -86,6 +98,18 @@ public:
     {
         return _mesh_subsets.end();
     }
+
+
+    friend std::ostream& operator<<(std::ostream& os, MeshSubsets const& mss)
+    {
+        os << "Component size: " << mss.size() << "\n";
+        for (std::size_t i=0; i< mss._mesh_subsets.size(); i++)
+        {
+            os << "# Component " << i  << "\n" << *mss._mesh_subsets[i];
+        }
+        return os;
+    }
+
 private:
     /// returns true if all mesh ids of _mesh_subsets elements are different.
     bool areMeshSubsetMeshesUnique() const
@@ -105,6 +129,9 @@ private:
 
     /// Number of all mesh entities on all subsets.
     std::size_t _n_total_items;
+
+    /// Number of all non-ghost mesh entities on all subsets.
+    std::size_t _n_total_nonghost_items;
 };
 
 }   // namespace MeshLib
