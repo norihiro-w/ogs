@@ -19,6 +19,9 @@
 #include <vector>
 #include <string>
 
+#include <logog/include/logog.hpp>
+
+#include "BaseLib/DebugTools.h"
 #include "Mesh.h"
 
 namespace MeshLib
@@ -52,7 +55,7 @@ class NodePartitionedMesh : public Mesh
                             const std::vector<Node*> &nodes,
                             const std::vector<std::size_t> &glb_node_ids,
                             const std::vector<Element*> &elements,
-                            Properties properties,
+                            Properties const& properties,
                             const std::size_t n_nghost_elem,
                             const std::size_t n_global_base_nodes,
                             const std::size_t n_global_nodes,
@@ -66,7 +69,11 @@ class NodePartitionedMesh : public Mesh
               _n_active_base_nodes(n_active_base_nodes),
               _n_active_nodes(n_active_nodes)
         {
+            INFO("Creating a node-partitioned mesh: %d global nodes, %d local nodes, %d local eles, %d ghost nodes", n_global_nodes, nodes.size(), elements.size(), nodes.size()-n_active_nodes);
+            INFO("Global node IDs: %s", BaseLib::toString(_global_node_ids).data());
         }
+
+        virtual ~NodePartitionedMesh() {}
 
         /// Get the number of nodes of the global mesh for linear elements.
         std::size_t getNGlobalBaseNodes() const
@@ -78,6 +85,12 @@ class NodePartitionedMesh : public Mesh
         std::size_t getNGlobalNodes() const
         {
             return _n_global_nodes;
+        }
+
+        /// Get the global node ID of a node with its local ID.
+        std::size_t getGlobalNodeID(const std::size_t node_id) const
+        {
+            return _global_node_ids[node_id];
         }
 
         /// Get the number of the active nodes of the partition for linear elements.
@@ -92,15 +105,15 @@ class NodePartitionedMesh : public Mesh
             return _n_active_nodes;
         }
 
-        /// Check whether a node with ID of node_id is a ghost node
+        /// Check whether a node with given id is a ghost node.
         bool isGhostNode(const std::size_t node_id) const
         {
             if(node_id < _n_active_base_nodes)
-                return true;
-            else if(node_id >= _n_base_nodes && node_id < getLargestActiveNodeID() )
-                return true;
-            else
                 return false;
+            else if(node_id >= _n_base_nodes && node_id < getLargestActiveNodeID() )
+                return false;
+            else
+                return true;
         }
 
         /// Get the largest ID of active nodes for higher order elements in a partition.
@@ -113,6 +126,22 @@ class NodePartitionedMesh : public Mesh
         std::size_t getNNonGhostElements() const
         {
             return _n_nghost_elem;
+        }
+
+        virtual bool isPartitioned() const { return true; }
+
+        virtual bool hasGlobalNode(std::size_t global_node_id) const
+        {
+            return getLocalNodeID(global_node_id)!=static_cast<std::size_t>(-1);
+        }
+
+        virtual std::size_t getLocalNodeID(std::size_t global_node_id) const
+        {
+            auto it = std::find(_global_node_ids.begin(), _global_node_ids.end(), global_node_id);
+            if (it == _global_node_ids.end())
+                return -1;
+            else
+                return std::distance(_global_node_ids.begin(), it);
         }
 
     private:

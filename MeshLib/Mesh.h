@@ -21,13 +21,13 @@
 
 #include "BaseLib/Counter.h"
 
+#include "Node.h"
 #include "MeshEnums.h"
 #include "Properties.h"
 #include "CoordinateSystem.h"
 
 namespace MeshLib
 {
-	class Node;
 	class Element;
 
 /**
@@ -128,6 +128,77 @@ public:
 
 	MeshLib::Properties & getProperties() { return _properties; }
 	MeshLib::Properties const& getProperties() const { return _properties; }
+
+    /// Get the number of nodes of the global mesh for linear elements.
+    virtual std::size_t getNGlobalBaseNodes() const
+    {
+        return getNBaseNodes();
+    }
+
+    /// Get the number of all nodes of the global mesh.
+    virtual std::size_t getNGlobalNodes() const
+    {
+        return getNNodes();
+    }
+
+    /// Get the global node ID of a node with its local ID.
+    virtual std::size_t getGlobalNodeID(const std::size_t node_id) const
+    {
+        return node_id;
+    }
+
+    /// Get the number of the active nodes of the partition for linear elements.
+    virtual std::size_t getNActiveBaseNodes() const
+    {
+        return getNBaseNodes();
+    }
+
+    /// Get the number of all active nodes of the partition.
+    virtual std::size_t getNActiveNodes() const
+    {
+        return getNNodes();
+    }
+
+    virtual std::size_t getNGhostNodes() const { return getNNodes() - getNActiveNodes(); }
+
+    virtual std::size_t getNGhostBaseNodes() const { return getNBaseNodes() - getNActiveBaseNodes(); }
+
+    virtual const Node* getGhostNode(std::size_t i) const
+    {
+        return getNode(getNActiveNodes() + i);
+    }
+
+    /// Check whether a node with given id is a ghost node.
+    virtual bool isGhostNode(const std::size_t /*node_id*/) const
+    {
+        return false;
+    }
+
+    /// Check whether an element with given id is ghost.
+    virtual bool isGhostElement(const std::size_t /*element_id*/) const
+    {
+        return false;
+    }
+
+    /// Get the largest ID of active nodes for higher order elements in a partition.
+    virtual std::size_t getLargestActiveNodeID() const
+    {
+        const Node* node = _nodes.back();
+        return node->getID();
+    }
+
+    /// Get the number of non-ghost elements, or the start entry ID of ghost elements in element vector.
+    virtual std::size_t getNNonGhostElements() const
+    {
+        return getNElements();
+    }
+
+    bool isGlobal() const { return getNNodes() == getNGlobalNodes(); }
+
+    virtual bool isPartitioned() const { return false; }
+
+    virtual bool hasGlobalNode(std::size_t global_node_id) const { return global_node_id < getNNodes(); }
+    virtual std::size_t getLocalNodeID(std::size_t global_node_id) const { return hasGlobalNode(global_node_id) ? global_node_id : -1; }
 
 protected:
 	/// Set the minimum and maximum length over the edges of the mesh.
