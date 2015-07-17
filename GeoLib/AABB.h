@@ -41,6 +41,11 @@ template <typename PNT_TYPE = GeoLib::Point>
 class AABB
 {
 public:
+    explicit AABB(PNT_TYPE const & pnt)
+    {
+        init(pnt);
+    }
+
 	/**
 	 * construction of object, initialization the axis aligned bounding box
 	 * */
