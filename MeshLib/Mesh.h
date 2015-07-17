@@ -53,7 +53,7 @@ public:
 	     const std::size_t n_base_nodes = 0);
 
 	/// Copy constructor
-	Mesh(const Mesh &mesh);
+	Mesh(const Mesh &mesh, std::size_t mesh_id = -1);
 
 	/// Destructor
 	virtual ~Mesh();

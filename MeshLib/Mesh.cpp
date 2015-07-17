@@ -54,8 +54,8 @@ Mesh::Mesh(const std::string &name,
 	this->calcNodeDistanceRange();
 }
 
-Mesh::Mesh(const Mesh &mesh)
-	: _id(_counter_value-1), _mesh_dimension(mesh.getDimension()),
+Mesh::Mesh(const Mesh &mesh, std::size_t mesh_id)
+	: _id(mesh_id == static_cast<std::size_t>(-1) ? (_counter_value-1) : mesh_id), _mesh_dimension(mesh.getDimension()),
 	  _edge_length(mesh._edge_length.first, mesh._edge_length.second),
 	  _node_distance(mesh._node_distance.first, mesh._node_distance.second),
 	  _name(mesh.getName()), _nodes(mesh.getNNodes()), _elements(mesh.getNElements()),
@@ -115,6 +115,7 @@ void Mesh::resetNodeIDs()
 	const size_t nNodes (this->_nodes.size());
 	for (unsigned i=0; i<nNodes; ++i)
 		_nodes[i]->setID(i);
+	_n_base_nodes = nNodes;
 }
 
 void Mesh::resetElementIDs()
