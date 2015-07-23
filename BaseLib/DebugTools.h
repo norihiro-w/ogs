@@ -15,15 +15,29 @@
 #define DEBUGTOOLS_H
 
 #include <ostream>
+#include <iterator>
+#include <sstream>
 #include <algorithm>
 #include <vector>
 
 template<typename T>
 std::ostream &operator <<(std::ostream &os, const std::vector<T> &v) {
     std::copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
-    os << "\n";
+//    os << "\n";
     return os;
 }
+
+namespace BaseLib
+{
+
+template<typename T>
+std::string toString(const std::vector<T> &v) {
+    std::stringstream ss;
+    ss << v;
+    return ss.str();
+}
+
+} // BaseLib
 
 #endif //DEBUGTOOLS_H
 
