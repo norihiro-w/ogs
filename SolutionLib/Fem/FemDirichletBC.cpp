@@ -49,4 +49,11 @@ void FemDirichletBC::setup(NumLib::PolynomialOrder order)
         _do_setup = false;
 }
 
+void FemDirichletBC::write(std::ostream &os) const
+{
+    os << "# Dirichlet BC\n";
+    for (std::size_t i=0; i<_vec_nodes.size(); i++)
+        os << _vec_nodes[i] << " " << _vec_values[i] << "\n";
+}
+
 }

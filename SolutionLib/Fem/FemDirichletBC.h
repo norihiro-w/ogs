@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <vector>
 
 #include "GeoLib/GeoObject.h"
@@ -48,19 +49,21 @@ public:
     FemDirichletBC(const std::vector<size_t> &vec_node_id, const std::vector<double> &vec_node_values);
 
     ///
-    virtual ~FemDirichletBC() {};
+    virtual ~FemDirichletBC() {}
 
     /// setup B.C.
     void setup(NumLib::PolynomialOrder order);
 
     ///
-    std::vector<size_t>& getListOfBCNodes() {return _vec_nodes;};
+    std::vector<size_t>& getListOfBCNodes() {return _vec_nodes;}
 
     ///
-    std::vector<double>& getListOfBCValues() {return _vec_values;};
+    std::vector<double>& getListOfBCValues() {return _vec_values;}
 
     ///
-    bool isTransient() const {return _is_transient;};
+    bool isTransient() const {return _is_transient;}
+
+    void write(std::ostream &os = std::cout) const;
 
 private:
     const MeshLib::Mesh* _msh;
@@ -72,5 +75,10 @@ private:
     bool _do_setup;
 };
 
+inline std::ostream& operator<< (std::ostream &os, const FemDirichletBC &p)
+{
+    p.write (os);
+    return os;
+}
 
 }
