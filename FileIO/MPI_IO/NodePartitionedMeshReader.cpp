@@ -14,6 +14,7 @@
 
 #include "NodePartitionedMeshReader.h"
 
+#include <sstream>
 #include <logog/include/logog.hpp>
 
 #include "BaseLib/FileTools.h"
@@ -88,7 +89,7 @@ MeshLib::NodePartitionedMesh* NodePartitionedMeshReader::read(
         mesh = readBinary(file_name_base);
     }
 
-    INFO("\t\n>>Total elapsed time in reading mesh:%f s\n", timer.elapsed());
+    //INFO("\t\n>>Total elapsed time in reading mesh:%f s\n", timer.elapsed());
 
     MPI_Barrier(_mpi_comm);
 
@@ -294,6 +295,7 @@ bool NodePartitionedMeshReader::readCastElemsASCII(std::ifstream& is_elem,
     std::vector<unsigned long> elem_data(data_size);
     if(_mpi_rank == 0)
     {
+        INFO("readElementASCII() with data_size = %d", data_size);
         readElementASCII(is_elem, elem_data, process_ghost);
 
         if(part_id == 0)
@@ -364,6 +366,11 @@ MeshLib::NodePartitionedMesh* NodePartitionedMeshReader::readASCII(
             // The last positon is the extra_flag.
             is_cfg >> _mesh_info.extra_flag;
             is_cfg >> std::ws;
+
+//            std::stringstream ss;
+//            for(unsigned long j = 0; j < 10; ++j)
+//                ss << *(_mesh_info.data() + j) << " ";
+//            INFO("mesh_info: %s", ss.str().c_str());
         }
 
         MPI_Bcast(_mesh_info.data(), static_cast<int>(_mesh_info.size()),
@@ -431,6 +438,7 @@ void NodePartitionedMeshReader::readElementASCII(std::ifstream &ins,
     unsigned long const ne =
         ghost ? _mesh_info.ghost_elements : _mesh_info.regular_elements;
     unsigned long id_offset_elem = ne;
+//    INFO("ne = %d", ne);
     for(unsigned long j = 0; j < ne; j++)
     {
         elem_data[j] = id_offset_elem;
@@ -440,6 +448,8 @@ void NodePartitionedMeshReader::readElementASCII(std::ifstream &ins,
         unsigned long const nn_e =  elem_data[id_offset_elem++];
         for(unsigned long k = 0; k < nn_e; k++)
             ins >> elem_data[id_offset_elem++];
+//        auto idx = elem_data[j];
+//        INFO("%d: index=%d, mat=%d, type=%d, nnodes=%d", j, elem_data[j], elem_data[idx], elem_data[idx+1], elem_data[idx+2]);
     }
 }
 
