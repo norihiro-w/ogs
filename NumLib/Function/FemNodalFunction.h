@@ -199,6 +199,7 @@ public:
         _msh = msh;
         _order = order;
         _nodal_values = MathLib::LinAlgBuilder::generateVector(_linAlgLibType, _msh->getNNodes());
+        //_nodal_values = MathLib::LinAlgBuilder::generateVector(_linAlgLibType, _msh->getNActiveNodes(), _msh->isGlobal());
         _feObjects = nullptr;
     }
 
@@ -233,6 +234,7 @@ class TemplateFEMNodalFunction<double> : public NumLib::ITXDiscreteFunction
 public:
     inline void eval(const NumLib::TXPosition x,  NumLib::ITXFunction::DataType &v) const
     {
+        assert(x.getId() < _nodal_values->size());
         NumLib::ITXFunction::DataType val(1,1);
         val(0,0) = (*_nodal_values)[x.getId()];
         v = val;
@@ -354,10 +356,13 @@ public:
     /// initialize
     void initialize(MeshLib::Mesh* msh, PolynomialOrder order)
     {
-    	_msh = msh;
+        _msh = msh;
         _order = order;
-        size_t n = _msh->getNNodes();
-        _nodal_values = MathLib::LinAlgBuilder::generateVector(_linAlgLibType,n);
+        _nodal_values = MathLib::LinAlgBuilder::generateVector(_linAlgLibType, _msh->getNNodes());
+//        std::vector<std::size_t> ghost_nodes;
+//        for (std::size_t i=0; i<msh->getNGhostNodes(); i++)
+//            ghost_nodes.push_back(msh->getGhostNode(i)->getID());
+//        _nodal_values = MathLib::LinAlgBuilder::generateVector(_linAlgLibType, _msh->getNNodes(), ghost_nodes.empty(), &ghost_nodes);
         _feObjects = nullptr;
     }
 
