@@ -10,6 +10,7 @@
 #ifndef ROWCOLUMNINDICES_H_
 #define ROWCOLUMNINDICES_H_
 
+#include <iostream>
 #include <vector>
 
 namespace MathLib
@@ -25,7 +26,20 @@ struct RowColumnIndices
 
 	LineIndex const& rows;
 	LineIndex const& columns;
+
+	void write(std::ostream &os) const
+	{
+		os << "rows: "; for (auto i : rows) os << i << " "; os << ", ";
+		os << "cols: "; for (auto i : columns) os << i << " "; os << "\n";
+	}
 };
+
+template <typename IDX_TYPE>
+std::ostream& operator<< (std::ostream &os, const RowColumnIndices<IDX_TYPE> &p)
+{
+	p.write (os);
+	return os;
+}
 
 } // MathLib
 
