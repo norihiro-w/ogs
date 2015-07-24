@@ -1,7 +1,4 @@
 /**
- * \author Norihiro Watanabe
- * \date   2013-04-16
- *
  * \copyright
  * Copyright (c) 2012-2015, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
@@ -40,24 +37,34 @@ struct Line
     // Position in global matrix or vector
     std::size_t global_index;
 
-    Line(MeshLib::Location const& l, std::size_t c, std::size_t i)
-    : location(l), comp_id(c), global_index(i)
+    // Element entity status in a mesh partition, either ghost or real one in use
+    bool is_ghost = false;
+
+    Line(const Line &src)
+    : location(src.location), comp_id(src.comp_id), global_index(src.global_index), is_ghost(src.is_ghost)
     {}
 
-    Line(MeshLib::Location const& l, std::size_t c)
+    Line(MeshLib::Location const& l, std::size_t c, std::size_t i,
+        bool const ghost_flag = false)
+    : location(l), comp_id(c), global_index(i), is_ghost(ghost_flag)
+    {}
+
+    Line(MeshLib::Location const& l, std::size_t c, bool const ghost_flag = false)
     : location(l), comp_id(c),
-        global_index(std::numeric_limits<std::size_t>::max())
+        global_index(std::numeric_limits<std::size_t>::max()), is_ghost(ghost_flag)
     {}
 
-    explicit Line(MeshLib::Location const& l)
+    explicit Line(MeshLib::Location const& l, bool const ghost_flag = false)
     : location(l),
         comp_id(std::numeric_limits<std::size_t>::max()),
-        global_index(std::numeric_limits<std::size_t>::max())
+        global_index(std::numeric_limits<std::size_t>::max()),
+        is_ghost(ghost_flag)
     {}
 
     friend std::ostream& operator<<(std::ostream& os, Line const& l)
     {
-        return os << l.location << ", " << l.comp_id << ", " << l.global_index;
+        return os << l.location << ", " << l.comp_id << ", " << l.global_index
+            << ", " << (l.is_ghost ? "ghost" : "");
     }
 };
 

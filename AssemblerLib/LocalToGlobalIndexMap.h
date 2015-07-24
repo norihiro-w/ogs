@@ -16,9 +16,12 @@
 
 #include <vector>
 
-#include "AssemblerLib/MeshComponentMap.h"
 #include "MathLib/LinAlg/RowColumnIndices.h"
 #include "MeshLib/MeshSubsets.h"
+#ifdef USE_MPI
+#include "MeshLib/NodePartitionedMesh.h"
+#endif
+#include "AssemblerLib/MeshComponentMap.h"
 
 namespace AssemblerLib
 {
@@ -35,27 +38,17 @@ namespace AssemblerLib
 class LocalToGlobalIndexMap
 {
 public:
-    typedef MathLib::RowColumnIndices<std::size_t> RowColumnIndices;
+    typedef std::size_t IDX_TYPE;
+    typedef MathLib::RowColumnIndices<IDX_TYPE> RowColumnIndices;
     typedef RowColumnIndices::LineIndex LineIndex;
 
 public:
-    /* \todo Extend the constructor for parallel meshes.
-    LocalToGlobalIndexMap(
-        std::vector<LineIndex> const& rows,
-        std::vector<LineIndex> const & columns)
-        : _rows(rows), _columns(columns)
-    {
-        assert(_rows.size() == _columns.size());
-        assert(!_rows.empty());
-    }
-    */
-
     /// Creates a MeshComponentMap internally and stores the global indices for
     /// each mesh element of the given mesh_subsets.
     explicit LocalToGlobalIndexMap(
         std::vector<MeshLib::MeshSubsets*> const& mesh_subsets,
         AssemblerLib::ComponentOrder const order =
-            AssemblerLib::ComponentOrder::BY_COMPONENT);
+            AssemblerLib::ComponentOrder::BY_COMPONENT, bool is_parallel = true);
 
     /// Derive a LocalToGlobalIndexMap constrained to a set of mesh subsets and
     /// elements. A new mesh component map will be constructed using the passed
@@ -97,13 +90,17 @@ private:
     template <typename ElementIterator>
     void
     findGlobalIndices(ElementIterator first, ElementIterator last,
-        std::size_t const mesh_id, AssemblerLib::ComponentOrder const order)
+        MeshLib::MeshSubset const* const mesh_subset,
+        AssemblerLib::ComponentOrder const order)
     {
+        std::size_t const mesh_id = mesh_subset->getMeshID();
+
         // For each element find the global indices for node/element
         // components.
         for (ElementIterator e = first; e != last; ++e)
         {
             std::vector<MeshLib::Location> vec_items;
+            /// \todo Need to distinguish those for different interpolation orders.
             std::size_t const nnodes = (*e)->getNNodes();
             vec_items.reserve(nnodes);
 
@@ -119,10 +116,12 @@ private:
             switch (order)
             {
                 case AssemblerLib::ComponentOrder::BY_LOCATION:
-                    _rows.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_LOCATION>(vec_items));
+                    _rows.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_LOCATION>(vec_items, true));
+                    _columns.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_LOCATION>(vec_items, false));
                     break;
                 case AssemblerLib::ComponentOrder::BY_COMPONENT:
-                    _rows.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_COMPONENT>(vec_items));
+                    _rows.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_COMPONENT>(vec_items, true));
+                    _columns.push_back(_mesh_component_map.getGlobalIndices<AssemblerLib::ComponentOrder::BY_COMPONENT>(vec_items, false));
                     break;
             }
         }
@@ -138,7 +137,7 @@ private:
 
     /// For non-parallel implementations the columns are equal to the rows.
     /// \todo This is to be overriden by any parallel implementation.
-    std::vector<LineIndex> const& _columns = _rows;
+    std::vector<LineIndex> _columns;
 
     AssemblerLib::ComponentOrder const _order;
 

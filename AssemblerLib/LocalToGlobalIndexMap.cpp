@@ -19,8 +19,8 @@ namespace AssemblerLib
 
 LocalToGlobalIndexMap::LocalToGlobalIndexMap(
     std::vector<MeshLib::MeshSubsets*> const& mesh_subsets,
-    AssemblerLib::ComponentOrder const order)
-    : _mesh_subsets(mesh_subsets), _mesh_component_map(_mesh_subsets, order)
+    AssemblerLib::ComponentOrder const order, bool is_parallel)
+    : _mesh_subsets(mesh_subsets), _mesh_component_map(_mesh_subsets, order, is_parallel)
       , _order(order)
 {
     // For all MeshSubsets and each of their MeshSubset's and each element
@@ -29,9 +29,7 @@ LocalToGlobalIndexMap::LocalToGlobalIndexMap(
     {
         for (MeshLib::MeshSubset const* const ms : *mss)
         {
-            std::size_t const mesh_id = ms->getMeshID();
-
-            findGlobalIndices(ms->elementsBegin(), ms->elementsEnd(), mesh_id, order);
+            findGlobalIndices(ms->elementsBegin(), ms->elementsEnd(), ms, order);
         }
     }
 }
@@ -50,9 +48,7 @@ LocalToGlobalIndexMap::LocalToGlobalIndexMap(
     {
         for (MeshLib::MeshSubset const* const ms : *mss)
         {
-            std::size_t const mesh_id = ms->getMeshID();
-
-            findGlobalIndices(elements.cbegin(), elements.cend(), mesh_id, order);
+            findGlobalIndices(elements.cbegin(), elements.cend(), ms, order);
         }
     }
 }

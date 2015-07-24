@@ -42,19 +42,26 @@ public:
 public:
     /// \param components   a vector of components
     /// \param order        type of ordering values in a vector
+    /// \param is_parallel  if this map is used in parallel
     MeshComponentMap(std::vector<MeshLib::MeshSubsets*> const& components,
-        ComponentOrder order);
+        ComponentOrder order, bool is_parallel = true);
 
     /// Creates a subset of the current mesh component map.
     /// The order of components is the same as of the current map.
     MeshComponentMap getSubset(
         std::vector<MeshLib::MeshSubsets*> const& components) const;
 
+    /// Returns if this is used in parallel
+    bool isParallel() const { return _is_parallel; }
+
     /// The number of components in the map.
     std::size_t size() const
     {
         return _dict.size();
     }
+
+    /// The number of active components in the map.
+    std::size_t nonGhostSize() const { return _n_nonghost_dofs; }
 
     /// Component ids at given location \c l.
     ///
@@ -113,11 +120,13 @@ public:
     /// | ...      |  ...        | ...         |
     /// | l_n      | comp_id_n   | gi89        |
     template <ComponentOrder ORDER>
-    std::vector<std::size_t> getGlobalIndices(const std::vector<Location> &ls) const;
+    std::vector<std::size_t> getGlobalIndices(const std::vector<Location> &ls, bool mask_ghosts = false) const;
 
     /// Global indices for the given componet
     template <ComponentOrder ORDER>
     std::vector<std::size_t> getGlobalIndices(const std::vector<Location> &ls, std::size_t const comp_id) const;
+
+    std::vector<std::size_t> getGlobalIndicesOfGhosts() const;
 
     /// A value returned if no global index was found for the requested
     /// location/component. The value is implementation dependent.
@@ -131,7 +140,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, MeshComponentMap const& m)
     {
-        os << "Dictionary size: " << m._dict.size() << "\n";
+        os << "Dictionary size: " << m._dict.size() << "(active " << m._n_nonghost_dofs << ")" << "\n";
         for (auto l : m._dict)
             os << l << "\n";
         return os;
@@ -141,7 +150,7 @@ public:
 private:
     /// Private constructor used by internally created mesh component maps.
     MeshComponentMap(detail::ComponentGlobalIndexDict& dict)
-        : _dict(dict)
+        : _dict(dict), _is_parallel(true)
     { }
 
     /// Looks up if a line is already stored in the dictionary.
@@ -154,6 +163,9 @@ private:
 
 private:
     detail::ComponentGlobalIndexDict _dict;
+
+    bool _is_parallel;
+    std::size_t _n_nonghost_dofs;
 };
 
 }   // namespace AssemblerLib
