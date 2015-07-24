@@ -83,7 +83,8 @@ inline void setGlobalVector(
 	for (size_t i=node_value_vec.getRangeBegin(); i<node_value_vec.getRangeEnd(); i++) {
 		MeshLib::Location loc(mesh_id, MeshLib::MeshItemType::Node, i);
 		size_t eqs_id = meshComponentMap.getGlobalIndex(loc, comp_id);
-		global_vec.set(eqs_id, node_value_vec[i]);
+		if (eqs_id != static_cast<std::size_t>(-1))
+			global_vec.set(eqs_id, node_value_vec[i]);
 	}
 }
 
