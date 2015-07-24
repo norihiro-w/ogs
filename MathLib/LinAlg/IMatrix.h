@@ -101,8 +101,10 @@ IMatrix::add(std::vector<std::size_t> const& row_pos, std::vector<std::size_t> c
     const std::size_t n_cols = col_pos.size();
     for (std::size_t i = 0; i < n_rows; i++) {
         const std::size_t row = row_pos[i];
+        if (row == -1) continue;
         for (std::size_t j = 0; j < n_cols; j++) {
             const std::size_t col = col_pos[j];
+            if (col == -1) continue;
             add(row, col, fkt * sub_matrix(i, j));
         }
     }

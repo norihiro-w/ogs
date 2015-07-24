@@ -76,12 +76,14 @@ public:
     /// set entry
     void set(std::size_t rowId, double v)
     {
+        if (rowId!=static_cast<std::size_t>(-1))
         _vec[rowId] = v;
     }
 
     /// add entry
     void add(std::size_t rowId, double v)
     {
+        if (rowId!=static_cast<std::size_t>(-1))
         _vec[rowId] += v;
     }
 

@@ -73,6 +73,7 @@ public:
     void add(const std::vector<std::size_t> &pos, const T_SUBVEC &sub_vec, double fac = 1.0)
     {
         for (std::size_t i=0; i<pos.size(); ++i) {
+            if (pos[i]==-1) continue;
             this->add(pos[i], fac * sub_vec[i]);
         }
     }
