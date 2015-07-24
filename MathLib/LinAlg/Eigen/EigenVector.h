@@ -125,6 +125,8 @@ public:
         return _vec.lpNorm<Eigen::Infinity>();
     }
 
+    void assemble() {}
+
 private:
     RawVectorType _vec;
 };

@@ -18,7 +18,7 @@
 namespace MathLib
 {
 
-PETScMatrix::PETScMatrix (const PetscInt nrows, const PETScMatrixOption &mat_opt)
+PETScMatrix::PETScMatrix (const PetscInt nrows, const MatrixOption &mat_opt)
     :_nrows(nrows), _ncols(nrows), _n_loc_rows(PETSC_DECIDE),
      _n_loc_cols(mat_opt.n_local_cols), _external_data(false)
 {
@@ -36,7 +36,7 @@ PETScMatrix::PETScMatrix (const PetscInt nrows, const PETScMatrixOption &mat_opt
     create(mat_opt.d_nz, mat_opt.o_nz);
 }
 
-PETScMatrix::PETScMatrix (const PetscInt nrows, const PetscInt ncols, const PETScMatrixOption &mat_opt)
+PETScMatrix::PETScMatrix (const PetscInt nrows, const PetscInt ncols, const MatrixOption &mat_opt)
     :_nrows(nrows), _ncols(ncols),  _n_loc_rows(PETSC_DECIDE),
      _n_loc_cols(mat_opt.n_local_cols), _external_data(false)
 {

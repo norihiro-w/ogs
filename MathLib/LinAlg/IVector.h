@@ -80,6 +80,8 @@ public:
     virtual double norm1() const = 0;
     virtual double norm2() const = 0;
     virtual double norm_max() const = 0;
+
+    virtual void assemble() = 0;
 };
 
 } // MathLib

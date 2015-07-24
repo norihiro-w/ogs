@@ -294,6 +294,8 @@ class PETScVector : public IVector
             return norm;
         }
 
+        void assemble() { finalizeVectorAssembly(*this); }
+
     private:
         PETSc_Vec _v;
 
