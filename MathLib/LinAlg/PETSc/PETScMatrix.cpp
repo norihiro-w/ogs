@@ -15,41 +15,82 @@
 
 #include "PETScMatrix.h"
 
+#include <logog/include/logog.hpp>
+
+#include <petscmat.h>
+
 namespace MathLib
 {
 
-PETScMatrix::PETScMatrix (const PetscInt nrows, const MatrixOption &mat_opt)
-    :_nrows(nrows), _ncols(nrows), _n_loc_rows(PETSC_DECIDE),
-     _n_loc_cols(mat_opt.n_local_cols), _external_data(false)
+PETScMatrix::PETScMatrix (const PetscInt nrows)
+    : _external_data(false)
 {
-    if(!mat_opt.is_global_size)
-    {
-        _nrows = PETSC_DECIDE;
-        _ncols = PETSC_DECIDE;
-        _n_loc_rows = nrows;
+    PetscInt m = PETSC_DECIDE, n = PETSC_DECIDE, M = nrows, N = PETSC_DECIDE;
 
-        // Make the matrix be square.
-        MPI_Allreduce(&_n_loc_rows, &_nrows, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
-        _ncols = _nrows;
-    }
+    MatCreate(PETSC_COMM_WORLD, &_A);
+    MatSetSizes(_A, m, n, M, N);
 
-    create(mat_opt.d_nz, mat_opt.o_nz);
+//#ifdef USE_MPI
+//    MatSetType(_A, MATMPIAIJ);
+//#else
+//    MatSetType(_A, MATSEQAIJ);
+//#endif
+    MatSetFromOptions(_A);
+
+    MatGetOwnershipRange(_A, &_start_rank, &_end_rank);
+    MatGetSize(_A, &_nrows,  &_ncols);
+    MatGetLocalSize(_A, &_n_loc_rows, &_n_loc_cols);
 }
 
-PETScMatrix::PETScMatrix (const PetscInt nrows, const PetscInt ncols, const MatrixOption &mat_opt)
-    :_nrows(nrows), _ncols(ncols),  _n_loc_rows(PETSC_DECIDE),
-     _n_loc_cols(mat_opt.n_local_cols), _external_data(false)
+PETScMatrix::PETScMatrix (const PetscInt nrows, const MatrixOption& mat_opt)
+    : _external_data(false)
 {
-    if(!mat_opt.is_global_size)
+    PetscInt m = PETSC_DECIDE, n = PETSC_DECIDE, M = nrows, N = PETSC_DECIDE;
+    if (!mat_opt.is_global_size)
     {
-        _nrows = PETSC_DECIDE;
-        _ncols = PETSC_DECIDE;
-        _n_loc_rows = nrows;
-        _n_loc_cols = ncols;
+        m = nrows;
+        MPI_Allreduce(&m, &M, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
+        N = M; // assume square
     }
 
-    create(mat_opt.d_nz, mat_opt.o_nz);
+    MatCreate(PETSC_COMM_WORLD, &_A);
+    MatSetSizes(_A, m, n, M, N);
+
+//#ifdef USE_MPI
+//    MatSetType(_A, MATMPIAIJ);
+//#else
+//    MatSetType(_A, MATSEQAIJ);
+//#endif
+    MatSetFromOptions(_A);
+
+    PetscInt d_nz = (mat_opt.d_nz == 0) ? PETSC_DECIDE : mat_opt.d_nz;
+    PetscInt o_nz = (mat_opt.o_nz == 0) ? PETSC_DECIDE : mat_opt.o_nz;
+    MatSeqAIJSetPreallocation(_A, d_nz, PETSC_NULL);
+    MatMPIAIJSetPreallocation(_A, d_nz, PETSC_NULL, o_nz, PETSC_NULL);
+    // If pre-allocation does not work one can use MatSetUp(_A), which is much
+    // slower.
+
+    MatGetOwnershipRange(_A, &_start_rank, &_end_rank);
+    MatGetSize(_A, &_nrows,  &_ncols);
+    MatGetLocalSize(_A, &_n_loc_rows, &_n_loc_cols);
+
+    INFO("creating a matrix: rows=%d, local rows=%d, start=%d, end=%d", _nrows, _n_loc_rows, _start_rank, _end_rank);
 }
+
+//PETScMatrix::PETScMatrix (const PetscInt nrows, const PetscInt ncols, const MatrixOption* mat_opt)
+//    :_nrows(nrows), _ncols(ncols),  _n_loc_rows(PETSC_DECIDE),
+//     _n_loc_cols(mat_opt.n_local_cols), _external_data(false)
+//{
+//    if(!mat_opt.is_global_size)
+//    {
+//        _nrows = PETSC_DECIDE;
+//        _ncols = PETSC_DECIDE;
+//        _n_loc_rows = nrows;
+//        _n_loc_cols = ncols;
+//    }
+//
+//    create(mat_opt.d_nz, mat_opt.o_nz);
+//}
 
 PETScMatrix::PETScMatrix (Mat &mat)
 : _A(mat), _external_data(true)
@@ -94,27 +135,27 @@ void PETScMatrix::viewer(const std::string &file_name, const PetscViewerFormat v
 
 }
 
-void PETScMatrix::create(const PetscInt d_nz, const PetscInt o_nz)
-{
-    MatCreate(PETSC_COMM_WORLD, &_A);
-    MatSetSizes(_A, _n_loc_rows, _n_loc_cols, _nrows, _ncols);
-
-#ifdef USE_MPI
-    MatSetType(_A, MATMPIAIJ);
-#else
-    MatSetType(_A, MATSEQAIJ);
-#endif
-    MatSetFromOptions(_A);
-
-    MatSeqAIJSetPreallocation(_A, d_nz, PETSC_NULL);
-    MatMPIAIJSetPreallocation(_A, d_nz, PETSC_NULL, o_nz, PETSC_NULL);
-    // If pre-allocation does not work one can use MatSetUp(_A), which is much
-    // slower.
-
-    MatGetOwnershipRange(_A, &_start_rank, &_end_rank);
-    MatGetSize(_A, &_nrows,  &_ncols);
-    MatGetLocalSize(_A, &_n_loc_rows, &_n_loc_cols);
-}
+//void PETScMatrix::create(const PetscInt d_nz, const PetscInt o_nz)
+//{
+//    MatCreate(PETSC_COMM_WORLD, &_A);
+//    MatSetSizes(_A, _n_loc_rows, _n_loc_cols, _nrows, _ncols);
+//
+//#ifdef USE_MPI
+//    MatSetType(_A, MATMPIAIJ);
+//#else
+//    MatSetType(_A, MATSEQAIJ);
+//#endif
+//    MatSetFromOptions(_A);
+//
+//    MatSeqAIJSetPreallocation(_A, d_nz, PETSC_NULL);
+//    MatMPIAIJSetPreallocation(_A, d_nz, PETSC_NULL, o_nz, PETSC_NULL);
+//    // If pre-allocation does not work one can use MatSetUp(_A), which is much
+//    // slower.
+//
+//    MatGetOwnershipRange(_A, &_start_rank, &_end_rank);
+//    MatGetSize(_A, &_nrows,  &_ncols);
+//    MatGetLocalSize(_A, &_n_loc_rows, &_n_loc_cols);
+//}
 
 bool finalizeMatrixAssembly(PETScMatrix &mat, const MatAssemblyType asm_type)
 {

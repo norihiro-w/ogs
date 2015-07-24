@@ -18,10 +18,12 @@
 #include <string>
 #include <vector>
 
+#include <petscmat.h>
+
 #include "MathLib/LinAlg/IMatrix.h"
 #include "MathLib/LinAlg/RowColumnIndices.h"
+#include "MathLib/LinAlg/MatrixOption.h"
 
-#include "PETScMatrixOption.h"
 #include "PETScVector.h"
 
 
@@ -41,16 +43,18 @@ class PETScMatrix : public IMatrix
           \param nrows  The number of rows of the matrix or the local matrix.
           \param mat_op The configuration information for creating a matrix.
         */
-        PETScMatrix(const PetscInt nrows, const PETScMatrixOption &mat_op = PETScMatrixOption() );
+        explicit PETScMatrix(const PetscInt nrows);
 
-        /*!
-          \brief        Constructor for a rectangular matrix partitioning with more options
-          \param nrows  The number of global or local rows.
-          \param ncols  The number of global or local columns.
-          \param mat_op The configuration information for creating a matrix.
-        */
-        PETScMatrix(const PetscInt nrows, const PetscInt ncols,
-                    const PETScMatrixOption &mat_op = PETScMatrixOption() );
+        PETScMatrix(const PetscInt nrows, const MatrixOption& mat_op);
+
+//        /*!
+//          \brief        Constructor for a rectangular matrix partitioning with more options
+//          \param nrows  The number of global or local rows.
+//          \param ncols  The number of global or local columns.
+//          \param mat_op The configuration information for creating a matrix.
+//        */
+//        PETScMatrix(const PetscInt nrows, const PetscInt ncols,
+//                    const MatrixOption* mat_op = nullptr );
 
         explicit PETScMatrix(Mat &mat);
 
@@ -259,14 +263,14 @@ class PETScMatrix : public IMatrix
         /// is externally given data
         bool _external_data;
 
-        /*!
-          \brief Create the matrix, configure memory allocation and set the related member data.
-          \param Number of nonzeros per row in the diagonal portion of local submatrix
-                 (same value is used for all local rows),
-          \param Number of nonzeros per row in the off-diagonal portion of local submatrix
-                 (same value is used for all local rows)
-        */
-        void create(const PetscInt d_nz, const PetscInt o_nz);
+//        /*!
+//          \brief Create the matrix, configure memory allocation and set the related member data.
+//          \param Number of nonzeros per row in the diagonal portion of local submatrix
+//                 (same value is used for all local rows),
+//          \param Number of nonzeros per row in the off-diagonal portion of local submatrix
+//                 (same value is used for all local rows)
+//        */
+//        void create(const PetscInt d_nz, const PetscInt o_nz);
 
         friend bool finalizeMatrixAssembly(PETScMatrix &mat, const MatAssemblyType asm_type);
 };
@@ -282,10 +286,20 @@ void PETScMatrix::add(std::vector<std::size_t> const& row_pos,
                       std::vector<std::size_t> const& col_pos,
                       const T_DENSE_MATRIX &sub_mat)
 {
-    const PetscInt nrows = static_cast<PetscInt> (row_pos.size());
-    const PetscInt ncols = static_cast<PetscInt> (col_pos.size());
+    auto nrows = row_pos.size();
+    auto ncols = col_pos.size();
+    for (std::size_t i = 0; i < nrows; i++) {
+        const std::size_t row = row_pos[i];
+        if (row==(std::size_t)-1) continue;
+        for (std::size_t j = 0; j < ncols; j++) {
+            const std::size_t col = col_pos[j];
+            add(row, col, sub_mat(i, j));
+        }
+    }
 
-    MatSetValues(_A, nrows, (PetscInt*)&row_pos[0], ncols, (PetscInt*)&col_pos[0], &sub_mat(0,0), ADD_VALUES);
+//    const PetscInt nrows = static_cast<PetscInt> (row_pos.size());
+//    const PetscInt ncols = static_cast<PetscInt> (col_pos.size());
+//    MatSetValues(_A, nrows, (PetscInt*)&row_pos[0], ncols, (PetscInt*)&col_pos[0], &sub_mat(0,0), ADD_VALUES);
 };
 
 /*!

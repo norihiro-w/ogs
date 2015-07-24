@@ -11,9 +11,12 @@
 #define LINALGBUILDER_H_
 
 #include <cstdlib>
+#include <vector>
+
 #include <boost/property_tree/ptree.hpp>
 
 #include "LinAlgLibType.h"
+#include "MatrixOption.h"
 
 namespace MathLib
 {
@@ -26,8 +29,8 @@ class LinAlgBuilder
 {
 public:
     static IVector* duplicateVector(IVector &v);
-    static IVector* generateVector(LinAlgLibType libType, std::size_t n);
-    static IMatrix* generateMatrix(LinAlgLibType libType, std::size_t n);
+    static IVector* generateVector(LinAlgLibType libType, std::size_t n, bool is_global_size = true, std::vector<std::size_t> const* ghost_ids = nullptr);
+    static IMatrix* generateMatrix(LinAlgLibType libType, std::size_t n, const MatrixOption* opt = nullptr);
     static ILinearSolver* generateLinearSolver(LinAlgLibType libType, IMatrix*A, boost::property_tree::ptree const*const option = nullptr);
 };
 

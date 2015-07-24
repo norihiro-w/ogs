@@ -11,20 +11,20 @@
                See accompanying file LICENSE.txt or
                http://www.opengeosys.org/project/license
 */
-#ifndef PETSCMATRIXOPTION_H_
-#define PETSCMATRIXOPTION_H_
+#ifndef MATRIXOPTION_H_
+#define MATRIXOPTION_H_
 
-#include <petscmat.h>
+#include <cstdlib>
 
 namespace MathLib
 {
 /*!
    \brief This a struct data containing the configuration information to create a PETSc type matrix
 */
-struct PETScMatrixOption
+struct MatrixOption
 {
-    PETScMatrixOption() :  is_global_size(true), n_local_cols(PETSC_DECIDE),
-        d_nz(PETSC_DECIDE), o_nz(PETSC_DECIDE)
+    MatrixOption() :  is_global_size(true), n_local_cols(0),
+        d_nz(0), o_nz(0)
     { }
 
     /*!
@@ -37,19 +37,19 @@ struct PETScMatrixOption
     bool is_global_size;
 
     /// Number of local columns. The default is PETSC_DECIDE.
-    PetscInt n_local_cols;
+    std::size_t n_local_cols;
 
     /*!
      \brief Number of nonzeros per row in the diagonal portion of local submatrix
            (same value is used for all local rows), the default is PETSC_DECIDE
     */
-    PetscInt d_nz;
+    std::size_t d_nz;
 
     /*!
      \brief Number of nonzeros per row in the off-diagonal portion of local submatrix
             (same value is used for all local rows), the default is PETSC_DECIDE
     */
-    PetscInt o_nz;
+    std::size_t o_nz;
 };
 
 } // end namespace

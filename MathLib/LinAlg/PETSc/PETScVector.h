@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include <petscvec.h>
 
@@ -44,7 +45,8 @@ class PETScVector : public IVector
             \param is_global_size The flag of the type of vec_size, i.e. whether it is a global size
                                   or local size. The default is true.
         */
-        PETScVector(const PetscInt vec_size, const bool is_global_size = true);
+        PETScVector(const PetscInt vec_size, const bool is_sequential = true,
+                const std::vector<std::size_t>* vec_ghosts = nullptr);
 
         /*!
              \brief Copy constructor
@@ -56,11 +58,7 @@ class PETScVector : public IVector
 
         explicit PETScVector(Vec &vec);
 
-        ~PETScVector()
-        {
-            if (!_external_data)
-                VecDestroy(&_v);
-        }
+        ~PETScVector();
 
         LinAlgLibType getLinAlgLibType() const
         {
@@ -69,15 +67,11 @@ class PETScVector : public IVector
 
         IVector* duplicate() const
         {
-            return new PETScVector(*this);
+            return new PETScVector(*this, false);
         }
 
         /// Perform MPI collection of assembled entries in buffer
-        void finalizeAssembly()
-        {
-            VecAssemblyBegin(_v);
-            VecAssemblyEnd(_v);
-        }
+        void finalizeAssembly();
 
         /// Get the global size of the vector
         std::size_t size() const
@@ -154,6 +148,7 @@ class PETScVector : public IVector
             VecSetValues(_v, e_idxs.size(), (PetscInt*)&e_idxs[0], &sub_vec[0], INSERT_VALUES);
         }
 
+#if 0
         /*!
            Get several entries
            \param e_idxs  Indicies of entries to be gotten.
@@ -165,6 +160,7 @@ class PETScVector : public IVector
         {
             VecGetValues(_v, e_idxs.size(), &e_idxs[0], &sub_vec[0]);
         }
+#endif
 
         /*!
            Get local vector, i.e. entries in the same rank
@@ -189,11 +185,25 @@ class PETScVector : public IVector
 
         /// Get an entry value. This is an expensive operation,
         /// and it only get local value. Use it for only test purpose
-        PetscScalar get(std::size_t idx) const
+        PetscScalar get(std::size_t idx_) const
         {
-            PetscInt idx_(idx);
+            if (idx_==static_cast<std::size_t>(-1)) return -99999;
+            PetscInt idx(idx_);
             PetscScalar x;
-            VecGetValues(_v, 1, &idx_, &x);
+            if (_lv) {
+                PetscInt local_id(0);
+                if (_start_rank <= idx && idx < _end_rank)
+                    local_id = idx - _start_rank;
+                else {
+                    auto it = std::find(_vec_ghosts_gid.begin(), _vec_ghosts_gid.end(), idx);
+                    assert(it!=_vec_ghosts_gid.end());
+                    local_id = _size_loc + std::distance(_vec_ghosts_gid.begin(), it);
+                }
+                VecGetValues(_lv, 1, &local_id, &x);
+            } else {
+                PetscInt global_id(idx);
+                VecGetValues(_v, 1, &global_id, &x);
+            }
             return x;
         }
 
@@ -215,13 +225,9 @@ class PETScVector : public IVector
             VecSet(_v, val);
             return *this;
         }
+
         /// Overloaded operator: assign
-        IVector& operator = (const IVector &v_in_)
-        {
-            const PETScVector &v_in(static_cast<const PETScVector &>(v_in_));
-            VecCopy(v_in._v, _v);
-            return *this;
-        }
+        IVector& operator = (const IVector &v_in_);
 
         ///  Overloaded operator: add
         void operator += (const IVector& v_in_)
@@ -298,6 +304,7 @@ class PETScVector : public IVector
 
     private:
         PETSc_Vec _v;
+        PETSc_Vec _lv; /// local representation
 
         /// Starting index in a rank
         PetscInt _start_rank;
@@ -310,6 +317,7 @@ class PETScVector : public IVector
         PetscInt _size_loc;
 
         bool _external_data;
+        std::vector<std::size_t> _vec_ghosts_gid;
 
         /*!
               \brief  Collect local vectors

@@ -266,7 +266,7 @@ TEST(Math, CheckInterface_Lis)
 #ifdef USE_PETSC
 TEST(MPITest_Math, CheckInterface_PETSc_Linear_Solver_basic)
 {
-    MathLib::PETScMatrixOption opt;
+    MathLib::MatrixOption opt;
     opt.d_nz = 2;
     opt.o_nz = 0;
     opt.is_global_size = false;
@@ -290,7 +290,7 @@ TEST(MPITest_Math, CheckInterface_PETSc_Linear_Solver_basic)
 
 TEST(MPITest_Math, CheckInterface_PETSc_Linear_Solver_chebyshev_sor)
 {
-    MathLib::PETScMatrixOption opt;
+    MathLib::MatrixOption opt;
     opt.d_nz = 2;
     opt.o_nz = 0;
     opt.is_global_size = false;
@@ -314,7 +314,7 @@ TEST(MPITest_Math, CheckInterface_PETSc_Linear_Solver_chebyshev_sor)
 
 TEST(MPITest_Math, CheckInterface_PETSc_Linear_Solver_gmres_amg)
 {
-    MathLib::PETScMatrixOption opt;
+    MathLib::MatrixOption opt;
     opt.d_nz = 2;
     opt.o_nz = 0;
     opt.is_global_size = false;

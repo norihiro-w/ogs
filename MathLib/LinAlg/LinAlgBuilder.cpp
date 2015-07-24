@@ -56,7 +56,7 @@ IVector* LinAlgBuilder::duplicateVector(IVector &v)
     }
 }
 
-IVector* LinAlgBuilder::generateVector(LinAlgLibType libType, std::size_t n)
+IVector* LinAlgBuilder::generateVector(LinAlgLibType libType, std::size_t n, bool is_global_size, std::vector<std::size_t> const* ghost_ids)
 {
     switch (libType)
     {
@@ -72,14 +72,14 @@ IVector* LinAlgBuilder::generateVector(LinAlgLibType libType, std::size_t n)
 #endif
 #ifdef USE_PETSC
     case LinAlgLibType::PETSc:
-        return new MathLib::PETScVector(n);
+        return new MathLib::PETScVector(n, is_global_size, ghost_ids);
 #endif
     default:
         return nullptr;
     }
 }
 
-IMatrix* LinAlgBuilder::generateMatrix(LinAlgLibType libType, std::size_t n)
+IMatrix* LinAlgBuilder::generateMatrix(LinAlgLibType libType, std::size_t n, const MatrixOption* opt)
 {
     switch (libType)
     {
@@ -95,7 +95,7 @@ IMatrix* LinAlgBuilder::generateMatrix(LinAlgLibType libType, std::size_t n)
 #endif
 #ifdef USE_PETSC
     case LinAlgLibType::PETSc:
-        return new MathLib::PETScMatrix(n);
+        return opt ? new MathLib::PETScMatrix(n, *opt) : new MathLib::PETScMatrix(n);
 #endif
     default:
         return nullptr;
