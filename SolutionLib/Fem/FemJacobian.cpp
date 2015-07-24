@@ -45,9 +45,9 @@ void TransientFEMJacobianFunction::operator()(const MathLib::IVector &u_n1, Math
         auto rowColIndeces = (*_dofManager)[e->getID()];
 
         // local assembly
-        MathLib::LocalMatrix localA = MathLib::LocalMatrix::Zero(rowColIndeces.rows.size(), rowColIndeces.rows.size());
+        MathLib::LocalMatrix localA = MathLib::LocalMatrix::Zero(rowColIndeces.rows.size(), rowColIndeces.columns.size());
         // previous and current results
-        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.rows, u_n1);
+        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
 
         // create local DoF table
@@ -57,7 +57,7 @@ void TransientFEMJacobianFunction::operator()(const MathLib::IVector &u_n1, Math
         MeshLib::MeshSubset subset(*_msh, &vec_items);
         MeshLib::MeshSubsets ss(&subset);
         std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
-        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets);
+        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
 
         _local_assembler->reset(*e, localDofMap);
         _local_assembler->jacobian(t_n1, local_u_n1, local_u_n, localA);
@@ -83,6 +83,8 @@ void TransientFEMJacobianFunction::operator()(const MathLib::IVector &u_n1, Math
     J.zeroRows(list_bc1_eqs_id);
 
     J.assemble();
+
+    //J.write("J.txt");
 }
 
 } //end

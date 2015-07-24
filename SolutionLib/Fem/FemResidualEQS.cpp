@@ -19,6 +19,12 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
     const MathLib::IVector &u_n = *this->_u_n0;
     size_t msh_id = _msh->getID();
 
+    //std::stringstream ss;
+    //ss << "u_n1 = ";
+    //for (std::size_t i=u_n1.getRangeBegin(); i<u_n1.getRangeEnd(); i++)
+    //    ss << u_n1[i] << " ";
+    //INFO("%s", ss.str().data());
+
     // assembly
     r = .0;
     for (auto e : _msh->getElements()) {
@@ -28,7 +34,7 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
         // local assembly
         MathLib::LocalVector localRes(rowColIndeces.rows.size());
         // previous and current results
-        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.rows, u_n1);
+        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
 
         // create local DoF table
@@ -38,7 +44,7 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
         MeshLib::MeshSubset subset(*_msh, &vec_items);
         MeshLib::MeshSubsets ss(&subset);
         std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
-        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets);
+        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
 
         _local_assembler->reset(*e, localDofMap);
         _local_assembler->residual(t_n1, local_u_n1, local_u_n, localRes);
@@ -50,6 +56,7 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
     // add source/sink term (i.e. RHS in linear equation)
     if (_st!=nullptr)
         r += *_st;
+    r.assemble();
 
     // set residual to zero for Dirichlet BC
     std::vector<size_t> list_bc1_eqs_id;
@@ -66,6 +73,9 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
     }
     for (auto i : list_bc1_eqs_id)
         r.set(i, 0);
+    r.assemble();
+
+    //r.write("r.txt");
 }
 
 } //end

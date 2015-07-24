@@ -37,7 +37,7 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         auto rowColIndeces = (*_dofManager)[e->getID()];
 
         // previous and current results
-        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.rows, u_k1);
+        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_k1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
 
         // create a local DoF table
@@ -47,7 +47,7 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         MeshLib::MeshSubset subset(*_msh, &vec_items);
         MeshLib::MeshSubsets ss(&subset);
         std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
-        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets);
+        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
 
         // local assembly
         MathLib::LocalMatrix localA(rowColIndeces.rows.size(), rowColIndeces.rows.size());
@@ -58,7 +58,14 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         // update global
         _A->add(rowColIndeces.rows, rowColIndeces.columns, localA);
         _rhs->add(rowColIndeces.rows, localRhs);
+
+//        std::stringstream sst; sst << rowColIndeces;
+//        sst << "A=\n" <<  localA;
+//        sst << "\nb=\n" << localRhs;
+//        INFO("e %d:\%s", e->getID(), sst.str().data());
     }
+    _A->assemble();
+    _rhs->assemble();
 
     //apply BC1,2
     for (size_t i=0; i<_list_var.size(); i++) {
@@ -74,9 +81,14 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
 
         for (size_t j=0; j<var->getNumberOfNeumannBC(); j++) {
             IFemNeumannBC* bc2 = var->getNeumannBC(j);
-            _rhs->add(bc2->getListOfBCNodes(), bc2->getListOfBCValues(), -1.0);
+            std::vector<size_t> var_bc2_id;
+            std::vector<double> var_bc2_val;
+            AssemblerLib::toGlobalIDValues(*_dofManager, i, _msh->getID(), bc2->getListOfBCNodes(), bc2->getListOfBCValues(), var_bc2_id, var_bc2_val);
+            _rhs->add(var_bc2_id, var_bc2_val, -1.0);
         }
     }
+    _A->assemble();
+    _rhs->assemble();
 
 //#define OUT_LEQS
 #ifdef OUT_LEQS
