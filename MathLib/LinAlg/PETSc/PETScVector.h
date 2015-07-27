@@ -56,7 +56,7 @@ class PETScVector : public IVector
         */
         PETScVector(const PETScVector &existing_vec, const bool deep_copy = true);
 
-        explicit PETScVector(Vec &vec);
+        PETScVector(Vec &vec, const std::vector<std::size_t>& ghost_globalIDs);
 
         ~PETScVector();
 
@@ -301,6 +301,8 @@ class PETScVector : public IVector
         }
 
         void assemble() { finalizeVectorAssembly(*this); }
+
+        std::vector<std::size_t> getGhostGlobalIDs() const { return _vec_ghosts_gid; }
 
     private:
         PETSc_Vec _v;

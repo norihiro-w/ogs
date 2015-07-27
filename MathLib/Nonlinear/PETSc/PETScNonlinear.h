@@ -94,21 +94,21 @@ struct Wrapper
 template <class F_R, class F_J>
 struct Wrapper<F_R, F_J, MathLib::PETScVector, MathLib::PETScMatrix>
 {
-    Wrapper(F_R &fr, F_J &fj, MathLib::PETScVector &x) : _f_r(fr), _f_j(fj) {}
+    Wrapper(F_R &fr, F_J &fj, MathLib::PETScVector &x) : _f_r(fr), _f_j(fj), _x(x) {}
 
     ~Wrapper() {}
 
     PetscErrorCode residual(SNES, Vec x_, Vec r_,void*)
     {
-        PETScVector x(x_);
-        PETScVector r(r_);
+        PETScVector x(x_, _x.getGhostGlobalIDs());
+        PETScVector r(r_, _x.getGhostGlobalIDs());
         _f_r(x, r);
         return 0;
     }
 
     PetscErrorCode jacobian(SNES, Vec x_, Mat jac_, Mat /*B*/, void*)
     {
-        PETScVector x(x_);
+        PETScVector x(x_, _x.getGhostGlobalIDs());
         PETScMatrix jac(jac_);
         _f_j(x, jac);
         return 0;
@@ -116,6 +116,7 @@ struct Wrapper<F_R, F_J, MathLib::PETScVector, MathLib::PETScMatrix>
 
     F_R& _f_r;
     F_J& _f_j;
+    MathLib::PETScVector& _x;
 };
 
 template <class T>

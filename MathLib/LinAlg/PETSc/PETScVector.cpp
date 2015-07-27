@@ -70,9 +70,10 @@ PETScVector::PETScVector(const PETScVector &existing_vec, const bool deep_copy)
 }
 
 
-PETScVector::PETScVector(Vec &vec)
-: _v(vec), _lv(nullptr), _external_data(true)
+PETScVector::PETScVector(Vec &vec, const std::vector<std::size_t> &ghost_globalIDs)
+: _v(vec), _lv(nullptr), _external_data(true), _vec_ghosts_gid(ghost_globalIDs)
 {
+    VecGhostGetLocalForm(_v, &_lv);
     VecGetOwnershipRange(_v, &_start_rank,&_end_rank);
     VecGetLocalSize(_v, &_size_loc);
     VecGetSize(_v, &_size);
