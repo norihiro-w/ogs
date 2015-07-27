@@ -77,6 +77,8 @@ PETScVector::PETScVector(Vec &vec, const std::vector<std::size_t> &ghost_globalI
     VecGetOwnershipRange(_v, &_start_rank,&_end_rank);
     VecGetLocalSize(_v, &_size_loc);
     VecGetSize(_v, &_size);
+
+    finalizeAssembly();
 }
 
 PETScVector::~PETScVector()
