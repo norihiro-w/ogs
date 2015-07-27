@@ -98,6 +98,7 @@ public:
     double getRelDxError() const {return _dx_rel_error; }
 
 private:
+//#define DEBUG_NEWTON_RAPHSON
 #ifdef DEBUG_NEWTON_RAPHSON
     /// print out for debugging
     template<class T_VALUE>

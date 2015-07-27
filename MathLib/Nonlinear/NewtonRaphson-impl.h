@@ -67,7 +67,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
             // evaluate residual
             f_residual(x, r);
 #ifdef DEBUG_NEWTON_RAPHSON
-            printout(std::cout, itr_cnt, x_new, r, dx);
+            printout(std::cout, itr_cnt, x, r, dx);
 #endif
             // check convergence
             r_norm = norm(r, _normType);
@@ -161,10 +161,12 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
 
             x += dx;
             x.assemble();
+            //x.write("x" + std::to_string(itr_cnt) + ".txt");
             // evaluate residual
             f_residual(x, r);
-#ifdef DEBUG_NEWTON_RAPHSO
-            printout(std::cout, itr_cnt, x_new, r, dx);
+#ifdef DEBUG_NEWTON_RAPHSON
+            mpi.barrier();
+            printout(std::cout, itr_cnt, x, r, dx);
 #endif
             // check convergence
             r_norm = norm(r, _normType);
@@ -219,6 +221,21 @@ inline void NewtonRaphson::printout(std::ostream& os, std::size_t i, T_VALUE& x_
         os << r[i] << " ";
     os << "), dx=(";
     for (std::size_t i=0; i<dx.size(); i++)
+        os << dx[i] << " ";
+    os << ")\n";
+}
+
+template<>
+inline void NewtonRaphson::printout(std::ostream& os, std::size_t i, IVector& x_new, IVector& r, IVector& dx)
+{
+    os << "-> " << i <<": x=(";
+    for (std::size_t i=x_new.getRangeBegin(); i<x_new.getRangeEnd(); i++)
+        os << x_new[i] << " ";
+    os << "), r=(";
+    for (std::size_t i=r.getRangeBegin(); i<r.getRangeEnd(); i++)
+        os << r[i] << " ";
+    os << "), dx=(";
+    for (std::size_t i=dx.getRangeBegin(); i<dx.getRangeEnd(); i++)
         os << dx[i] << " ";
     os << ")\n";
 }
