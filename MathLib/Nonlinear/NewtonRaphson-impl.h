@@ -160,6 +160,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
             delete ls;
 
             x += dx;
+            x.assemble();
             // evaluate residual
             f_residual(x, r);
 #ifdef DEBUG_NEWTON_RAPHSO
