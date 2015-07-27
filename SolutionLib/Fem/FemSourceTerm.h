@@ -16,8 +16,7 @@
 #include <vector>
 
 #include "GeoLib/GeoObject.h"
-#include "MeshLib/Mesh.h"
-//#include "MeshLib/Tools/Tools.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
 
 #include "NumLib/Function/ITXFunction.h"
 
@@ -33,7 +32,7 @@ class FemSourceTerm : public IFemNeumannBC
 {
 public:
     /// 
-    FemSourceTerm(const MeshLib::Mesh *msh, const GeoLib::GeoObject *geo, NumLib::ITXFunction *func);
+    FemSourceTerm(MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearcher, const GeoLib::GeoObject *geo, NumLib::ITXFunction *func);
 
     ///
     FemSourceTerm(const std::vector<size_t> &vec_node_id, const std::vector<double> &vec_node_values);
@@ -60,7 +59,7 @@ public:
 
 private:
     // node id, var id, value
-    const MeshLib::Mesh* _msh;
+    MeshGeoToolsLib::MeshNodeSearcher* _mshNodeSearcher;
     const GeoLib::GeoObject *_geo;
     NumLib::ITXFunction *_bc_func;
     std::vector<size_t> _vec_nodes;

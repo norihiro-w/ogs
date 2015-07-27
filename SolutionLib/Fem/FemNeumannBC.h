@@ -10,7 +10,8 @@
 #include <vector>
 
 #include "GeoLib/GeoObject.h"
-#include "MeshLib/Mesh.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
+#include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
 #include "NumLib/Function/ITXFunction.h"
 #include "NumLib/Fem/Tools/IFeObjectContainer.h"
 
@@ -28,7 +29,8 @@ class FemNeumannBC : public IFemNeumannBC
 {
 public:
     /// 
-    FemNeumannBC(const MeshLib::Mesh *msh, NumLib::IFeObjectContainer* feObjects, const GeoLib::GeoObject *geo, NumLib::ITXFunction *func);
+    FemNeumannBC(MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearcher, MeshGeoToolsLib::BoundaryElementsSearcher* beSearcher,
+            NumLib::IFeObjectContainer* feObjects, const GeoLib::GeoObject *geo, NumLib::ITXFunction *func);
 
     ///
     FemNeumannBC(const std::vector<size_t> &vec_node_id, const std::vector<double> &vec_node_values);
@@ -62,7 +64,8 @@ public:
     virtual std::vector<double>& getListOfBCValues() {return _vec_values;};
 
 private:
-    const MeshLib::Mesh* _msh;
+    MeshGeoToolsLib::MeshNodeSearcher* _mshNodeSearcher;
+    MeshGeoToolsLib::BoundaryElementsSearcher* _beSearcher;
     NumLib::IFeObjectContainer* _feObjects;
     const GeoLib::GeoObject *_geo;
     NumLib::ITXFunction *_bc_func;

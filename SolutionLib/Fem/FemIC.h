@@ -3,11 +3,6 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file FemIC.h
- *
- * Created on 2012-09-22 by Norihiro Watanabe
  */
 
 #pragma once
@@ -15,7 +10,7 @@
 #include <vector>
 
 #include "GeoLib/GeoObject.h"
-#include "MeshLib/Mesh.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
 #include "NumLib/Function/ITXFunction.h"
 #include "NumLib/Function/ITXDiscreteFunction.h"
 
@@ -36,8 +31,8 @@ public:
      *
      * @param msh
      */
-    FemIC(const MeshLib::Mesh* msh)
-    : _msh(msh)
+    FemIC(MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearcher)
+    : _mshNodeSearcher(mshNodeSearcher)
     {
     }
 
@@ -57,7 +52,7 @@ public:
     void setup(MathLib::IVector &u0) const;
 
 private:
-    const MeshLib::Mesh* _msh;
+    MeshGeoToolsLib::MeshNodeSearcher* _mshNodeSearcher;
     std::vector<const GeoLib::GeoObject*> _vec_geo;
     std::vector<const NumLib::ITXFunction*> _vec_func;
 

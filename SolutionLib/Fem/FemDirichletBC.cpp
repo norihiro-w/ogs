@@ -19,15 +19,15 @@
 namespace SolutionLib
 {
 
-FemDirichletBC::FemDirichletBC(const MeshLib::Mesh* msh, const GeoLib::GeoObject* geo, NumLib::ITXFunction* bc_func)
-    : _msh(msh), _geo(geo), _bc_func(bc_func)
+FemDirichletBC::FemDirichletBC(MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearcher, const GeoLib::GeoObject* geo, NumLib::ITXFunction* bc_func)
+    : _mshNodeSearcher(mshNodeSearcher), _geo(geo), _bc_func(bc_func)
 {
     _is_transient = !bc_func->isTemporallyConst();
     _do_setup = true;
 }
 
 FemDirichletBC::FemDirichletBC(const std::vector<size_t> &vec_node_id, const std::vector<double> &vec_node_values)
-    : _msh(NULL), _geo(NULL), _bc_func(NULL), _vec_nodes(vec_node_id), _vec_values(vec_node_values)
+    : _mshNodeSearcher(nullptr), _geo(nullptr), _bc_func(nullptr), _vec_nodes(vec_node_id), _vec_values(vec_node_values)
 {
     _is_transient = false;
     _do_setup = false;
@@ -40,7 +40,7 @@ void FemDirichletBC::setup(NumLib::PolynomialOrder order)
     if (!_is_transient) _do_setup = false;
 
     //_msh->setCurrentOrder(order);
-    NumLib::DirichletBC2FEM convert(*_msh, *_geo, *_bc_func, _vec_nodes, _vec_values);
+    NumLib::DirichletBC2FEM convert(*_mshNodeSearcher, *_geo, *_bc_func, _vec_nodes, _vec_values);
 
     if (_vec_nodes.size()==0)
         INFO("***INFO: No Dirichlet BC found in FemDirichletBC::setup()");

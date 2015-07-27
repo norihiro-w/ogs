@@ -17,6 +17,7 @@
 
 #include "GeoLib/GeoObject.h"
 #include "MeshLib/Mesh.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
 #include "NumLib/Function/ITXFunction.h"
 #include "NumLib/Fem/PolynomialOrder.h"
 
@@ -39,7 +40,7 @@ public:
      * @param geo       Pointer to a geometric object representing locations of a boundary condition
      * @param bc_func   Pointer to a temporal-spatial function giving boundary values
      */
-    FemDirichletBC(const MeshLib::Mesh* msh, const GeoLib::GeoObject* geo, NumLib::ITXFunction* bc_func);
+    FemDirichletBC(MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearcher, const GeoLib::GeoObject* geo, NumLib::ITXFunction* bc_func);
 
     /**
      * 
@@ -66,7 +67,7 @@ public:
     void write(std::ostream &os = std::cout) const;
 
 private:
-    const MeshLib::Mesh* _msh;
+    MeshGeoToolsLib::MeshNodeSearcher* _mshNodeSearcher;
     const GeoLib::GeoObject* _geo;
     NumLib::ITXFunction* _bc_func;
     std::vector<size_t> _vec_nodes;
