@@ -3,11 +3,6 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file FemVariableBuilder.h
- *
- * Created on 2012-10-19 by Norihiro Watanabe
  */
 
 #pragma once
@@ -20,9 +15,10 @@ namespace GeoLib
 class GEOObjects;
 }
 
-namespace MeshLib
+namespace MeshGeoToolsLib
 {
-class Mesh;
+class MeshNodeSearcher;
+class BoundaryElementsSearcher;
 }
 
 namespace NumLib
@@ -51,7 +47,9 @@ public:
      * @param var               Pointer to a variable to be configured
      */
     void doit(const std::string &given_var_name, boost::property_tree::ptree const& option,
-              const MeshLib::Mesh* msh, const GeoLib::GEOObjects *geo, const std::string &geo_unique_name,
+              MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearch,
+              MeshGeoToolsLib::BoundaryElementsSearcher* beSearch,
+              const GeoLib::GEOObjects *geo, const std::string &geo_unique_name,
               NumLib::IFeObjectContainer* _feObjects, SolutionLib::FemVariable* var) const;
 };
 

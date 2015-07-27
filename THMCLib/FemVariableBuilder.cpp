@@ -3,11 +3,6 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file FemVariableBuilder.cpp
- *
- * Created on 2012-10-19 by Norihiro Watanabe
  */
 
 #include "FemVariableBuilder.h"
@@ -19,7 +14,8 @@
 
 #include "GeoLib/GEOObjects.h"
 
-#include "MeshLib/Mesh.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
+#include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
 
 #include "NumLib/Fem/Tools/IFeObjectContainer.h"
 #include "NumLib/Function/TXFunctionBuilder.h"
@@ -35,13 +31,15 @@ namespace SolutionLib
 {
 
 void FemVariableBuilder::doit(const std::string &given_var_name,
-		boost::property_tree::ptree const& option,
-		const MeshLib::Mesh* msh, const GeoLib::GEOObjects *geo,
-		const std::string &geo_unique_name, NumLib::IFeObjectContainer* _feObjects,
-		SolutionLib::FemVariable* var) const
+        boost::property_tree::ptree const& option,
+        MeshGeoToolsLib::MeshNodeSearcher* mshNodeSearch,
+        MeshGeoToolsLib::BoundaryElementsSearcher* beSearch,
+        const GeoLib::GEOObjects *geo,
+        const std::string &geo_unique_name, NumLib::IFeObjectContainer* _feObjects,
+        SolutionLib::FemVariable* var) const
 {
     // IC
-    SolutionLib::FemIC* var_ic = new SolutionLib::FemIC(msh);
+    SolutionLib::FemIC* var_ic = new SolutionLib::FemIC(mshNodeSearch);
     auto opICList = option.get_child_optional("ICList");
     if (opICList) {
         auto range = opICList->equal_range("IC");
@@ -74,7 +72,7 @@ void FemVariableBuilder::doit(const std::string &given_var_name,
 //            assert(opBC->hasOption("DistributionType"));
             //auto &opDistribution = it->second.get_child("Distribution");
             NumLib::ITXFunction* f_bc = NumLib::TXFunctionBuilder::create(it->second);
-            var->addDirichletBC(new SolutionLib::FemDirichletBC(msh, geo_obj, f_bc));
+            var->addDirichletBC(new SolutionLib::FemDirichletBC(mshNodeSearch, geo_obj, f_bc));
         }
     }
 
@@ -103,9 +101,9 @@ void FemVariableBuilder::doit(const std::string &given_var_name,
             }
             SolutionLib::IFemNeumannBC *femSt = 0;
             if (st_type.compare("NEUMANN")==0) {
-                femSt = new SolutionLib::FemNeumannBC(msh, _feObjects, geo_obj, f_st);
+                femSt = new SolutionLib::FemNeumannBC(mshNodeSearch, beSearch, _feObjects, geo_obj, f_st);
             } else if (st_type.compare("SOURCESINK")==0) {
-                femSt = new SolutionLib::FemSourceTerm(msh, geo_obj, f_st);
+                femSt = new SolutionLib::FemSourceTerm(mshNodeSearch, geo_obj, f_st);
             }
             var->addNeumannBC(femSt);
         }

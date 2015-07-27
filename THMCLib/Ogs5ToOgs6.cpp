@@ -9,9 +9,11 @@
 #include "Ogs5ToOgs6.h"
 
 #include <logog/include/logog.hpp>
-#include <MaterialLib/SolidModel.h>
 
 #include "BaseLib/StringTools.h"
+
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
+#include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
 
 #include "NumLib/Fem/Tools/LagrangeFeObjectContainer.h"
 #include "NumLib/Function/ITXFunction.h"
@@ -27,6 +29,7 @@
 #include "MaterialLib/FluidDensity.h"
 #include "MaterialLib/FluidViscosity.h"
 #include "MaterialLib/Fracture.h"
+#include "MaterialLib/SolidModel.h"
 
 #include "GeoProcessBuilder.h"
 
@@ -301,9 +304,10 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
         ERR("***Error: no mesh found in ogs5");
         return false;
     }
-    for (size_t i=0; i<ogs5fem.list_mesh.size(); i++) {
-        ogs6fem.list_mesh.push_back(ogs5fem.list_mesh[i]);
-//        ogs6fem.list_dis_sys.push_back(new DiscreteLib::DiscreteSystem(*ogs5fem.list_mesh[i]));
+    for (auto msh : ogs5fem.list_mesh) {
+        ogs6fem.list_mesh.push_back(msh);
+        ogs6fem.list_nodeSearcher.push_back(new MeshGeoToolsLib::MeshNodeSearcher(*msh));
+        ogs6fem.list_beSearcher.push_back(new MeshGeoToolsLib::BoundaryElementsSearcher(*msh, *ogs6fem.list_nodeSearcher.back()));
     }
 
     // -------------------------------------------------------------------------

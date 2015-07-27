@@ -7,23 +7,26 @@
 
 #pragma once
 
-#include <MaterialLib/SolidModel.h>
 #include <vector>
 #include <string>
 
 #include "BaseLib/OrderedMap.h"
 #include "MathLib/LinAlg/LinAlgLibType.h"
 #include "MathLib/DataType.h"
+#include "GeoLib/GEOObjects.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
+#include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
 #include "NumLib/Function/ITXFunction.h"
 #include "NumLib/TimeStepping/Algorithms/ITimeStepAlgorithm.h"
+
 #include "MaterialLib/IMedium.h"
 #include "MaterialLib/PorousMediumModel.h"
 #include "MaterialLib/FluidModel.h"
 #include "MaterialLib/Compound.h"
+#include "MaterialLib/SolidModel.h"
 #include "SolutionLib/Fem/FemDirichletBC.h"
 #include "SolutionLib/Fem/FemNeumannBC.h"
-#include "GeoLib/GEOObjects.h"
-#include "ProcessLib/Process.h"
+#include "THMCLib/ProcessLib/Process.h"
 #include "OutputController.h"
 #include "FeElementData.h"
 
@@ -55,9 +58,11 @@ public:
     std::vector<MaterialLib::Compound*> list_compound;
     // geometric data
     std::string geo_unique_name;
-    GeoLib::GEOObjects* geo;
+    GeoLib::GEOObjects* geo = nullptr;
     // mesh data
     std::vector<MeshLib::Mesh*> list_mesh;
+    std::vector<MeshGeoToolsLib::MeshNodeSearcher*> list_nodeSearcher;
+    std::vector<MeshGeoToolsLib::BoundaryElementsSearcher*> list_beSearcher;
     // time group data
     std::vector<NumLib::ITimeStepAlgorithm*> list_tim;
     //process
@@ -84,6 +89,8 @@ public:
         for (auto p : list_mesh) delete p;
         for (auto p : list_tim) delete p;
         for (auto p : list_pcs) delete p.second;
+        for (auto p : list_nodeSearcher) delete p;
+        for (auto p : list_beSearcher) delete p;
     }
 
     ~Ogs6FemData()
