@@ -194,6 +194,16 @@ void PETScVector::viewer(const std::string &file_name, const PetscViewerFormat v
     PetscObjectSetName((PetscObject)_v, file_name.c_str());
     VecView(_v, viewer);
 
+    if (_lv!=nullptr) {
+        std::stringstream ss;
+        for (PetscInt i=0; i<(_size_loc + _vec_ghosts_gid.size()); i++) {
+            PetscScalar x;
+            VecGetValues(_lv, 1, &i, &x);
+            ss << x << " ";
+        }
+        INFO("local vec = %s", ss.str().data());
+    }
+
 #define  nEXIT_TEST
 #ifdef EXIT_TEST
     VecDestroy(&_v);
