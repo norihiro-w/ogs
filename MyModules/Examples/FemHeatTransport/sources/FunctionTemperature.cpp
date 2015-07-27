@@ -58,7 +58,8 @@ bool FunctionTemperature::initialize(const boost::property_tree::ptree &option)
     // set up variable
     auto* pressure = _problem->addVariable("temperature"); //internal name
     SolutionLib::FemVariableBuilder varBuilder;
-    varBuilder.doit(this->getOutputParameterName(Temperature), option, msh, femData->geo, femData->geo_unique_name, _feObjects, pressure);
+    varBuilder.doit(this->getOutputParameterName(Temperature), option, femData->list_nodeSearcher[msh_id], femData->list_beSearcher[msh_id],
+                    femData->geo, femData->geo_unique_name, _feObjects, pressure);
 
     // set up solution
     _solution = new SolutionLib::SingleStepFEM(msh, _problem, femData->linalg_type);

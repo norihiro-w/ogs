@@ -44,8 +44,8 @@ bool FunctionLiquidPressure::initialize(const boost::property_tree::ptree& optio
     auto* femData = THMCLib::Ogs6FemData::getInstance();
     auto opt_msh_id = option.get_optional<size_t>("MeshID");
     if (!opt_msh_id) {
-    	ERR("Mesh ID not given for LIQUID_FLOW");
-    	return false;
+        ERR("Mesh ID not given for LIQUID_FLOW");
+        return false;
     }
     size_t msh_id = *opt_msh_id;
     auto time_id = option.get_optional<size_t>("TimeGroupID");
@@ -66,7 +66,8 @@ bool FunctionLiquidPressure::initialize(const boost::property_tree::ptree& optio
     // set up variable
     auto* pressure = _problem->addVariable("pressure"); //internal name
     SolutionLib::FemVariableBuilder varBuilder;
-    varBuilder.doit(this->getOutputParameterName(Pressure), option, msh, femData->geo, femData->geo_unique_name, _feObjects, pressure);
+    varBuilder.doit(this->getOutputParameterName(Pressure), option, femData->list_nodeSearcher[msh_id], femData->list_beSearcher[msh_id],
+                    femData->geo, femData->geo_unique_name, _feObjects, pressure);
 
     // set up solution
     _solution = new SolutionLib::SingleStepFEM(msh, _problem, femData->linalg_type);
