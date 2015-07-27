@@ -28,13 +28,14 @@ namespace NumLib
 {
 
 NeumannBC2FEM::NeumannBC2FEM(
-        const MeshLib::Mesh &msh, const double &current_time,
+        MeshGeoToolsLib::MeshNodeSearcher& nodeSearcher, MeshGeoToolsLib::BoundaryElementsSearcher& beSearcher,
+        const double &current_time,
         IFeObjectContainer &feObjects, const GeoLib::GeoObject &_geo,
         const NumLib::ITXFunction &_bc_func,
         std::vector<size_t> &_vec_nodes, std::vector<double> &_vec_values)
 {
+    auto const* msh = nodeSearcher.getMesh();
     // pickup nodes on geo
-    MeshGeoToolsLib::MeshNodeSearcher nodeSearcher(msh);
     _vec_nodes = nodeSearcher.getMeshNodeIDs(_geo);
 
     // distribute to RHS
@@ -46,7 +47,7 @@ NeumannBC2FEM::NeumannBC2FEM(
             // no need to integrate
             // get discrete values at nodes
             for (size_t i=0; i<_vec_nodes.size(); i++) {
-                auto* x = msh.getNode(_vec_nodes[i])->getCoords();
+                auto* x = msh->getNode(_vec_nodes[i])->getCoords();
                 NumLib::TXPosition pos(current_time, x);
                 _bc_func.eval(pos, _vec_values[i]);
             }
@@ -56,7 +57,6 @@ NeumannBC2FEM::NeumannBC2FEM(
         {
             // find edge elements on the geo
             std::vector<MeshLib::Element*> vec_edge_eles;
-            MeshGeoToolsLib::BoundaryElementsSearcher beSearcher(msh, nodeSearcher);
             vec_edge_eles = beSearcher.getBoundaryElements(_geo);
             // for each edge elements found
             std::map<size_t, double> map_nodeId2val;
@@ -82,7 +82,7 @@ NeumannBC2FEM::NeumannBC2FEM(
                 auto q = NumLib::getIntegrationMethod(e->getCellType());
                 MathLib::LocalMatrix M = MathLib::LocalMatrix::Zero(edge_nnodes, edge_nnodes);
                 //double x_ref[3];
-                NumLib::DynamicShapeMatrices shapeMat(e->getDimension(), msh.getDimension(), e->getNNodes());
+                NumLib::DynamicShapeMatrices shapeMat(e->getDimension(), msh->getDimension(), e->getNNodes());
                 for (size_t j=0; j<q->getNPoints(); j++) {
                     shapeMat.setZero();
                     auto wp = q->getWeightedPoint(j);

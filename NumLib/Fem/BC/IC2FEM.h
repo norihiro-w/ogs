@@ -21,9 +21,9 @@ namespace GeoLib
 class GeoObject;
 }
 
-namespace MeshLib
+namespace MeshGeoToolsLib
 {
-class Mesh;
+class MeshNodeSearcher;
 }
 
 namespace NumLib
@@ -37,7 +37,7 @@ class IC2FEM
 {
 public:
     ///
-    IC2FEM(const MeshLib::Mesh &msh, const GeoLib::GeoObject &geo, const NumLib::ITXFunction &ic_func, std::vector<size_t> &vec_nodes, std::vector<double> &vec_values);
+    IC2FEM(MeshGeoToolsLib::MeshNodeSearcher& nodeSearcher, const GeoLib::GeoObject &geo, const NumLib::ITXFunction &ic_func, std::vector<size_t> &vec_nodes, std::vector<double> &vec_values);
 };
 
 
