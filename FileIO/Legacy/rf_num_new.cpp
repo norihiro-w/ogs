@@ -352,6 +352,10 @@ ios::pos_type CNumerics::Read(ifstream* num_file)
                 line >> nls_plasticity_local_tolerance;
                 line >> nls_max_iterations;
                 line >> nls_relaxation;
+            } else {
+                line >> nls_error_tolerance[0];
+                line >> nls_max_iterations;
+                line >> nls_relaxation;
             }
             line.clear();
             continue;
