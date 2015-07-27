@@ -149,7 +149,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
 
     std::size_t itr_cnt = 0;
     if (!converged) {
-        for (itr_cnt=1; itr_cnt<_max_itr; itr_cnt++) {
+        for (itr_cnt=1; itr_cnt<(_max_itr+1); itr_cnt++) {
             // form J
             f_jacobian(x, *_J);
             // solve dx=-J^-1*r
