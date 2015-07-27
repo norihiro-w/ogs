@@ -64,6 +64,8 @@ public:
 
 	virtual ~MeshNodeSearcher();
 
+	const MeshLib::Mesh* getMesh() const {return &_mesh; }
+
 	/**
 	 * Searches for the nearest mesh nodes on the given geometric object (point, polyline, surface).
 	 * @param geoObj a GeoLib::GeoObject where the nearest mesh node is searched for
