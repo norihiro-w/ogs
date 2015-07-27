@@ -4,10 +4,16 @@
  $LINEAR_SOLVER 
 ; method error_tolerance max_iterations theta precond storage
   2      2 1.e-016       1000           1.0   1       4
+; $NON_LINEAR_ITERATION
+; ; method error_type max_iterations relaxation tolerance 
+;  NEWTON LMAX  2 0.0 1e-3
+;  LINEAR 1e-3            25             0.0
  $NON_LINEAR_SOLVER  
+ ; method error_tolerance local_tol  max_iterations relaxation
+;  NEWTON 1e-15 0 25 0.0
  ; method error_tolerance max_iterations relaxation
-  LINEAR 1e-3            25             0.0
-;  PICARD 1e-3            25             0.0
+;  LINEAR 1e-3            25             0.0
+  SNES 1e-3            2             0.0
 #NUMERICS
  $PCS_TYPE
   HEAT_TRANSPORT
