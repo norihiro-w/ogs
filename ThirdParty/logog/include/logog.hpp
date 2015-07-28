@@ -11,6 +11,10 @@
  **/
 // #define LOGOG_UNICODE 1
 
+#ifdef USE_MPI
+#include "BaseLib/MPITools.h"
+#endif
+
 #include "const.hpp"
 #include "platform.hpp"
 #include "statics.hpp"

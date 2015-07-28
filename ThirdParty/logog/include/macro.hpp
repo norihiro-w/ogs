@@ -204,7 +204,26 @@ namespace logog
 /** \sa LOGOG_DEBUG */
 #define DBUG(...) LOGOG_DEBUG( __VA_ARGS__ )
 /** \sa LOGOG_INFO */
+#define INFOc(COMM, ...) \
+{\
+    BaseLib::MPIEnvironment mpi(COMM);\
+    if (mpi.root())\
+        LOGOG_INFO( __VA_ARGS__ )\
+}
+#ifdef USE_MPI
+//#include "BaseLib/MPITools.h"
+#define INFO(...) \
+{\
+    BaseLib::MPIEnvironment mpi;\
+    if (mpi.root())\
+        LOGOG_INFO( __VA_ARGS__ )\
+}
+#define INFOa(...) LOGOG_INFO( __VA_ARGS__ )
+#else
+#define INFOa(...) LOGOG_INFO( __VA_ARGS__ )
 #define INFO(...) LOGOG_INFO( __VA_ARGS__ )
+#endif // USE_MPI
+#define INFO_IF(FLAG, ...) if (FLAG) LOGOG_INFO( __VA_ARGS__ )
 /** \sa LOGOG_WARN3 */
 #define WARN3(...) LOGOG_WARN3( __VA_ARGS__ )
 /** \sa LOGOG_WARN2 */
