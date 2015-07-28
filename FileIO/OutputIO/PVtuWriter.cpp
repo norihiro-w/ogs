@@ -104,6 +104,7 @@ bool PVtuWriter::write(const std::string &vtkfile,
 //    writeDataArrayHeader(fin, type_Int, "Domain", 1, str_format, offset);
     writeCellData(fin, true, elemental_values, msh, offset);
     writeDataArrayHeader(fin, type_Int, "MatGroup", 1, str_format, offset);
+    writeDataArrayHeader(fin, type_Int, "Rank", 1, str_format, offset);
     fin << "    </PCellData>\n";
 
     // sub files

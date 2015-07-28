@@ -3,19 +3,15 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file VtuWriter.cpp
- *
- * Created on 2012-08-03 by Norihiro Watanabe
  */
 
 #include "VtuWriter.h"
 
 #include <fstream>
 
-#include "logog/include/logog.hpp"
+#include <logog/include/logog.hpp>
 
+#include "BaseLib/MPITools.h"
 #include "BaseLib/SystemTools.h"
 #include "BaseLib/FileTools.h"
 
@@ -140,6 +136,9 @@ bool VtuWriter::write(const std::string &vtkfile,
     writeCellData(fin, data_out, elemental_values, msh, offset);
     if (outGroupID)
         writeElementGroupID(fin, data_out, msh, offset);
+    BaseLib::MPIEnvironment mpi;
+    if (mpi.isParallel())
+        writeElementRank(fin, data_out, msh, mpi.rank(), offset);
     fin << "      </CellData>" << std::endl;
     fin << "    </Piece>" << std::endl;
     fin << "  </UnstructuredGrid>" << std::endl;
@@ -178,7 +177,7 @@ bool VtuWriter::write(const std::string &vtkfile,
 bool VtuWriter::writePointData(std::fstream &fin,
                            bool output_data,
                            std::vector<PointData> &nod_values,
-						   Mesh &msh,
+                           Mesh &msh,
                            long &offset)
 {
     //Nodal values
@@ -322,6 +321,57 @@ bool VtuWriter::writeElementGroupID(std::fstream &fin,
                     (long)msh.getNElements());
             for (long i = 0; i < (long)msh.getNElements(); i++)
                 BaseLib::writeValueBinary(fin, msh.getElement(i)->getValue());
+        }
+    }
+    else
+    {
+        offset += (long)msh.getNElements() * sizeof(int) +
+                  SIZE_OF_BLOCK_LENGTH_TAG;
+    }
+
+    if (!_useBinary || !output_data)
+        writeDataArrayFooter(fin);
+
+
+    return true;
+}
+
+bool VtuWriter::writeElementRank(std::fstream &fin,
+                             bool output_data,
+                             MeshLib::Mesh& msh,
+                             unsigned rank,
+                             long &offset)
+{
+    std::string str_format;
+    if (!_useBinary)
+        str_format = "ascii";
+    else
+        str_format = "appended";
+
+
+    if (!_useBinary || !output_data)
+        writeDataArrayHeader(fin, this->type_Int, "Rank", 0, str_format, offset);
+    if (output_data)
+    {
+        const MeshLib::Element* ele = NULL;
+        if (!_useBinary)
+        {
+            fin << "          ";
+            for(long i = 0; i < (long)msh.getNElements(); i++)
+            {
+                ele = msh.getElement(i);
+                fin << rank << " ";
+            }
+            fin << std::endl;
+        }
+        else
+        {
+            BaseLib::writeValueBinary<unsigned int>(
+                    fin,
+                    sizeof(int) *
+                    (long)msh.getNElements());
+            for (long i = 0; i < (long)msh.getNElements(); i++)
+                BaseLib::writeValueBinary(fin, rank);
         }
     }
     else

@@ -112,6 +112,12 @@ protected:
                                  MeshLib::Mesh& msh,
                                  long &offset);
 
+    bool writeElementRank(std::fstream &fin,
+                                 bool output_data,
+                                 MeshLib::Mesh& msh,
+                                 unsigned rank,
+                                 long &offset);
+
 protected:
     //for binary output
     bool _useBinary;
