@@ -38,7 +38,7 @@ size_t TimeSteppingController::solve(double time_end)
 
         mpi.barrier();
         if (mpi.root()) {
-            INFO("\n");
+            INFO("");
             INFO("#############################################################");
             INFO("Time step %d: t=%f s, dt=%f s ", t_n1.steps(), time_next, t_n1.dt());
             INFO("#############################################################");
