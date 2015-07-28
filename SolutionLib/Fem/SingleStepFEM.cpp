@@ -33,20 +33,20 @@ SingleStepFEM::SingleStepFEM(
     const size_t n_var = problem->getNumberOfVariables();
 
     // create dof map
-    INFO("->constructing a DoF table");
+    INFOa("->constructing a DoF table");
     std::vector<MeshLib::MeshSubsets*> components;
     for (size_t i=0; i<n_var; i++) {
         FemVariable* var = problem->getVariable(i);
         size_t n_dof_per_var = msh->getNNodes(); //(var->getCurrentOrder());
         components.push_back(new MeshLib::MeshSubsets(new MeshLib::MeshSubset(*msh, &msh->getNodes())));
-        INFO("* Variable %d: name=%s, order=%d, n_dof=%d", i, var->getName().c_str(), var->getCurrentOrder(), n_dof_per_var);
+        INFOa("* Variable %d: name=%s, order=%d, n_dof=%d", i, var->getName().c_str(), var->getCurrentOrder(), n_dof_per_var);
     }
     _dofManager = new AssemblerLib::LocalToGlobalIndexMap(components, AssemblerLib::ComponentOrder::BY_COMPONENT);
     const size_t n_total_dofs = _dofManager->dofSize();
-    INFO("* Total number of DoFs = %d", n_total_dofs);
-    std::stringstream ss;
-    ss << _dofManager->getMeshComponentMap();
-    INFO("%s", ss.str().c_str())
+    INFOa("* Total number of DoFs = %d", n_total_dofs);
+//    std::stringstream ss;
+//    ss << _dofManager->getMeshComponentMap();
+//    INFO("%s", ss.str().c_str())
 
     // setup IC
     _vec_u_n1.resize(n_var, nullptr);

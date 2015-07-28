@@ -66,7 +66,7 @@ void FemNeumannBC::setup(NumLib::PolynomialOrder order)
     _vec_values.clear();
     NumLib::NeumannBC2FEM convert(*_mshNodeSearcher, *_beSearcher, _t, *_feObjects, *_geo, *_bc_func, _vec_nodes, _vec_values);
     if (_vec_nodes.size()==0)
-        INFO("***INFO: No Neumann BC found in FemDirichletBC::setup()");
+        INFOa("***INFO: No Neumann BC found in FemDirichletBC::setup()");
 }
 
 }
