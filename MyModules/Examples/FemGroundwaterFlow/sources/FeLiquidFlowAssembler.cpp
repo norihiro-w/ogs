@@ -106,6 +106,12 @@ void FeLiquidFlowAssembler::residual(const NumLib::TimeStep &t, const MathLib::L
     RHS.resize(n_dof);
     linear(t, p1, p0, A, RHS);
     residual.noalias() = A*p1 - RHS;
+    //std::stringstream ss;
+    //ss << "# Element " << _e->getID() << std::endl;
+    //ss << "p1 = " << p1.transpose() << std::endl;
+    //ss << "p0 = " << p0.transpose() << std::endl;
+    //ss << "r = " << residual.transpose() << std::endl;
+    //INFO("%s", ss.str().data());
 }
 
 void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::LocalVector &p1,

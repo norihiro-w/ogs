@@ -104,7 +104,9 @@ bool FunctionLiquidPressure::initialize(const boost::property_tree::ptree& optio
 
 void FunctionLiquidPressure::postSolutionAlgorithm(const NumLib::TimeStep &/*time*/)
 {
-    INFO("Calculating Darcy velocity within elements from fluid pressure...");
+    BaseLib::MPIEnvironment mpi;
+    if (mpi.root())
+        INFO("Calculating Darcy velocity within elements from fluid pressure...");
     getDarcyVelocity(*_solution->getCurrentSolution(0), *_vel);
 }
 
