@@ -12,6 +12,7 @@
 
 #include <logog/include/logog.hpp>
 
+#include "BaseLib/MPITools.h"
 #include "MathLib/LinAlg/IVector.h"
 #include "MathLib/LinAlg/IMatrix.h"
 #include "MathLib/LinAlg/ILinearSolver.h"
@@ -31,9 +32,12 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
     const bool checkRelDxError = (_dx_rel_tol > .0);
     const bool needXNorm =  (checkRelResidualError || checkRelDxError);
 
-    INFO("------------------------------------------------------------------");
-    INFO("*** NEWTON-RAPHSON nonlinear solver");
-    INFO("-> iteration started");
+    BaseLib::MPIEnvironment mpi;
+    if (mpi.root()) {
+        INFO("------------------------------------------------------------------");
+        INFO("*** NEWTON-RAPHSON nonlinear solver");
+        INFO("-> iteration started");
+    }
 
     // evaluate initial residual
     T_VALUE r(x);
@@ -51,7 +55,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
 
     bool converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                      || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
-    if (_printErrors)
+    if (_printErrors && mpi.root())
         INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", 0, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
 
     std::size_t itr_cnt = 0;
@@ -72,7 +76,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
                 x_norm = norm(x, _normType);
             converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                         || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
-            if (_printErrors)
+            if (_printErrors && mpi.root())
                 INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
 
             if (converged)
@@ -80,21 +84,23 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_DX &f_dx, T_VALUE &x)
         }
     }
 
-    INFO("-> iteration finished");
-    if (_max_itr==1) {
-        INFO("status    : iteration not required");
-    } else {
-        INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+    if (mpi.root()) {
+        INFO("-> iteration finished");
+        if (_max_itr==1) {
+            INFO("status    : iteration not required");
+        } else {
+            INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+        }
+        INFO("iteration : %d/%d", itr_cnt, _max_itr);
+        if (checkAbsResidualError)
+            INFO("abs. res. : %1.3e (tolerance=%1.3e)", r_norm, _r_abs_tol);
+        if (checkRelResidualError)
+            INFO("rel. res. : %1.3e (tolerance=%1.3e)", x_norm==0?r_norm:r_norm/x_norm, _r_rel_tol);
+        if (checkRelDxError)
+            INFO("dx        : %1.3e (tolerance=%1.3e)", x_norm==0?dx_norm:dx_norm/x_norm, _dx_rel_tol);
+        INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
+        INFO("------------------------------------------------------------------");
     }
-    INFO("iteration : %d/%d", itr_cnt, _max_itr);
-    if (checkAbsResidualError)
-        INFO("abs. res. : %1.3e (tolerance=%1.3e)", r_norm, _r_abs_tol);
-    if (checkRelResidualError)
-        INFO("rel. res. : %1.3e (tolerance=%1.3e)", x_norm==0?r_norm:r_norm/x_norm, _r_rel_tol);
-    if (checkRelDxError)
-        INFO("dx        : %1.3e (tolerance=%1.3e)", x_norm==0?dx_norm:dx_norm/x_norm, _dx_rel_tol);
-    INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
-    INFO("------------------------------------------------------------------");
 
     this->_n_iterations = itr_cnt;
     this->_r_abs_error = r_norm;
@@ -112,9 +118,12 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
     const bool checkRelDxError = (_dx_rel_tol > .0);
     const bool needXNorm =  (checkRelResidualError || checkRelDxError);
 
-    INFO("------------------------------------------------------------------");
-    INFO("*** NEWTON-RAPHSON nonlinear solver");
-    INFO("-> iteration started");
+    BaseLib::MPIEnvironment mpi;
+    if (mpi.root()) {
+        INFO("------------------------------------------------------------------");
+        INFO("*** NEWTON-RAPHSON nonlinear solver");
+        INFO("-> iteration started");
+    }
 
     // evaluate initial residual
     if (_r == nullptr)
@@ -135,7 +144,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
 
     bool converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                      || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
-    if (_printErrors)
+    if (_printErrors && mpi.root())
         INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", 0, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
 
     std::size_t itr_cnt = 0;
@@ -163,7 +172,7 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
                 x_norm = norm(x, _normType);
             converged = ((r_norm < _r_abs_tol && r_norm < _r_rel_tol*x_norm)
                         || (checkRelDxError && dx_norm < _dx_rel_tol*x_norm));
-            if (_printErrors)
+            if (_printErrors && mpi.root())
                 INFO("-> %d: ||r||=%1.3e, ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, r_norm, dx_norm, x_norm, x_norm==0 ? dx_norm : dx_norm/x_norm);
 
             if (converged)
@@ -171,21 +180,23 @@ bool NewtonRaphson::solve(F_RESIDUAL &f_residual, F_J &f_jacobian, IVector &x)
         }
     }
 
-    INFO("-> iteration finished");
-    if (_max_itr==1) {
-        INFO("status    : iteration not required");
-    } else {
-        INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+    if (mpi.root()) {
+        INFO("-> iteration finished");
+        if (_max_itr==1) {
+            INFO("status    : iteration not required");
+        } else {
+            INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+        }
+        INFO("iteration : %d/%d", itr_cnt, _max_itr);
+        if (checkAbsResidualError)
+            INFO("abs. res. : %1.3e (tolerance=%1.3e)", r_norm, _r_abs_tol);
+        if (checkRelResidualError)
+            INFO("rel. res. : %1.3e (tolerance=%1.3e)", x_norm==0?r_norm:r_norm/x_norm, _r_rel_tol);
+        if (checkRelDxError)
+            INFO("dx        : %1.3e (tolerance=%1.3e)", x_norm==0?dx_norm:dx_norm/x_norm, _dx_rel_tol);
+        INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
+        INFO("------------------------------------------------------------------");
     }
-    INFO("iteration : %d/%d", itr_cnt, _max_itr);
-    if (checkAbsResidualError)
-        INFO("abs. res. : %1.3e (tolerance=%1.3e)", r_norm, _r_abs_tol);
-    if (checkRelResidualError)
-        INFO("rel. res. : %1.3e (tolerance=%1.3e)", x_norm==0?r_norm:r_norm/x_norm, _r_rel_tol);
-    if (checkRelDxError)
-        INFO("dx        : %1.3e (tolerance=%1.3e)", x_norm==0?dx_norm:dx_norm/x_norm, _dx_rel_tol);
-    INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
-    INFO("------------------------------------------------------------------");
 
     this->_n_iterations = itr_cnt;
     this->_r_abs_error = r_norm;

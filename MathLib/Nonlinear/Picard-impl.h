@@ -1,7 +1,4 @@
 /**
- * \author Norihiro Watanabe
- * \date   2012-06-25
- *
  * \copyright
  * Copyright (c) 2012-2015, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
@@ -13,7 +10,9 @@
 #include <limits>
 #include <memory>
 
-#include "logog/include/logog.hpp"
+#include <logog/include/logog.hpp>
+
+#include "BaseLib/MPITools.h"
 #include "MathLib/LinAlg/IVector.h"
 
 
@@ -91,15 +90,18 @@ bool Picard::solve(T_FUNCTOR &functor, T_VALUE &x)
 template<class T_FUNCTOR>
 bool Picard::solve(T_FUNCTOR &functor, MathLib::IVector &x)
 {
+    BaseLib::MPIEnvironment mpi;
     std::unique_ptr<MathLib::IVector> x_old(x.duplicate());
     std::unique_ptr<MathLib::IVector> dx(x.duplicate());
 
     const bool checkAbsError = (_abs_tol<std::numeric_limits<double>::max());
     const bool checkRelError = (_rel_tol<std::numeric_limits<double>::max());
 
-    INFO("------------------------------------------------------------------");
-    INFO("*** PICARD nonlinear solver");
-    INFO("-> iteration started");
+    if (mpi.root()) {
+        INFO("------------------------------------------------------------------");
+        INFO("*** PICARD nonlinear solver");
+        INFO("-> iteration started");
+    }
     bool converged = false;
     std::size_t itr_cnt = 0;
     double x_norm = -1.;
@@ -119,7 +121,7 @@ bool Picard::solve(T_FUNCTOR &functor, MathLib::IVector &x)
                 rel_error = abs_error;
         }
         converged = (abs_error < _abs_tol && rel_error < _rel_tol);
-        if (_printErrors)
+        if (_printErrors && mpi.root())
             INFO("-> %d: ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, abs_error, x_norm, rel_error);
 
 #ifdef DEBUG_PICARD
@@ -131,19 +133,21 @@ bool Picard::solve(T_FUNCTOR &functor, MathLib::IVector &x)
         *x_old = x;
     }
 
-    INFO("-> iteration finished");
-    if (_max_itr==1) {
-        INFO("status    : iteration not required");
-    } else {
-        INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+    if (mpi.root()) {
+        INFO("-> iteration finished");
+        if (_max_itr==1) {
+            INFO("status    : iteration not required");
+        } else {
+            INFO("status    : %s", (converged ? "CONVERGED" : "***DIVERGED***"));
+        }
+        INFO("iteration : %d/%d", itr_cnt, _max_itr);
+        if (checkAbsError)
+            INFO("abs error = %1.3e (tolerance=%1.3e)", abs_error, _abs_tol);
+        if (checkRelError)
+            INFO("rel error = %1.3e (tolerance=%1.3e)", rel_error, _rel_tol);
+        INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
+        INFO("------------------------------------------------------------------");
     }
-    INFO("iteration : %d/%d", itr_cnt, _max_itr);
-    if (checkAbsError)
-        INFO("abs error = %1.3e (tolerance=%1.3e)", abs_error, _abs_tol);
-    if (checkRelError)
-        INFO("rel error = %1.3e (tolerance=%1.3e)", rel_error, _rel_tol);
-    INFO("norm type : %s", convertVecNormTypeToString(_normType).c_str());
-    INFO("------------------------------------------------------------------");
 
     this->_n_iterations = itr_cnt;
     this->_abs_error = abs_error;
