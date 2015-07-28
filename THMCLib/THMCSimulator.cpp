@@ -259,14 +259,14 @@ int THMCSimulator::execute()
 
     // output converted setting
     BaseLib::MPIEnvironment mpi;
-    if (mpi.rank()==0) {
-    std::string str_conversion_logfile = (ogs6fem->output_dir.empty() ? "." : ogs6fem->output_dir) + "/converted_setting.log";
+    if (mpi.root()) {
+        std::string str_conversion_logfile = (ogs6fem->output_dir.empty() ? "." : ogs6fem->output_dir) + "/converted_setting.log";
 #if BOOST_VERSION >= 105600
-    auto settings = boost::property_tree::xml_writer_make_settings<std::string> ('\t', 1);
+        auto settings = boost::property_tree::xml_writer_make_settings<std::string> ('\t', 1);
 #else
-    xml_writer_settings<char> settings('\t', 1);
+        xml_writer_settings<char> settings('\t', 1);
 #endif
-    write_xml(str_conversion_logfile, opRoot, std::locale(), settings);
+        write_xml(str_conversion_logfile, opRoot, std::locale(), settings);
     }
 
 
@@ -278,7 +278,7 @@ int THMCSimulator::execute()
     for (size_t i=0; i<ogs6fem->list_mesh.size(); i++) {
         MeshLib::Mesh* msh = ogs6fem->list_mesh[i];
         //msh->constructGeometricProperty();
-        INFO("->mesh id %d: dim=%d, nodes=%d, elements=%d", i, msh->getDimension(), msh->getNNodes(), msh->getNElements());
+        INFOa("->mesh id %d: dim=%d, nodes=%d, elements=%d", i, msh->getDimension(), msh->getNNodes(), msh->getNElements());
     }
 
     // construct element data for FE calculations
@@ -371,10 +371,8 @@ int THMCSimulator::execute()
     //-------------------------------------------------------------------------
     // Run simulation
     //-------------------------------------------------------------------------
-    if (mpi.root()) INFO("->Simulation is ready! start=%f, end=%f", t_start, t_end);
-#ifdef USE_MPI
-    MPI_Barrier(mpi.communicator());
-#endif
+    INFO("->Simulation is ready! start=%f, end=%f", t_start, t_end);
+    mpi.barrier();
 
     BaseLib::RunTime runTime;
     runTime.start();
@@ -382,16 +380,14 @@ int THMCSimulator::execute()
     timestepping.setBeginning(t_start); //TODO really need this? start, end is already given in timestep function
     size_t n_timesteps = timestepping.solve(t_end);
 
-    if (mpi.root()) {
-        INFO("");
-        INFO("->Simulation is finished.\n");
-        INFO("#############################################################");
-        INFO("*** Summary of this simulation");
-        INFO("total time step : %d", n_timesteps);
-        INFO("elapsed time   : %g sec", runTime.elapsed());
-        INFO("#############################################################");
-        INFO("");
-    }
+    INFO("");
+    INFO("->Simulation is finished.");
+    INFO("#############################################################");
+    INFO("*** Summary of this simulation");
+    INFO("total time step : %d", n_timesteps);
+    INFO("elapsed time   : %g sec", runTime.elapsed());
+    INFO("#############################################################");
+    INFO("");
 
     return 0;
 }

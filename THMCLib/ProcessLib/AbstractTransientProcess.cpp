@@ -9,6 +9,7 @@
 
 #include <logog/include/logog.hpp>
 
+#include "BaseLib/MPITools.h"
 #include "NumLib/TransientCoupling/TransientMonolithicSystem.h"
 #include "SolutionLib/Core/AbstractTimeSteppingAlgorithm.h"
 
@@ -17,7 +18,9 @@ namespace THMCLib
 
 int AbstractTransientProcess::solveTimeStep(const NumLib::TimeStep &time)
 {
-    INFO("Solving %s...", getProcessName().c_str());
+    BaseLib::MPIEnvironment mpi;
+    if (mpi.root())
+        INFO("Solving %s...", getProcessName().c_str());
     initializeTimeStep(time);
     getSolution()->solveTimeStep(time);
     postSolutionAlgorithm(time);
