@@ -28,6 +28,8 @@
 #include <set>
 #include <cstdlib>
 
+#include <logog/include/logog.hpp>
+
 #include "makros.h"
 #include "ProcessIO.h"
 #include "Ogs5FileTools.h"
@@ -459,7 +461,7 @@ bool STRead(const std::string &file_base_name,
    }
 
    // Keyword loop
-   std::cout << "STRead ... " << std::flush;
+   //INFO("STRead ... ");
    while (!st_file.eof())
    {
       st_file.getline(line, MAX_ZEILE);
@@ -467,7 +469,7 @@ bool STRead(const std::string &file_base_name,
                                                   //Code included to make dynamic memory for analytical solution
       if (line_string.find("#STOP") != std::string::npos)
       {
-         std::cout << "done, read " << st_vector.size() << " source terms" << std::endl;
+         //INFO("done, read %d source terms", st_vector.size());
          return true;
       }
       //----------------------------------------------------------------------

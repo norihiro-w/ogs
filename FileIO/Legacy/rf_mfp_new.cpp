@@ -19,7 +19,6 @@
 **************************************************************************/
 #include "rf_mfp_new.h"
 
-#include "makros.h"
 // C++ STL
 //#include <math.h>
 #include <fstream>
@@ -28,6 +27,9 @@
 #include <cfloat>
 #include <cstdlib>
 
+#include <logog/include/logog.hpp>
+
+#include "makros.h"
 #include "Ogs5FileTools.h"
 
 //
@@ -530,14 +532,13 @@ bool MFPRead(const std::string &file_base_name, std::vector<CFluidProperties*> &
     mfp_file.seekg(0L,std::ios::beg);
     //========================================================================
     // Keyword loop
-    std::cout << "MFPRead ... " << std::flush;
+    //INFO("MFPRead ... ");
     while (!mfp_file.eof())
     {
         mfp_file.getline(line,MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << mfp_vector.size() << " fluid properties" <<
-            std::endl;
+            //INFO("done, read %d fluid properties", mfp_vector.size());
            return true;
         }
         //----------------------------------------------------------------------

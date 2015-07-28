@@ -553,14 +553,14 @@ bool TIMRead(const std::string& file_base_name, std::vector<CTimeDiscretization*
     tim_file.seekg(0L,std::ios::beg);
     //========================================================================
     // Keyword loop
-    std::cout << "TIMRead ... " << std::flush;
+    //std::cout << "TIMRead ... " << std::flush;
     while (!tim_file.eof())
     {
         tim_file.getline(line,MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << time_vector.size() << " time stepping properties" <<
-            std::endl;
+//            std::cout << "done, read " << time_vector.size() << " time stepping properties" <<
+//            std::endl;
            return true;
         }
         //----------------------------------------------------------------------

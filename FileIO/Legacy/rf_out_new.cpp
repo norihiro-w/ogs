@@ -62,14 +62,14 @@ bool OUTRead(const std::string& file_base_name,
     out_file.seekg(0L, ios::beg);
 
     // Keyword loop
-    cout << "OUTRead ... " << std::flush;
+    //cout << "OUTRead ... " << std::flush;
     while (!out_file.eof())
     {
         out_file.getline(line, MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << out_vector.size() << " output settings" <<
-            std::endl;
+//            std::cout << "done, read " << out_vector.size() << " output settings" <<
+//            std::endl;
            return true;
         }
 

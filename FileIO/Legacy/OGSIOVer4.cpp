@@ -434,14 +434,14 @@ bool readGLIFileV4(const std::string& fname,
                    std::string& unique_name,
                    std::vector<std::string>& errors)
 {
-	INFO("GeoLib::readGLIFile(): open stream from file %s.", fname.c_str());
+	//INFO("GeoLib::readGLIFile(): open stream from file %s.", fname.c_str());
 	std::ifstream in(fname.c_str());
 	if (!in) {
 		WARN("GeoLib::readGLIFile(): could not open file %s.", fname.c_str());
 		errors.push_back("[readGLIFileV4] error opening stream from " + fname);
 		return false;
 	}
-	INFO("GeoLib::readGLIFile(): \t done.");
+	//INFO("GeoLib::readGLIFile(): \t done.");
 
 	std::string tag;
 	while (tag.find("#POINTS") == std::string::npos && !in.eof())
@@ -451,9 +451,9 @@ bool readGLIFileV4(const std::string& fname,
 	std::map<std::string,std::size_t>* pnt_id_names_map (new std::map<std::string,std::size_t>);
 	bool zero_based_idx(true);
 	std::vector<GeoLib::Point*>* pnt_vec(new std::vector<GeoLib::Point*>);
-	INFO("GeoLib::readGLIFile(): read points from stream.");
+	//INFO("GeoLib::readGLIFile(): read points from stream.");
 	tag = readPoints(in, pnt_vec, zero_based_idx, pnt_id_names_map);
-	INFO("GeoLib::readGLIFile(): \t ok, %d points read.", pnt_vec->size());
+	//INFO("GeoLib::readGLIFile(): \t ok, %d points read.", pnt_vec->size());
 
 	unique_name = BaseLib::extractBaseName(fname);
 	if (!pnt_vec->empty())
@@ -472,11 +472,11 @@ bool readGLIFileV4(const std::string& fname,
 		point_vec.getVector()));
 	if (tag.find("#POLYLINE") != std::string::npos && in)
 	{
-		INFO("GeoLib::readGLIFile(): read polylines from stream.");
+		//INFO("GeoLib::readGLIFile(): read polylines from stream.");
 		tag = readPolylines(in, ply_vec, *ply_names, *geo_pnt_vec,
 		                    zero_based_idx,
 		                    geo->getPointVecObj(unique_name)->getIDMap(), path, errors);
-		INFO("GeoLib::readGLIFile(): \t ok, %d polylines read.", ply_vec->size());
+		//INFO("GeoLib::readGLIFile(): \t ok, %d polylines read.", ply_vec->size());
 	}
 	else
 		INFO("GeoLib::readGLIFile(): tag #POLYLINE not found.");
@@ -485,7 +485,7 @@ bool readGLIFileV4(const std::string& fname,
 	std::map<std::string,std::size_t>* sfc_names (new std::map<std::string,std::size_t>);
 	if (tag.find("#SURFACE") != std::string::npos && in)
 	{
-		INFO("GeoLib::readGLIFile(): read surfaces from stream.");
+		//INFO("GeoLib::readGLIFile(): read surfaces from stream.");
 		tag = readSurfaces(in,
 		                   *sfc_vec,
 		                   *sfc_names,
@@ -494,7 +494,7 @@ bool readGLIFileV4(const std::string& fname,
 		                   point_vec,
 		                   path,
 		                   errors);
-		INFO("GeoLib::readGLIFile(): \tok, %d surfaces read.", sfc_vec->size());
+		//INFO("GeoLib::readGLIFile(): \tok, %d surfaces read.", sfc_vec->size());
 	}
 	else
 		INFO("GeoLib::readGLIFile(): tag #SURFACE not found.");

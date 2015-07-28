@@ -27,6 +27,8 @@
 #include <sstream>
 #include <list>
 
+#include <logog/include/logog.hpp>
+
 #include "makros.h"
 
 #include "Ogs5FileTools.h"
@@ -105,14 +107,13 @@ bool ICRead(const std::string& file_base_name,
     std::ios::pos_type position;
 
     // Keyword loop
-    std::cout << "ICRead ... " << std::flush;
+    //INFO("ICRead ... ");
     while (!ic_file.eof())
     {
         ic_file.getline(line, MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << ic_vector.size() << " initial conditions" <<
-            std::endl;
+           //INFO("done, read %d initial conditions", ic_vector.size());
            return true;
         }
 

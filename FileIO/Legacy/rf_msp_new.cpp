@@ -27,6 +27,8 @@
 #include <sstream>
 #include <cfloat>
 
+#include <logog/include/logog.hpp>
+
 #include "BaseLib/StringTools.h"
 
 // FEM-Makros
@@ -67,14 +69,13 @@ bool MSPRead(const std::string &file_base_name, std::vector<CSolidProperties*> &
     msp_file.seekg(0L,std::ios::beg);
     //========================================================================
     // Keyword loop
-    std::cout << "MSPRead ... " << std::flush;
+    //INFO("MSPRead ... ");
     while (!msp_file.eof())
     {
         msp_file.getline(line,MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << msp_vector.size() << " solid properties" <<
-            std::endl;
+            //INFO("done, read %d solid properties", msp_vector.size());
            return true;
         }
         //----------------------------------------------------------------------

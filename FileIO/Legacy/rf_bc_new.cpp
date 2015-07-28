@@ -29,6 +29,8 @@
 #include <sstream>
 #include <string>
 
+#include <logog/include/logog.hpp>
+
 #include "makros.h"
 //// FileIO
 #include "ProcessIO.h"
@@ -320,15 +322,14 @@ bool BCRead(std::string const& file_base_name,
     }
 
     // Keyword loop
-    std::cout << "BCRead ... " << std::flush;
+    //INFO("BCRead ... ");
     while (!bc_file.eof())
     {
         bc_file.getline(line, MAX_ZEILE);
         line_string = line;
         if (line_string.find("#STOP") != std::string::npos)
         {
-            std::cout << "done, read " << bc_vector.size()
-                      << " boundary conditions" << std::endl;
+            //INFO("done, read %d boundary conditions", bc_vector.size());
             return true;
         }
         if (line_string.find("#BOUNDARY_CONDITION") != std::string::npos)

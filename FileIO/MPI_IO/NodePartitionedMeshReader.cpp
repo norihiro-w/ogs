@@ -295,7 +295,7 @@ bool NodePartitionedMeshReader::readCastElemsASCII(std::ifstream& is_elem,
     std::vector<unsigned long> elem_data(data_size);
     if(_mpi_rank == 0)
     {
-        INFO("readElementASCII() with data_size = %d", data_size);
+        //INFO("readElementASCII() with data_size = %d", data_size);
         readElementASCII(is_elem, elem_data, process_ghost);
 
         if(part_id == 0)
@@ -353,7 +353,7 @@ MeshLib::NodePartitionedMesh* NodePartitionedMeshReader::readASCII(
     std::vector<unsigned long> glb_node_ids;
     std::vector<MeshLib::Element*> mesh_elems;
 
-    INFO("-->Reading partitioned mesh.");
+    //INFO("-->Reading partitioned mesh.");
 
     for(int i = 0; i < _mpi_comm_size; i++)
     {

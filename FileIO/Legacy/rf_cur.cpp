@@ -41,7 +41,7 @@ void CURRead(const std::string &base_file_name, std::vector<Kurven*> &kurven_vec
     cur_file.seekg(0L,std::ios::beg);
     //========================================================================
     // keyword loop
-    std::cout << "CURRead" << std::endl;
+//    std::cout << "CURRead" << std::endl;
     while (!cur_file.eof())
     {
         cur_file.getline(line,MAX_ZEILE);

@@ -12,7 +12,6 @@
 
 #include "rf_pcs.h"
 
-#include "makros.h"
 
 // C++
 #include <cfloat>
@@ -23,8 +22,10 @@
 #include <sstream>
 #include <cstdlib>
 
-#include "Ogs5FileTools.h"
+#include <logog/include/logog.hpp>
 
+#include "makros.h"
+#include "Ogs5FileTools.h"
 
 using namespace std;
 
@@ -56,7 +57,7 @@ bool PCSRead(const std::string& file_base_name, std::vector<CRFProcess*> &pcs_ve
     std::ifstream pcs_file(pcs_file_name.data(), ios::in);
     if (!pcs_file.good())
     {
-        cout << "Warning: no PCS data *.pcs file is missing" << endl;
+        ERR("Warning: no PCS data *.pcs file is missing");
         return false;
     }
 
@@ -65,7 +66,7 @@ bool PCSRead(const std::string& file_base_name, std::vector<CRFProcess*> &pcs_ve
     pcs_file.seekg(0, std::ios::beg);
     //========================================================================
     // Keyword loop
-    std::cout << "PCSRead ... " << std::flush;
+    //INFO("PCSRead ... ");
     while (!pcs_file.eof())
     {
         pcs_file.getline(line, MAX_ZEILE);
@@ -89,7 +90,7 @@ bool PCSRead(const std::string& file_base_name, std::vector<CRFProcess*> &pcs_ve
         }                         // keyword found
     }                                     // eof
 
-    std::cout << "done, read " << pcs_vector.size() << " processes" << std::endl;
+    //INFO("done, read %d processes", pcs_vector.size());
 
     return true;
 }

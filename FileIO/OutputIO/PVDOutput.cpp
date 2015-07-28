@@ -69,7 +69,7 @@ void PVDOutput::write(  const NumLib::TimeStep &current_time,
         vtu_file_name_base += "_part" + std::to_string(mpi.rank());
     vtu_file_name_base += ".vtu";
     std::string vtu_file_name = vtk_file_path + vtu_file_name_base;
-    INFO("Writing results...: %s", vtu_file_name.c_str());
+    INFOa("Writing results...: %s", vtu_file_name.c_str());
     VtuWriter vtuWriter(false);
     vtuWriter.write(vtu_file_name, *getMesh(), node_values, ele_values, true);
     

@@ -171,14 +171,14 @@ bool NUMRead(const std::string &file_base_name, std::vector<CNumerics*> &num_vec
     num_file.seekg(0L,ios::beg);
     //========================================================================
     // Keyword loop
-    cout << "NUMRead ... " << std::flush;
+    //cout << "NUMRead ... " << std::flush;
     while (!num_file.eof())
     {
         num_file.getline(line,MAX_ZEILE);
         line_string = line;
         if(line_string.find("#STOP") != std::string::npos) {
-            std::cout << "done, read " << num_vector.size() << " numeric properties" <<
-            std::endl;
+//            std::cout << "done, read " << num_vector.size() << " numeric properties" <<
+//            std::endl;
            return true;
         }
 //        //

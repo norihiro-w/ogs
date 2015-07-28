@@ -29,6 +29,8 @@
 #include <string>
 #include <cstring>
 
+#include <logog/include/logog.hpp>
+
 #include "makros.h" // JT
 #include "Ogs5FileTools.h"
 
@@ -171,7 +173,7 @@ bool MMPRead(const std::string& base_file_name, std::vector<CMediumProperties*> 
     //----------------------------------------------------------------------
     //OK  MMPDelete();
     //----------------------------------------------------------------------
-    std::cout << "MMPRead ... " << std::flush;
+    //INFO("MMPRead ... ");
     CMediumProperties* m_mat_mp = NULL;
     char line[MAX_ZEILE];
     std::string sub_line;
@@ -196,8 +198,7 @@ bool MMPRead(const std::string& base_file_name, std::vector<CMediumProperties*> 
         line_string = line;
         if(line_string.find("#STOP") != string::npos)
         {
-            std::cout << "done, read " << mmp_vector.size() << " medium properties" <<
-            std::endl;
+            //INFO("done, read %d medium properties", mmp_vector.size());
             return true;
         }
         //----------------------------------------------------------------------
