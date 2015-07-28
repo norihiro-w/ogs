@@ -69,8 +69,8 @@ class NodePartitionedMesh : public Mesh
               _n_active_base_nodes(n_active_base_nodes),
               _n_active_nodes(n_active_nodes)
         {
-            INFO("Creating a node-partitioned mesh: %d global nodes, %d local nodes, %d local eles, %d ghost nodes", n_global_nodes, nodes.size(), elements.size(), nodes.size()-n_active_nodes);
-            INFO("Global node IDs: %s", BaseLib::toString(_global_node_ids).data());
+            INFOa("Creating a node-partitioned mesh: %d global nodes, %d local nodes, %d local eles, %d ghost nodes", n_global_nodes, nodes.size(), elements.size(), nodes.size()-n_active_nodes);
+            //INFO("Global node IDs: %s", BaseLib::toString(_global_node_ids).data());
         }
 
         virtual ~NodePartitionedMesh() {}
