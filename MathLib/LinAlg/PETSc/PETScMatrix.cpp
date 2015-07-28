@@ -48,9 +48,14 @@ PETScMatrix::PETScMatrix (const PetscInt nrows, const MatrixOption& mat_opt)
     PetscInt m = PETSC_DECIDE, n = PETSC_DECIDE, M = nrows, N = PETSC_DECIDE;
     if (!mat_opt.is_global_size)
     {
+//        int local_rows = m;
+//        int all_rows = 0;
+//        MPI_Allreduce(&local_rows, &all_rows, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
+//        //N = M; // assume square
         m = nrows;
-        MPI_Allreduce(&m, &M, 1, MPI_INT, MPI_SUM, PETSC_COMM_WORLD);
-        N = M; // assume square
+        M = PETSC_DECIDE;
+        n = m; // n should correspond to the local size of solution and rhs vectors
+        N = PETSC_DECIDE; //assume square matrix
     }
 
     MatCreate(PETSC_COMM_WORLD, &_A);
@@ -74,7 +79,7 @@ PETScMatrix::PETScMatrix (const PetscInt nrows, const MatrixOption& mat_opt)
     MatGetSize(_A, &_nrows,  &_ncols);
     MatGetLocalSize(_A, &_n_loc_rows, &_n_loc_cols);
 
-    INFO("creating a matrix: rows=%d, local rows=%d, start=%d, end=%d", _nrows, _n_loc_rows, _start_rank, _end_rank);
+    INFO("creating a matrix: rows=%d, cols=%d, lc rows=%d, lc cols=%d, start=%d, end=%d", _nrows, _ncols, _n_loc_rows, _n_loc_cols, _start_rank, _end_rank);
 }
 
 //PETScMatrix::PETScMatrix (const PetscInt nrows, const PetscInt ncols, const MatrixOption* mat_opt)
