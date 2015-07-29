@@ -54,8 +54,9 @@ public:
      * @param geo_unique_name
      */
     void initialize(boost::property_tree::ptree const& option, const std::string &output_dir,
-    		const std::string &project_name,
-			std::vector<MeshLib::Mesh*> &list_mesh, GeoLib::GEOObjects &geo, const std::string &geo_unique_name);
+            const std::string &project_name,
+            std::vector<MeshLib::Mesh*> &list_mesh, std::vector<MeshGeoToolsLib::MeshNodeSearcher*> &list_nodeSearcher,
+            GeoLib::GEOObjects &geo, const std::string &geo_unique_name);
 
     /**
      *

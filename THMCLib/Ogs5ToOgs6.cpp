@@ -607,7 +607,8 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
 //        opt.addOptionAsArray("MFPValues", rfout->mfp_value_vector);
     }
 
-    ogs6fem.outController.initialize(option, ogs6fem.output_dir, ogs6fem.project_name, ogs6fem.list_mesh, *ogs6fem.geo, ogs6fem.geo_unique_name);
+    ogs6fem.outController.initialize(option, ogs6fem.output_dir, ogs6fem.project_name,
+            ogs6fem.list_mesh, ogs6fem.list_nodeSearcher, *ogs6fem.geo, ogs6fem.geo_unique_name);
 
     return true;
 }
