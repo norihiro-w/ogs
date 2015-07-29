@@ -22,7 +22,7 @@
 #include "Lis/LisVector.h"
 #include "Lis/LisMatrix.h"
 #include "Lis/LisLinearSolver.h"
-#include "Lis/EigenLisLinearSolver.h"
+#include "EigenLis/EigenLisLinearSolver.h"
 #endif
 #ifdef USE_PETSC
 #include "PETSc/PETScVector.h"

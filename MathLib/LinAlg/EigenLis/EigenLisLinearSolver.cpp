@@ -17,6 +17,7 @@
 
 #include "MathLib/LinAlg/Eigen/EigenMatrix.h"
 #include "MathLib/LinAlg/Eigen/EigenVector.h"
+#include "MathLib/LinAlg/Eigen/EigenTools.h"
 #include "MathLib/LinAlg/Lis/LisMatrix.h"
 #include "MathLib/LinAlg/Lis/LisVector.h"
 #include "MathLib/LinAlg/Lis/LisLinearSolver.h"
@@ -57,11 +58,11 @@ void EigenLisLinearSolver::setOption(const ptree &option)
     }
 }
 
-void EigenLisLinearSolver::solve(EigenVector &b_, EigenVector &x_)
+void EigenLisLinearSolver::solve(IVector &b_, IVector &x_)
 {
-    auto &A = _A.getRawMatrix();
-    auto &b = b_.getRawVector();
-    auto &x = x_.getRawVector();
+    auto &A = static_cast<EigenMatrix&>(_A).getRawMatrix();
+    auto &b = static_cast<EigenVector&>(b_).getRawVector();
+    auto &x = static_cast<EigenVector&>(x_).getRawVector();
 
     A.makeCompressed();
     int nnz = A.nonZeros();
@@ -78,6 +79,12 @@ void EigenLisLinearSolver::solve(EigenVector &b_, EigenVector &x_)
 
     for (std::size_t i=0; i<lisx.size(); i++)
         x[i] = lisx[i];
+}
+
+void EigenLisLinearSolver::imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
+        const std::vector<double> &vec_knownX_x, double penalty_scaling)
+{
+    applyKnownSolution(static_cast<EigenMatrix&>(A), static_cast<EigenVector&>(b), vec_knownX_id, vec_knownX_x, penalty_scaling);
 }
 
 } //MathLib

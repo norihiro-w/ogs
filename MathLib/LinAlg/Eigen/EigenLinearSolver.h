@@ -60,7 +60,7 @@ public:
 
     /// apply prescribed values to a system of linear equations
     void imposeKnownSolution(IMatrix &A, IVector &b, const std::vector<std::size_t> &vec_knownX_id,
-    		const std::vector<double> &vec_knownX_x, double penalty_scaling = 1e+10);
+            const std::vector<double> &vec_knownX_x, double penalty_scaling = 1e+10);
 
 protected:
     class IEigenSolver

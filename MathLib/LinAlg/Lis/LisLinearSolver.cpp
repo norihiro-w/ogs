@@ -124,8 +124,8 @@ void LisLinearSolver::solve(MathLib::IVector &bb, MathLib::IVector &xx)
     checkLisError(ierr);
     ierr = lis_solver_get_residualnorm(solver, &resid);
     checkLisError(ierr);
-    INFO("\t iteration: %d/%ld\n", iter, _option.max_iterations);
-    INFO("\t residual: %e\n", resid);
+    INFO("iteration             : %d/%ld", iter, _option.max_iterations);
+    INFO("residual              : %e", resid);
 
     // Clear solver
     ierr = lis_solver_destroy(solver);

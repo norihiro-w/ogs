@@ -119,23 +119,25 @@ public:
         }
     }
 
+    void assemble() {}
+
     double norm1() const
     {
-    	double n = .0;
-    	lis_vector_nrm1(_vec, &n);
-    	return n;
+        double n = .0;
+        lis_vector_nrm1(_vec, &n);
+        return n;
     }
     double norm2() const
     {
-    	double n = .0;
-    	lis_vector_nrm2(_vec, &n);
-    	return n;
+        double n = .0;
+        lis_vector_nrm2(_vec, &n);
+        return n;
     }
     double norm_max() const
     {
-    	double n = .0;
-    	lis_vector_nrmi(_vec, &n);
-    	return n;
+        double n = .0;
+        lis_vector_nrmi(_vec, &n);
+        return n;
     }
 
 private:

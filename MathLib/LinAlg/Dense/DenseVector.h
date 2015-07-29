@@ -139,7 +139,7 @@ public:
 	/// returns maximum norm
 	T norm_max() const override { return MathLib::norm_max(&_vec[0], _vec.size()); }
 
-	void assemble() {}
+	void assemble() override {}
 
 private:
 	std::valarray<T> _vec;
