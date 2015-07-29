@@ -335,7 +335,7 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
         for (auto& s : var_name)
             optP.add("out", s);
         if (rfpcs->getProcessType()==FiniteElement::ProcessType::LIQUID_FLOW)
-            optP.add("out", "VELOCITY");
+            optP.add("out", "VELOCITY1");
     }
     auto &optProblems = optP.put_child("problems", ptree());
     for (size_t i=0; i<ogs5fem.pcs_vector.size(); i++)
@@ -346,11 +346,11 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
         auto &optM = optProblems.add_child("M", ptree());
         optM.add("type", pcs_name);
         if (rfpcs->getProcessType()==FiniteElement::ProcessType::HEAT_TRANSPORT)
-            optM.add("in", "VELOCITY");
+            optM.add("in", "VELOCITY1");
         for (auto& s : var_name)
             optM.add("out", s);
         if (rfpcs->getProcessType()==FiniteElement::ProcessType::LIQUID_FLOW)
-            optM.add("out", "VELOCITY");
+            optM.add("out", "VELOCITY1");
     }
 
 
@@ -582,9 +582,26 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
             auto& optVal = opt.add_child("nodeValue", ptree());
             optVal.add("name", rfout->_nod_value_vector[j]);
         }
-        for (size_t j=0; j<rfout->_ele_value_vector.size(); j++) {
+        std::vector<std::string> vecEleVelocity;
+        for (auto vname : rfout->_ele_value_vector) {
+            const std::string keyword = "VELOCITY";
+            if (vname.find(keyword)!=std::string::npos) { //TODO velocity2
+                std::string vname2;
+                if (vname.size()>keyword.size())
+                    vname2 = vname.erase(vname.find(keyword)+8+1, vname.size());
+                else
+                    vname2 = keyword;
+                vecEleVelocity.push_back(vname2);
+                continue;
+            }
             auto& optVal = opt.add_child("elementValue", ptree());
-            optVal.add("name", rfout->_ele_value_vector[j]);
+            optVal.add("name", vname);
+        }
+        std::sort(vecEleVelocity.begin(), vecEleVelocity.end());
+        vecEleVelocity.erase(std::unique(vecEleVelocity.begin(), vecEleVelocity.end()), vecEleVelocity.end());
+        for (auto vname : vecEleVelocity) {
+            auto& optVal = opt.add_child("elementValue", ptree());
+            optVal.add("name", vname);
         }
 //        opt.addOptionAsArray("MMPValues", rfout->mmp_value_vector);
 //        opt.addOptionAsArray("MFPValues", rfout->mfp_value_vector);
