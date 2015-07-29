@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 #include "MathLib/DataType.h"
@@ -88,10 +89,10 @@ public:
     {
     }
 
-    MathLib::LocalMatrix operator()(const StateVariables* /*variables*/, const unsigned global_dim, const MathLib::RotationMatrix* matR = nullptr)
+    MathLib::LocalMatrix operator()(const StateVariables* /*variables*/, unsigned ele_dim, unsigned global_dim, const MathLib::RotationMatrix* matR = nullptr)
     {
         MathLib::LocalMatrix mat;
-        _dim = global_dim; //TODO
+        _dim = ele_dim; //TODO
         switch(_model_type)
         {
         case Type::Constant:                   // rho = const
@@ -109,6 +110,7 @@ public:
 private:
     MathLib::LocalMatrix to_global(const MathLib::LocalMatrix &local, unsigned global_dim, const MathLib::RotationMatrix* matR)
     {
+        assert(matR!=nullptr);
         if (local.rows() < global_dim) {
             MathLib::LocalMatrix local2 = MathLib::LocalMatrix::Zero(global_dim, global_dim);
             local2.block(0, 0, local.rows(), local.cols()) = local.block(0, 0, local.rows(), local.cols());

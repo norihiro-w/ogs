@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "MeshLib/Elements/Element.h"
+#include "MeshLib/ElementCoordinatesMappingLocal.h"
 
 #include "BasicModel.h"
 #include "MaterialProperties.h"
@@ -47,12 +49,13 @@ struct SolidModel
         delete thermal_conductivity;
     }
 
-    SolidProperty operator()(const StateVariables &var, const unsigned dim) const
+    SolidProperty operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e) const
     {
+        const MathLib::RotationMatrix* matR = (global_dim==e.getDimension()) ? nullptr : &e.getMappedLocalCoordinates().getRotationMatrixToGlobal();
         SolidProperty v;
         if (density) v.rho = (*density)(&var);
         if (specific_heat) v.cp = (*specific_heat)(&var);
-        if (thermal_conductivity) v.lambda = (*thermal_conductivity)(&var, dim);
+        if (thermal_conductivity) v.lambda = (*thermal_conductivity)(&var, e.getDimension(), global_dim, matR);
         return v;
     }
 };

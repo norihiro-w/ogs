@@ -81,7 +81,7 @@ struct PorousMediumModel : public IMedium
         const MathLib::RotationMatrix* matR = (global_dim==e.getDimension()) ? nullptr : &e.getMappedLocalCoordinates().getRotationMatrixToGlobal();
         PorousMediumProperty pm;
         if (geo_area) pm.geo_area = (*geo_area)(&var);
-        if (permeability) pm.k = (*permeability)(&var, e.getDimension(), matR);
+        if (permeability) pm.k = (*permeability)(&var, e.getDimension(), global_dim, matR);
         if (porosity) pm.n = (*porosity)(&var);
         if (storage) pm.Ss = (*storage)(&var);
         if (heat_capacity) pm.Cp = (*heat_capacity)(&var, pm, s, f);
