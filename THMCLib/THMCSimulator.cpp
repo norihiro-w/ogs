@@ -117,11 +117,13 @@ THMCSimulator::THMCSimulator(int argc, char* argv[])
         // Command line parser
         TCLAP::CmdLine cmd("ogs6", ' ', "0.1");
         cmd.ignoreUnmatched(true);
-        TCLAP::ValueArg<std::string> input_arg("i", "input", "input file", false, "", "string");
+        TCLAP::UnlabeledValueArg<std::string> input_arg("project-name", "project file base path", false, "", "string");
         cmd.add( input_arg );
-        TCLAP::ValueArg<std::string> output_dir_arg("o", "output", "output directory", false, "", "string");
+//        TCLAP::ValueArg<std::string> input_arg2("i", "input", "input file", false, "", "string");
+//        cmd.add( input_arg2 );
+        TCLAP::ValueArg<std::string> output_dir_arg("o", "output-dir", "output directory", false, "", "string");
         cmd.add( output_dir_arg );
-        TCLAP::ValueArg<std::string> logfile_arg("l", "log", "log file", false, "", "string");
+        TCLAP::ValueArg<std::string> logfile_arg("l", "log-file", "log file", false, "", "string");
         cmd.add( logfile_arg );
         TCLAP::ValueArg<unsigned> verbosity_arg("v", "verbose", "level of verbosity [0 very low information, 1 much information]", false, 0, "number");
         cmd.add( verbosity_arg );
@@ -163,8 +165,8 @@ THMCSimulator::THMCSimulator(int argc, char* argv[])
             std::string output_dir_path = "";
             if (! output_dir_arg.getValue().empty()) {
                 output_dir_path = output_dir_arg.getValue();
+                INFO("* output directory : %s", output_dir_path.c_str());
             }
-            INFO("* output directory : %s", output_dir_path.c_str());
 
             if (! input_arg.getValue().empty()) {
                 const std::string proj_path = input_arg.getValue();
@@ -238,7 +240,7 @@ int THMCSimulator::execute()
     //-------------------------------------------------------------------------
     // Read files
     //-------------------------------------------------------------------------
-    INFO("->Reading input files...");
+    //INFO("->Reading input files...");
     // coupling
     using namespace boost::property_tree;
     ptree opRoot;
@@ -320,6 +322,7 @@ int THMCSimulator::execute()
         THMCLib::Process* pcs = list_mono_system[i];
         if (pcs->getProcessName().empty())
             pcs->setProcessName(pcs->getProcessType());
+        INFO("-------------------------------------------------");
         INFO("PCS %d: name=%s, type=%s (IN=%d, OUT=%d)", i, pcs_name.c_str(), pcs->getProcessType().c_str(), pcs->getNumberOfInputParameters(), pcs->getNumberOfOutputParameters());
         for (size_t j=0; j<pcs->getNumberOfInputParameters(); j++)
             INFO("* IN  %d: %s", j, pcs->getInputParameterName(j).c_str());
@@ -346,6 +349,7 @@ int THMCSimulator::execute()
             return 0;
         }
     }
+    INFO("-------------------------------------------------");
 
     INFO("->Setting time stepping...");
     TimeSteppingControllerWithOutput timestepping(&ogs6fem->outController);
