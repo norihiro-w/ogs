@@ -3,11 +3,6 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file IOutput.h
- *
- * Created on 2012-08-03 by Norihiro Watanabe
  */
 
 #pragma once
@@ -18,6 +13,7 @@
 #include "BaseLib/CodingTools.h"
 #include "BaseLib/OrderedMap.h"
 #include "MeshLib/Mesh.h"
+#include "MeshGeoToolsLib/MeshNodeSearcher.h"
 #include "NumLib/Function/ITXFunction.h"
 #include "NumLib/TimeStepping/TimeStep.h"
 
@@ -69,8 +65,8 @@ public:
     ///
     virtual ~IOutput()
     {
-        //BaseLib::releaseObject(_output_timing);
-    };
+        delete _output_timing;
+    }
 
     ///
     void setOutputPath(const std::string &dir, const std::string &base_name)
@@ -80,22 +76,22 @@ public:
     }
 
     ///
-    std::string getOutputDir() const {return _output_dir_path;};
+    std::string getOutputDir() const {return _output_dir_path;}
     
     ///
-    std::string getOutputBaseName() const {return _base_name;};
+    std::string getOutputBaseName() const {return _base_name;}
 
     ///
     void addNodalVariable(const std::string &var_name)
     {
         _list_nod_var_name.push_back(var_name);
-    };
+    }
 
     ///
     void addNodalVariable(const std::vector<std::string> &vec_var_name)
     {
         _list_nod_var_name.insert(_list_nod_var_name.end(), vec_var_name.begin(), vec_var_name.end());
-    };
+    }
     
     ///
     std::vector<std::string>& getListOfNodalVariables() {return _list_nod_var_name;};
@@ -110,16 +106,16 @@ public:
     void addElementalVariable(const std::string &var_name)
     {
         _list_ele_var_name.push_back(var_name);
-    };
+    }
 
     ///
     void addElementalVariable(const std::vector<std::string> &vec_var_name)
     {
         _list_ele_var_name.insert(_list_ele_var_name.end(), vec_var_name.begin(), vec_var_name.end());
-    };
+    }
 
     ///
-    std::vector<std::string>& getListOfElementalVariables() {return _list_ele_var_name;};
+    std::vector<std::string>& getListOfElementalVariables() {return _list_ele_var_name;}
 
     ///
     bool hasElementalVariable(const std::string &var_name) const
@@ -127,18 +123,25 @@ public:
         return (std::find(_list_ele_var_name.begin(), _list_ele_var_name.end(), var_name) != _list_ele_var_name.end());
     }
 
-    ///
-    void setGeometry(const GeoLib::GeoObject* geo_obj) {_geo_obj = geo_obj;};
-    ///
-    const GeoLib::GeoObject* getGeometry() const {return _geo_obj;};
+    void setGeometry(const GeoLib::GeoObject* geo_obj) {_geo_obj = geo_obj;}
+    const GeoLib::GeoObject* getGeometry() const {return _geo_obj;}
 
-    void setMesh(MeshLib::Mesh* msh) {_msh = msh;};
-    MeshLib::Mesh* getMesh() const {return _msh;};
+    void setGeometryName(const std::string name) { _geo_obj_name = name; }
+    std::string getGeometryName() const { return _geo_obj_name; }
+
+    void setGeometryIndex(std::size_t i) { _geo_id = i; }
+    std::size_t getGeometryIndex() const { return _geo_id; }
+
+    void setMesh(MeshLib::Mesh* msh) {_msh = msh;}
+    MeshLib::Mesh* getMesh() const {return _msh;}
+
+    void setMeshNodeSearcher(MeshGeoToolsLib::MeshNodeSearcher* nodeSearcher) { _nodeSearcher = nodeSearcher; }
+    MeshGeoToolsLib::MeshNodeSearcher* getMeshNodeSearcher() const { return _nodeSearcher; }
 
     ///
-    void setOutputTiming(IOutputTiming* timing) {_output_timing = timing;};
+    void setOutputTiming(IOutputTiming* timing) {_output_timing = timing;}
     ///
-    bool isActive(const NumLib::TimeStep &current_time) const {return _output_timing->isActive(current_time);};
+    bool isActive(const NumLib::TimeStep &current_time) const {return _output_timing->isActive(current_time);}
 
     ///
     virtual void write( const NumLib::TimeStep &current_time, 
@@ -151,6 +154,9 @@ private:
     std::vector<std::string> _list_nod_var_name;
     std::vector<std::string> _list_ele_var_name;
     const GeoLib::GeoObject* _geo_obj;
+    std::string _geo_obj_name;
+    std::size_t _geo_id;
     MeshLib::Mesh* _msh;
+    MeshGeoToolsLib::MeshNodeSearcher* _nodeSearcher;
 };
 
