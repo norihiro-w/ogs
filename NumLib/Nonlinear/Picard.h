@@ -44,7 +44,7 @@ public:
         }
 
         MathLib::Nonlinear::Picard picard;
-        picard.setAbsTolerance(getOption().error_tolerance);
+        picard.setRelTolerance(getOption().error_tolerance);
         picard.setMaxIterations(getOption().max_iteration);
         picard.solve(*_linear_f, x);
     }
