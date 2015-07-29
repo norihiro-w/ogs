@@ -73,9 +73,11 @@ public:
     std::string project_name;
     std::string project_dir;
     std::string output_dir;
-
+#ifdef USE_LIS
+    MathLib::LinAlgLibType linalg_type = MathLib::LinAlgLibType::EigenLis;
+#else
     MathLib::LinAlgLibType linalg_type = MathLib::LinAlgLibType::Eigen;
-
+#endif
     //std::vector<std::vector<FeElementData>> fe_ele_data; // msh_id, (ele id, fe data)
     std::vector<FeMeshData> fe_mesh_data;
 
