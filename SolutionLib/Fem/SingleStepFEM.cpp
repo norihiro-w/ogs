@@ -123,8 +123,8 @@ int SingleStepFEM::solveTimeStep(const NumLib::TimeStep &t_n1)
         FemVariable* var = _problem->getVariable(i_var);
         for (size_t i=0; i<var->getNumberOfDirichletBC(); i++) {
             SolutionLib::FemDirichletBC *bc1 = var->getDirichletBC(i);
-            INFO("-> setting 1st BC: %s, %d nodes", var->getName().data(), bc1->getListOfBCNodes().size());
             bc1->setup(var->getCurrentOrder());
+            INFO("-> setting 1st BC: %s, %d nodes", var->getName().data(), bc1->getListOfBCNodes().size());
             //std::stringstream ss; bc1->write(ss); INFO("%s", ss.str().data());
             std::vector<size_t> &list_bc_nodes = bc1->getListOfBCNodes();
             std::vector<double> &list_bc_values = bc1->getListOfBCValues();
@@ -139,9 +139,9 @@ int SingleStepFEM::solveTimeStep(const NumLib::TimeStep &t_n1)
     	FemVariable* var = _problem->getVariable(i_var);
         for (size_t i=0; i<var->getNumberOfNeumannBC(); i++) {
             SolutionLib::IFemNeumannBC *bc2 = var->getNeumannBC(i);
-            INFO("-> setting 2nd BC: %s, %d nodes", var->getName().data(), bc2->getListOfBCNodes().size());
             bc2->initCurrentTime(this_t_n1.current());
             bc2->setup(var->getCurrentOrder());
+            INFO("-> setting 2nd BC: %s, %d nodes", var->getName().data(), bc2->getListOfBCNodes().size());
             std::vector<size_t> &list_bc_nodes = bc2->getListOfBCNodes();
             std::vector<double> &list_bc_values = bc2->getListOfBCValues();
 //            std::cout << list_bc_nodes << std::endl;
