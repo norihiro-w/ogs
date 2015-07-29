@@ -121,8 +121,8 @@ bool Picard::solve(T_FUNCTOR &functor, MathLib::IVector &x)
                 rel_error = abs_error;
         }
         converged = (abs_error < _abs_tol && rel_error < _rel_tol);
-        if (_printErrors && mpi.root())
-            INFO("-> %d: ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, abs_error, x_norm, rel_error);
+        //if (_printErrors && mpi.root())
+        INFO("-> %d: ||dx||=%1.3e, ||x||=%1.3e, ||dx||/||x||=%1.3e", itr_cnt, abs_error, x_norm, rel_error);
 
 #ifdef DEBUG_PICARD
         printout(std::cout, itr_cnt, x_new, *dx);
