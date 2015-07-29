@@ -80,7 +80,7 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension());
+        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
         auto f = (*_fluid_model)(var);
         auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
@@ -90,8 +90,12 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
         //-----------------------------------------
         M.noalias() += W * pm.Ss * N_p.transpose() * fac;
         K.noalias() += dW.transpose() * pm.k / f.mu * dN_p * fac;
-        F.noalias() += dW.transpose() * pm.k * f.rho * _vec_g * fac;
+        F.noalias() += dW.transpose() * pm.k / f.mu * f.rho * _vec_g * fac;
     }
+//    std::cout << "# Element " << _e->getID() << std::endl;
+//    std::cout << "M=\n" << M << std::endl;
+//    std::cout << "K=\n" << K << std::endl;
+//    std::cout << "F=\n" << F << std::endl;
 
     const double theta = 1.0;
     localA.noalias() = 1/time.dt() * M + theta * K;
@@ -137,7 +141,7 @@ void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension());
+        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
         auto f = (*_fluid_model)(var);
         auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
 
@@ -164,11 +168,11 @@ void FeLiquidFlowAssembler::velocity(const MathLib::LocalVector &p, std::vector<
         const MathLib::LocalMatrix &dN_p = _sh.dNdx;
 
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension());
+        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
         auto f = (*_fluid_model)(var);
         auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
 
-        gp_v[ip].noalias() = - pm.k / f.mu * (dN_p * p + f.rho * _vec_g);
+        gp_v[ip].noalias() = - pm.k / f.mu * (dN_p * p - f.rho * _vec_g);
     }
 
 }

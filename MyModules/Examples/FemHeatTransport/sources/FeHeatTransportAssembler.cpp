@@ -80,7 +80,7 @@ void FeHeatTransportAssembler::linear(const NumLib::TimeStep &time,
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
         auto f = (*_fluid_model)(var);
-        auto s = (*_solid_model)(var, _global_coords.getDimension());
+        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
         auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
         const MathLib::LocalVector &v = fe_data.v1[j];
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
@@ -132,7 +132,7 @@ void FeHeatTransportAssembler::jacobian(const NumLib::TimeStep &ts, const MathLi
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
         auto f = (*_fluid_model)(var);
-        auto s = (*_solid_model)(var, _global_coords.getDimension());
+        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
         auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
         const MathLib::LocalVector &v = fe_data.v1[j];
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
