@@ -24,7 +24,7 @@ inline std::vector<char*> createCmdLineArguments(const std::string &str_in_proje
 {
     std::vector<std::string> vec_args;
     vec_args.push_back("ogs");
-    vec_args.push_back("-i");
+//    vec_args.push_back("-i");
     vec_args.push_back(str_in_project);
     vec_args.push_back("-o");
     vec_args.push_back(str_out_dir);
