@@ -28,6 +28,11 @@ FixedTimeStepping::FixedTimeStepping(double t0, double tn, double dt)
 : _t_initial(t0), _t_end(tn), _dt_vector(static_cast<std::size_t>(std::ceil((tn-t0)/dt)), dt), _ts_prev(t0), _ts_current(t0)
 {}
 
+FixedTimeStepping::FixedTimeStepping(const FixedTimeStepping &src)
+: _t_initial(src._t_initial), _t_end(src._t_end), _dt_vector(src._dt_vector),
+  _ts_prev(src._ts_prev), _ts_current(src._ts_current)
+{}
+
 const TimeStep FixedTimeStepping::getTimeStep() const
 {
     return _ts_current;

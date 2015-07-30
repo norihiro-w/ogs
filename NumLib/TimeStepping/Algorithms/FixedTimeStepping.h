@@ -58,7 +58,11 @@ public:
      */
     FixedTimeStepping(double t_initial, double t_end, const std::vector<double> &vec_all_dt);
 
+    FixedTimeStepping(const FixedTimeStepping &src);
+
     virtual ~FixedTimeStepping() {}
+
+    virtual ITimeStepAlgorithm* clone() const { return new FixedTimeStepping(*this); }
 
     /// return the beginning of time steps
     virtual double begin() const {return _t_initial;}

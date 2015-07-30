@@ -83,7 +83,11 @@ public:
                                 const std::vector<std::size_t> &iter_times_vector,
                                 const std::vector<double> &multiplier_vector);
 
+    IterationNumberBasedAdaptiveTimeStepping(const IterationNumberBasedAdaptiveTimeStepping& src);
+
     virtual ~IterationNumberBasedAdaptiveTimeStepping() {}
+
+    virtual ITimeStepAlgorithm* clone() const { return new IterationNumberBasedAdaptiveTimeStepping(*this); }
 
     /// return the beginning of time steps
     virtual double begin() const {return _t_initial;}

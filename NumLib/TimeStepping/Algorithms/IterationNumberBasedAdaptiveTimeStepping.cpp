@@ -30,6 +30,15 @@ IterationNumberBasedAdaptiveTimeStepping::IterationNumberBasedAdaptiveTimeSteppi
     assert(iter_times_vector.size() == multiplier_vector.size());
 }
 
+IterationNumberBasedAdaptiveTimeStepping::IterationNumberBasedAdaptiveTimeStepping(const IterationNumberBasedAdaptiveTimeStepping& src)
+: _t_initial(src._t_initial), _t_end(src._t_end), _iter_times_vector(src._iter_times_vector),
+  _multiplier_vector(src._multiplier_vector),
+  _min_ts(src._min_ts), _max_ts(src._max_ts), _initial_ts(src._initial_ts),
+  _max_iter(src._max_iter), _iter_times(src._iter_times), _ts_pre(src._ts_pre), _ts_current(src._ts_current),
+  _n_rejected_steps(src._n_rejected_steps)
+{
+}
+
 bool IterationNumberBasedAdaptiveTimeStepping::next()
 {
     // check current time step

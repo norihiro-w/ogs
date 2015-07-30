@@ -1,7 +1,4 @@
 /**
- * \author Norihiro Watanabe
- * \date   2012-08-03
- *
  * \copyright
  * Copyright (c) 2012-2015, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
@@ -44,6 +41,8 @@ public:
 
     /// return a history of time step sizes
     virtual const std::vector<double>& getTimeStepSizeHistory() const = 0;
+
+    virtual ITimeStepAlgorithm* clone() const = 0;
 
     virtual ~ITimeStepAlgorithm() {}
 };
