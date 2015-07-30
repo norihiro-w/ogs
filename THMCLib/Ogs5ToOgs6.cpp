@@ -580,7 +580,13 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
         opt.add("geoType", rfout->geo_type);
         opt.add("geoName", rfout->geo_name);
         opt.add("timeType", rfout->tim_type_name);
-        opt.add("timeSteps", rfout->nSteps);
+        if (rfout->tim_type_name == "STEPS") {
+            opt.add("timeSteps", rfout->nSteps);
+        } else {
+            auto& optTimeList = opt.add_child("timeList", ptree());
+            for (auto t : rfout->time_vector)
+                optTimeList.add("time", t);
+        }
         for (size_t j=0; j<rfout->_nod_value_vector.size(); j++) {
             auto& optVal = opt.add_child("nodeValue", ptree());
             optVal.add("name", rfout->_nod_value_vector[j]);
