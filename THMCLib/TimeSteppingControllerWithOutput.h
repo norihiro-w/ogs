@@ -14,7 +14,7 @@
 
 #include "BaseLib/CodingTools.h"
 #include "NumLib/TimeStepping/TimeSteppingController.h"
-#include "OutputController.h"
+#include "THMCLib/Output/OutputController.h"
 
 namespace ogs6
 {

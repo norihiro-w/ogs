@@ -23,10 +23,10 @@
 #include "NumLib/Fem/Integration/IIntegration.h"
 #include "NumLib/Fem/Integration/GaussIntegrationPolicy.h"
 
-#include "FileIO/OutputIO/OutputBuilder.h"
-#include "FileIO/OutputIO/OutputTimingBuilder.h"
-
 #include "SolutionLib/Fem/FemSourceTerm.h"
+
+#include "THMCLib/Output/OutputBuilder.h"
+#include "THMCLib/Output/OutputTimingBuilder.h"
 
 #include "Ogs6FemData.h"
 #include "FemVariableBuilder.h"

@@ -40,12 +40,15 @@ INCLUDE( MaterialLib/CMakeLists.txt )
 # ./ProcessLib
 INCLUDE( ProcessLib/CMakeLists.txt )
 
+INCLUDE( Output/CMakeLists.txt )
+
 #
 ADD_LIBRARY( THMCLib STATIC 
     ${MaterialLib_Files}
     ${ProcessLib_Files}
 #    ${ChemLib_Files}
     ${PhysicsLib_Files}
+    ${Output_Files}
     ${THMC_Files}
 )
 

@@ -27,7 +27,7 @@
 #include "SolutionLib/Fem/FemDirichletBC.h"
 #include "SolutionLib/Fem/FemNeumannBC.h"
 #include "THMCLib/ProcessLib/Process.h"
-#include "OutputController.h"
+#include "THMCLib/Output/OutputController.h"
 #include "FeElementData.h"
 
 

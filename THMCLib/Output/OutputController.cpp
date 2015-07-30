@@ -35,8 +35,17 @@ void OutputController::initialize(
         out->setMeshNodeSearcher(list_nodeSearcher[msh_id]);
 
         std::string time_type = op.get<std::string>("timeType");
-        size_t out_steps = op.get<size_t>("timeSteps");
-        out->setOutputTiming(outTimBuilder.create(time_type, out_steps));
+        std::size_t out_steps = 0;
+        std::vector<double> out_times;
+        if (time_type=="STEPS")
+            out_steps = op.get<size_t>("timeSteps");
+        else {
+            auto opTimeList = op.get_child("timeList");
+            auto range = opTimeList.equal_range("time");
+            for (auto it=range.first; it!=range.second; ++it)
+                out_times.push_back(it->second.get_value<double>());
+        }
+        out->setOutputTiming(outTimBuilder.create(time_type, out_steps, &out_times));
 
         std::vector<std::string> nod_var_name;
         auto range = op.equal_range("nodeValue");

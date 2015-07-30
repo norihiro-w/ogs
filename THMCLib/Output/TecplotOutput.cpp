@@ -13,7 +13,7 @@
 #include "BaseLib/CodingTools.h"
 #include "NumLib/Function/ITXFunction.h"
 
-#include "TecplotWriter.h"
+#include "FileIO/OutputIO/TecplotWriter.h"
 
 void TecplotOutput::write(const NumLib::TimeStep &current_time,
             BaseLib::OrderedMap<std::string, OutputVariableInfo> &data)

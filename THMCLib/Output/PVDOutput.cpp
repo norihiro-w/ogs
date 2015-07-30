@@ -19,9 +19,9 @@
 
 #include "BaseLib/MPITools.h"
 
-#include "PVDWriter.h"
-#include "VtuWriter.h"
-#include "PVtuWriter.h"
+#include "FileIO/OutputIO/PVDWriter.h"
+#include "FileIO/OutputIO/VtuWriter.h"
+#include "FileIO/OutputIO/PVtuWriter.h"
 
 
 void PVDOutput::write(  const NumLib::TimeStep &current_time, 

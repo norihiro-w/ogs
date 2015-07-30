@@ -3,16 +3,12 @@
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.com/LICENSE.txt
- *
- *
- * \file OutputTimingList.h
- *
- * Created on 2012-08-03 by Norihiro Watanabe
  */
 
 #pragma once
 
 #include <vector>
+#include <algorithm>
 
 #include "NumLib/TimeStepping/TimeStep.h"
 #include "IOutputTiming.h"
@@ -25,11 +21,11 @@ public:
     {
     }
 
-    virtual ~OutputTimingList() {};
+    virtual ~OutputTimingList() {}
 
     virtual bool isActive(const NumLib::TimeStep &current_timestep)
     {
-        return (_list_time.end() != std::find(_list_time.begin(), _list_time.end(), current_timestep.getTime()));
+        return (_list_time.end() != std::find(_list_time.begin(), _list_time.end(), current_timestep.current()));
     }
 
 private:

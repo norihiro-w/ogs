@@ -17,8 +17,8 @@
 
 #include "BaseLib/OrderedMap.h"
 #include "NumLib/TimeStepping/TimeStep.h"
-#include "FileIO/OutputIO/OutputBuilder.h"
-#include "FileIO/OutputIO/OutputTimingBuilder.h"
+#include "OutputBuilder.h"
+#include "OutputTimingBuilder.h"
 
 namespace GeoLib
 {
