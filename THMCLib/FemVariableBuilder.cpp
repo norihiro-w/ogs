@@ -50,6 +50,10 @@ void FemVariableBuilder::doit(const std::string &given_var_name,
             std::string geo_type = it->second.get<std::string>("GeometryType");
             std::string geo_name = it->second.get<std::string>("GeometryName");
             const GeoLib::GeoObject* geo_obj = geo->getGeoObject(geo_unique_name, GeoLib::convertGeoType(geo_type), geo_name);
+            if (geo_obj==nullptr) {
+                WARN("*** Geometry object (%s %s) not found", geo_type.data(), geo_name.data());
+                continue;
+            }
             //assert(opIC->hasOption("DistributionType"));
             //auto &opDistribution = it->second.get_child("Distribution");
             NumLib::ITXFunction* f_ic = NumLib::TXFunctionBuilder::create(it->second);
