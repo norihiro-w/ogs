@@ -22,6 +22,8 @@ namespace SolutionLib
 ///
 void FemIC::addDistribution(const GeoLib::GeoObject* geo, const NumLib::ITXFunction* ic_func)
 {
+    assert(geo!=nullptr);
+    assert(ic_func!=nullptr);
     _vec_geo.push_back(geo);
     _vec_func.push_back(ic_func);
 }
