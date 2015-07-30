@@ -148,7 +148,7 @@ public:
     /// assemble the matrix
     virtual void assemble() {}
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     /// printout this matrix for debugging
     void write(const std::string &filename) const
     {
@@ -165,7 +165,7 @@ public:
               os << it.row() << " " << it.col() << ": " << it.value() << "\n";
         os << std::endl;
     }
-#endif
+//#endif
 
     RawMatrixType& getRawMatrix() { return _mat; }
     const RawMatrixType& getRawMatrix() const { return _mat; }

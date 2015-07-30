@@ -11,10 +11,8 @@
 #define EIGENVECTOR_H_
 
 #include <vector>
-#ifndef NDEBUG
 #include <fstream>
 #include <string>
-#endif
 
 #include <Eigen/Eigen>
 
