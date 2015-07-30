@@ -242,7 +242,7 @@ ios::pos_type CInitialCondition::Read(std::ifstream* ic_file)
             {
                 in >> geo_name;
                 in.clear();
-                geo_name = ""; // REMOVE CANDIDATE
+                //geo_name = ""; // REMOVE CANDIDATE
             }
             if (geo_type_name.find("POLYLINE") != string::npos)
             {
