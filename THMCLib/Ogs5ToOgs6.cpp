@@ -314,6 +314,9 @@ bool convert(const Ogs5FemData &ogs5fem, THMCLib::Ogs6FemData &ogs6fem, boost::p
     // Time group
     // -------------------------------------------------------------------------
     convertTimeStepping(ogs5fem.time_vector, ogs6fem.list_tim);
+    for (std::size_t i=ogs6fem.list_tim.size(); i<ogs5fem.pcs_vector.size(); i++) {
+        ogs6fem.list_tim.push_back(ogs6fem.list_tim.front()->clone());
+    }
 
     // -------------------------------------------------------------------------
     // User-defined curves
