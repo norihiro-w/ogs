@@ -132,9 +132,10 @@ void BoostXmlGmlInterface::readPoints(boost::property_tree::ptree const & points
 		std::string p_name = point.second.get("<xmlattr>.name", "");
 
 		if ( p_id == std::numeric_limits<unsigned>::max() || p_x == std::numeric_limits<double>::max() ||
-		     p_y  == std::numeric_limits<double>::max()   || p_z == std::numeric_limits<double>::max() )
+		     p_y  == std::numeric_limits<double>::max()   || p_z == std::numeric_limits<double>::max() ) {
 			WARN("BoostXmlGmlInterface::readPoints(): Skipping point, attribute missing in <point> tag:\n%s",
 				BaseLib::propertyTreeToString(point.second).c_str())
+		}
 		else
 		{
 			_idx_map.insert (std::pair<std::size_t, std::size_t>(p_id, points->size()));
@@ -167,8 +168,10 @@ void BoostXmlGmlInterface::readPolylines(boost::property_tree::ptree const& poly
 			continue;
 
 		if (static_cast<unsigned>(polyline.second.get("<xmlattr>.id", std::numeric_limits<unsigned>::max()) == std::numeric_limits<unsigned>::max()))
+		{
 			WARN("BoostXmlGmlInterface::readPolylines(): Skipping polyline, attribute \"id\" missing in <polyline> tag:\n%s",
 				BaseLib::propertyTreeToString(polyline.second).c_str())
+		}
 		else
 		{
 			polylines->push_back(new GeoLib::Polyline(*points));
