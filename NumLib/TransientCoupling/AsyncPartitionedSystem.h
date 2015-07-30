@@ -32,11 +32,13 @@ public:
     typedef size_t InternalID;
     typedef size_t ExternalKey;
 
-    AsyncPartitionedSystem() : _algorithm(0)
+    AsyncPartitionedSystem() : _algorithm(nullptr)
     {
     }
 
-    virtual ~AsyncPartitionedSystem() {};
+    virtual ~AsyncPartitionedSystem() {
+        delete _algorithm;
+    }
 
     virtual void setAlgorithm(NumLib::ITransientPartitionedAlgorithm &algo)
     {
