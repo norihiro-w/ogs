@@ -27,7 +27,7 @@ public:
     template <class F_LINEAR, class F_R, class F_DX>
     INonlinearSolver* create(const NonlinerSolverOption &nl_option, F_LINEAR* f_l, F_R* f_r, F_DX* f_dx, MathLib::IMatrix* J, MathLib::IVector* r)
     {
-        INonlinearSolver* solver = 0;
+        INonlinearSolver* solver = nullptr;
         switch (nl_option.solver_type)
         {
         case NonlinerSolverOption::LINEAR:
@@ -45,7 +45,8 @@ public:
             break;
 #endif
         default:
-            break;
+            ERR("*** Specified nonlinear solver not supported");
+            return nullptr;
         }
         solver->setOption(nl_option);
         return solver;
