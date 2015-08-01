@@ -110,8 +110,8 @@ public:
 private:
     MathLib::LocalMatrix to_global(const MathLib::LocalMatrix &local, unsigned global_dim, const MathLib::RotationMatrix* matR)
     {
-        assert(matR!=nullptr);
         if (local.rows() < global_dim) {
+            assert(matR!=nullptr);
             MathLib::LocalMatrix local2 = MathLib::LocalMatrix::Zero(global_dim, global_dim);
             local2.block(0, 0, local.rows(), local.cols()) = local.block(0, 0, local.rows(), local.cols());
             return (*matR) * local2 * matR->transpose();
