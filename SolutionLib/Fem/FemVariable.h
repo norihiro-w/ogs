@@ -53,9 +53,9 @@ public:
     ///
     ~FemVariable()
     {
-//        BaseLib::releaseObject(_ic);
-//        BaseLib::releaseObjectsInStdVector(_map_bc1);
-//        BaseLib::releaseObjectsInStdVector(_map_bc2);
+        delete _ic;
+        for (auto p : _map_bc1) delete p;
+        for (auto p : _map_bc2) delete p;
     }
 
     //----------------------------------------------------------------------

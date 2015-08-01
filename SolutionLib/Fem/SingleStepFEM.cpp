@@ -42,6 +42,11 @@ SingleStepFEM::SingleStepFEM(
         INFOa("* Variable %d: name=%s, order=%d, n_dof=%d", i, var->getName().c_str(), var->getCurrentOrder(), n_dof_per_var);
     }
     _dofManager = new AssemblerLib::LocalToGlobalIndexMap(components, AssemblerLib::ComponentOrder::BY_COMPONENT);
+    for (auto p : components)
+    {
+        for (auto p2 : *p) delete p2;
+        delete p;
+    }
     const size_t n_total_dofs = _dofManager->dofSize();
     INFOa("* Total number of DoFs = %d", n_total_dofs);
 //    std::stringstream ss;

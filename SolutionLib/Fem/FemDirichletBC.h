@@ -50,7 +50,10 @@ public:
     FemDirichletBC(const std::vector<size_t> &vec_node_id, const std::vector<double> &vec_node_values);
 
     ///
-    virtual ~FemDirichletBC() {}
+    virtual ~FemDirichletBC()
+    {
+        delete _bc_func;
+    }
 
     /// setup B.C.
     void setup(NumLib::PolynomialOrder order);
