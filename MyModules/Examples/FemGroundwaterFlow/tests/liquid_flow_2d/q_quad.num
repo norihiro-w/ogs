@@ -8,7 +8,7 @@ GeoSys-NUM: Numerical Parameter ----------------------------------------
 ;  5      1 1.e-10       1000           1.0   100     2
  $NON_LINEAR_SOLVER 
 ; method error_tolerance max_iterations relaxation
-  LINEAR 1e-10            1            0.0
+  PICARD 1e-10            1            0.0
 ;  NEWTON 1e-10 1e-10            25            0.0
 ;  SNES 1e-10            1            0.0
 #STOP
