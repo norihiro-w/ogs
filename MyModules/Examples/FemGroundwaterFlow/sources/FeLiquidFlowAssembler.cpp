@@ -23,7 +23,7 @@
 
 FeLiquidFlowAssembler::FeLiquidFlowAssembler(const NumLib::IFeObjectContainer &feObjects, const MeshLib::CoordinateSystem &problem_coordinates)
 : _feObjects(feObjects), _global_coords(problem_coordinates), _vec_g(MathLib::LocalVector::Zero(_global_coords.getDimension())),
-  _e(nullptr), _dof(nullptr), fe(nullptr), /*fe_data(nullptr),*/ _pm_model(nullptr), _fluid_model(nullptr)
+  _e(nullptr), /*_dof(nullptr),*/ fe(nullptr), /*fe_data(nullptr),*/ _pm_model(nullptr), _fluid_model(nullptr)
 {
     if (_global_coords.hasZ())
         _vec_g[_global_coords.getIndexOfZ()] = -9.81;
@@ -42,13 +42,7 @@ void FeLiquidFlowAssembler::reset(const MeshLib::Element &e)
     fe = _feObjects.getFeObject(*_e);
     auto &mshData = projectData->fe_mesh_data[0];
     THMCLib::updateFeData(mshData, *fe, fe_data);
-}
-
-void FeLiquidFlowAssembler::reset(const MeshLib::Element &e, const AssemblerLib::LocalToGlobalIndexMap &dof)
-{
-    reset(e);
-    _dof = &dof;
-    const size_t n_dof = _dof->dofSize();
+    const size_t n_dof = e.getNNodes();
     M.resize(n_dof, n_dof);
     K.resize(n_dof, n_dof);
     F.resize(n_dof);
@@ -105,7 +99,7 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
 void FeLiquidFlowAssembler::residual(const NumLib::TimeStep &t, const MathLib::LocalVector &p1,
         const MathLib::LocalVector &p0,  MathLib::LocalVector &residual)
 {
-    const size_t n_dof = _dof->dofSize();
+    const size_t n_dof = _e->getNNodes();
     A.resize(n_dof, n_dof);
     RHS.resize(n_dof);
     linear(t, p1, p0, A, RHS);

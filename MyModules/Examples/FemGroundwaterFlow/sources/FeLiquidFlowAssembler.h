@@ -39,8 +39,7 @@ public:
 
     virtual ~FeLiquidFlowAssembler() {}
 
-    void reset(const MeshLib::Element &e);
-    void reset(const MeshLib::Element &e, const AssemblerLib::LocalToGlobalIndexMap &localDofManager) override;
+    void reset(const MeshLib::Element &e) override;
 
     void linear(const NumLib::TimeStep &/*time*/, const MathLib::LocalVector &/*u1*/, const MathLib::LocalVector &/*u0*/,
             MathLib::LocalMatrix &localA, MathLib::LocalVector &localRHS) override;
@@ -60,7 +59,6 @@ private:
     const MeshLib::CoordinateSystem _global_coords;
     MathLib::LocalVector _vec_g;
     const MeshLib::Element* _e;
-    const AssemblerLib::LocalToGlobalIndexMap* _dof;
     NumLib::IFiniteElement* fe;
     THMCLib::FeElementData fe_data;
     MaterialLib::PorousMediumModel* _pm_model;
