@@ -12,8 +12,8 @@
  ; method error_tolerance local_tol  max_iterations relaxation
 ;  NEWTON 1e-15 0 25 0.0
  ; method error_tolerance max_iterations relaxation
-;  LINEAR 1e-3            25             0.0
-  SNES 1e-3            2             0.0
+  PICARD 1e-3            1             0.0
+;  SNES 1e-3            2             0.0
 #NUMERICS
  $PCS_TYPE
   HEAT_TRANSPORT
