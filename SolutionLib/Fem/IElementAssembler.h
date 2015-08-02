@@ -35,7 +35,8 @@ class IElementAssembler
 public:
     virtual ~IElementAssembler() {}
 
-    virtual void reset(const MeshLib::Element &e, const AssemblerLib::LocalToGlobalIndexMap &localDof) = 0;
+    virtual void reset(const MeshLib::Element &e) = 0;
+    //virtual void reset(const MeshLib::Element &e, const AssemblerLib::LocalToGlobalIndexMap &localDof) = 0;
 
     virtual void linear(  const NumLib::TimeStep &time,
                             const MathLib::LocalVector &local_u_n1, const MathLib::LocalVector &local_u_n, 

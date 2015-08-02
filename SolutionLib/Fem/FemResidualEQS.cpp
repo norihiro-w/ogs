@@ -27,26 +27,28 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
 
     // assembly
     r = .0;
+    MathLib::LocalVector localRes;
     for (auto e : _msh->getElements()) {
         // get dof map
         auto rowColIndeces = (*_dofManager)[e->getID()];
 
         // local assembly
-        MathLib::LocalVector localRes(rowColIndeces.rows.size());
+        localRes.resize(rowColIndeces.rows.size());
+        localRes.setZero();
         // previous and current results
         auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
 
-        // create local DoF table
-        std::vector<MeshLib::Node*> vec_items;
-        for (std::size_t i=0; i<e->getNNodes(); i++)
-            vec_items.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
-        MeshLib::MeshSubset subset(*_msh, &vec_items);
-        MeshLib::MeshSubsets ss(&subset);
-        std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
-        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
+//        // create local DoF table
+//        std::vector<MeshLib::Node*> vec_items;
+//        for (std::size_t i=0; i<e->getNNodes(); i++)
+//            vec_items.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
+//        MeshLib::MeshSubset subset(*_msh, &vec_items);
+//        MeshLib::MeshSubsets ss(&subset);
+//        std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
+//        AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
 
-        _local_assembler->reset(*e, localDofMap);
+        _local_assembler->reset(*e);
         _local_assembler->residual(t_n1, local_u_n1, local_u_n, localRes);
 
         // update global

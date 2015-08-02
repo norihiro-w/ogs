@@ -32,7 +32,10 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
     }
 
     // assembly
-    for (auto e : _msh->getElements()) {
+    MathLib::LocalMatrix localA;
+    MathLib::LocalVector localRhs;
+    for (auto e : _msh->getElements())
+    {
         // get dof map
         auto rowColIndeces = (*_dofManager)[e->getID()];
 
@@ -40,6 +43,7 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_k1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
 
+#if 0
         // create a local DoF table
         std::vector<MeshLib::Node*> vec_items;
         for (std::size_t i=0; i<e->getNNodes(); i++)
@@ -48,11 +52,15 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         MeshLib::MeshSubsets ss(&subset);
         std::vector<MeshLib::MeshSubsets*> mesh_subsets(1, &ss);
         AssemblerLib::LocalToGlobalIndexMap localDofMap(mesh_subsets, AssemblerLib::ComponentOrder::BY_COMPONENT, false);
-
+#endif
         // local assembly
-        MathLib::LocalMatrix localA(rowColIndeces.rows.size(), rowColIndeces.rows.size());
-        MathLib::LocalVector localRhs(rowColIndeces.rows.size());
-        _local_assembler->reset(*e, localDofMap);
+        localA.resize(rowColIndeces.rows.size(), rowColIndeces.rows.size());
+        localRhs.resize(rowColIndeces.rows.size());
+        localA.setZero();
+        localRhs.setZero();
+//        MathLib::LocalMatrix localA(rowColIndeces.rows.size(), rowColIndeces.rows.size());
+//        MathLib::LocalVector localRhs(rowColIndeces.rows.size());
+        _local_assembler->reset(*e);
         _local_assembler->linear(t_n1, local_u_n1, local_u_n, localA, localRhs);
 
         // update global
