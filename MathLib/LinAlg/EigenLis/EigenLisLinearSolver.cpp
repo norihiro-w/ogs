@@ -64,7 +64,8 @@ void EigenLisLinearSolver::solve(IVector &b_, IVector &x_)
     auto &b = static_cast<EigenVector&>(b_).getRawVector();
     auto &x = static_cast<EigenVector&>(x_).getRawVector();
 
-    A.makeCompressed();
+    if (!A.isCompressed())
+        A.makeCompressed();
     int nnz = A.nonZeros();
     int* ptr = A.outerIndexPtr();
     int* col = A.innerIndexPtr();
