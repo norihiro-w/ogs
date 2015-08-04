@@ -65,9 +65,9 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
     {
         auto wp = q.getWeightedPoint(j);
         fe->computeShapeFunctionsd(wp.getCoords(), _sh);
-        const MathLib::LocalMatrix &N_p = _sh.N;
+        const MathLib::LocalVector &N_p = _sh.N;
         const MathLib::LocalMatrix &dN_p = _sh.dNdx;
-        const MathLib::LocalMatrix &W = N_p;
+        const MathLib::LocalVector &W = N_p;
         const MathLib::LocalMatrix &dW = dN_p;
 
         //-----------------------------------------
@@ -84,7 +84,8 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
         //-----------------------------------------
         M.noalias() += W * pm.Ss * N_p.transpose() * fac;
         K.noalias() += dW.transpose() * pm.k / f.mu * dN_p * fac;
-        F.noalias() += dW.transpose() * pm.k / f.mu * f.rho * _vec_g * fac;
+        if (_global_coords.hasZ())
+            F.noalias() += dW.transpose() * pm.k / f.mu * f.rho * _vec_g * fac;
     }
 //    std::cout << "# Element " << _e->getID() << std::endl;
 //    std::cout << "M=\n" << M << std::endl;
