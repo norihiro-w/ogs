@@ -39,7 +39,10 @@ public:
      * constructor
      * @param n the number of rows (that is equal to the number of columns)
      */
-    explicit EigenMatrix(std::size_t n) :_mat(n, n) {}
+    explicit EigenMatrix(std::size_t n) :_mat(n, n)
+    {
+        //_mat.reserve(Eigen::VectorXi::Constant(n, 9));
+    }
 
     virtual ~EigenMatrix() {}
 
@@ -60,7 +63,9 @@ public:
     /// reset data entries to zero.
     void setZero()
     {
-        _mat.setZero();
+        for (std::size_t i=0; i<_mat.nonZeros(); i++)
+            _mat.valuePtr()[i] = 0;
+        //_mat.setZero();
     }
 
     /// set a value to the given entry. If the entry doesn't exist, this class
