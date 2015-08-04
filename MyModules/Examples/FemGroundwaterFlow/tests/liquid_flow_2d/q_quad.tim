@@ -3,7 +3,7 @@ GeoSys-OUT: Output ------------------------------------------------
  $PCS_TYPE
   LIQUID_FLOW
  $TIME_STEPS
-  10  600
+  100  600
 ;  30  60
  $TIME_END
   1e+99

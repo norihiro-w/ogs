@@ -3,7 +3,7 @@ Gina - TIM-Datei
   $PCS_TYPE
     LIQUID_FLOW
   $TIME_STEPS
-    1  1e+6
+    100  1e+6
 ;    2000  100000
   $TIME_END
     1.e9

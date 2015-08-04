@@ -1,4 +1,6 @@
 GeoSys-OUT: Output ------------------------------------------------
+#STOP
+
 #OUTPUT
  $NOD_VALUES
   PRESSURE1
