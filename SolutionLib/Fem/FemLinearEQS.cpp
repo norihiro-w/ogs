@@ -34,14 +34,17 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
     // assembly
     MathLib::LocalMatrix localA;
     MathLib::LocalVector localRhs;
+    MathLib::LocalVector local_u_n1, local_u_n;
     for (auto e : _msh->getElements())
     {
         // get dof map
-        auto rowColIndeces = (*_dofManager)[e->getID()];
+        const auto rowColIndeces((*_dofManager)[e->getID()]);
 
         // previous and current results
-        auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_k1);
-        auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);
+        local_u_n1.resize(rowColIndeces.columns.size());
+        local_u_n.resize(rowColIndeces.columns.size());
+        AssemblerLib::getLocalVector(rowColIndeces.columns, u_k1, local_u_n1);
+        AssemblerLib::getLocalVector(rowColIndeces.columns, u_n, local_u_n);
 
 #if 0
         // create a local DoF table
