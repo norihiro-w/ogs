@@ -4,7 +4,7 @@ GeoSys-OUT: Output ------------------------------------------------
   PRESSURE1
   TEMPERATURE1
  $ELE_VALUES
-  VELOCITY
+  VELOCITY1
  $GEO_TYPE
   DOMAIN
  $DAT_TYPE
