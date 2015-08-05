@@ -88,8 +88,8 @@ public:
     void computeShapeFunctionsd(const double *natural_pt, DynamicShapeMatrices &shape) const
     {
         shape.setZero(); //TODO could be done in NaturalCoordinatesMapping
-    	NaturalCoordinatesMapping<
-    	            MeshElementType, ShapeFunctionType, DynamicShapeMatrices>::computeShapeMatrices(*_ele, natural_pt, shape);
+        NaturalCoordinatesMapping<
+            MeshElementType, ShapeFunctionType, DynamicShapeMatrices>::computeShapeMatrices(*_ele, natural_pt, shape);
     }
 
     /**
