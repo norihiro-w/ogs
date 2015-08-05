@@ -27,23 +27,21 @@ public:
     {
     }
 
-    MathLib::LocalMatrix operator()(const StateVariables* variables, const PorousMediumProperty &pm, const SolidProperty &s, const std::vector<FluidProperty> &f, unsigned global_dim)
+    void operator()(const StateVariables* variables, const PorousMediumProperty &pm, const SolidProperty &s, const std::vector<FluidProperty> &f, unsigned global_dim, MathLib::LocalMatrix &val)
     {
-        MathLib::LocalMatrix val;
-
-        //----------------------------------------------------------------------
         switch(_model_type)
         {
         case Type::Constant:                   // rho = const
         {
             double rho_0 = _parameters[0];
-            val = rho_0 * MathLib::LocalMatrix::Identity(global_dim, global_dim);
+            val.setIdentity(global_dim, global_dim);
+            val *= rho_0;
         }
             break;
 
         case Type::ARITHMETIC:
         {
-            val = (1-pm.n)*s.lambda + pm.n*f[0].lambda*MathLib::LocalMatrix::Identity(global_dim, global_dim);
+            val.noalias() = (1-pm.n)*s.lambda + pm.n*f[0].lambda*MathLib::LocalMatrix::Identity(global_dim, global_dim);
             break;
         }
         default:
@@ -51,8 +49,6 @@ public:
             std::endl;
             break;
         }
-
-        return val;
     }
 
 private:

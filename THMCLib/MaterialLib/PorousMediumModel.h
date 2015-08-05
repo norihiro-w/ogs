@@ -70,23 +70,21 @@ struct PorousMediumModel : public IMedium
 
     virtual MediumType getMediumType() const {return MediumType::PorousMedium;};
 
-    PorousMediumProperty operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e, const SolidProperty &s, const FluidProperty &f) const
+    void operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e, const SolidProperty &s, const FluidProperty &f, PorousMediumProperty &pm) const
     {
         std::vector<FluidProperty> vec_f(1, f);
-        return (*this)(var, global_dim, e, s, vec_f);
+        (*this)(var, global_dim, e, s, vec_f, pm);
     }
 
-    PorousMediumProperty operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e, const SolidProperty &s, const std::vector<FluidProperty> &f) const
+    void operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e, const SolidProperty &s, const std::vector<FluidProperty> &f, PorousMediumProperty &pm) const
     {
         const MathLib::RotationMatrix* matR = (global_dim==e.getDimension()) ? nullptr : &e.getMappedLocalCoordinates().getRotationMatrixToGlobal();
-        PorousMediumProperty pm;
         if (geo_area) pm.geo_area = (*geo_area)(&var);
-        if (permeability) pm.k = (*permeability)(&var, e.getDimension(), global_dim, matR);
+        if (permeability) (*permeability)(&var, e.getDimension(), global_dim, matR, pm.k);
         if (porosity) pm.n = (*porosity)(&var);
         if (storage) pm.Ss = (*storage)(&var);
         if (heat_capacity) pm.Cp = (*heat_capacity)(&var, pm, s, f);
-        if (thermal_conductivity) pm.lamba = (*thermal_conductivity)(&var, pm, s, f, global_dim);
-        return pm;
+        if (thermal_conductivity) (*thermal_conductivity)(&var, pm, s, f, global_dim, pm.lamba);
     }
 };
 

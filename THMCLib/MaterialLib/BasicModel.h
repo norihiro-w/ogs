@@ -89,34 +89,31 @@ public:
     {
     }
 
-    MathLib::LocalMatrix operator()(const StateVariables* /*variables*/, unsigned ele_dim, unsigned global_dim, const MathLib::RotationMatrix* matR = nullptr)
+    void operator()(const StateVariables* /*variables*/, unsigned ele_dim, unsigned global_dim, const MathLib::RotationMatrix* matR, MathLib::LocalMatrix &ret)
     {
-        MathLib::LocalMatrix mat;
         _dim = ele_dim; //TODO
         switch(_model_type)
         {
         case Type::Constant:                   // rho = const
             {
-                mat = MathLib::LocalMatrix::Identity(_dim, _dim) * _parameters[0];
+                ret.setIdentity(_dim, _dim);
+                ret *= _parameters[0];
             }
             break;
         default:
-            mat = MathLib::LocalMatrix::Identity(_dim, _dim) * _parameters[0];
             break;
         }
-        return to_global(mat, global_dim, matR);
+        to_global(ret, global_dim, matR);
     }
 
 private:
-    MathLib::LocalMatrix to_global(const MathLib::LocalMatrix &local, unsigned global_dim, const MathLib::RotationMatrix* matR)
+    void to_global(MathLib::LocalMatrix &local, unsigned global_dim, const MathLib::RotationMatrix* matR)
     {
         if (local.rows() < global_dim) {
             assert(matR!=nullptr);
             MathLib::LocalMatrix local2 = MathLib::LocalMatrix::Zero(global_dim, global_dim);
             local2.block(0, 0, local.rows(), local.cols()) = local.block(0, 0, local.rows(), local.cols());
-            return (*matR) * local2 * matR->transpose();
-        } else {
-            return local;
+            local.noalias() = (*matR) * local2 * matR->transpose();
         }
     }
 

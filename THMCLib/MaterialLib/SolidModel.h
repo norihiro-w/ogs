@@ -49,14 +49,12 @@ struct SolidModel
         delete thermal_conductivity;
     }
 
-    SolidProperty operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e) const
+    void operator()(const StateVariables &var, unsigned global_dim, const MeshLib::Element &e, SolidProperty &v) const
     {
         const MathLib::RotationMatrix* matR = (global_dim==e.getDimension()) ? nullptr : &e.getMappedLocalCoordinates().getRotationMatrixToGlobal();
-        SolidProperty v;
         if (density) v.rho = (*density)(&var);
         if (specific_heat) v.cp = (*specific_heat)(&var);
-        if (thermal_conductivity) v.lambda = (*thermal_conductivity)(&var, e.getDimension(), global_dim, matR);
-        return v;
+        if (thermal_conductivity) (*thermal_conductivity)(&var, e.getDimension(), global_dim, matR, v.lambda);
     }
 };
 

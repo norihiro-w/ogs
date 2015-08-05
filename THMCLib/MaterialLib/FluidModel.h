@@ -36,14 +36,12 @@ struct FluidModel
         delete thermal_conductivity;
     }
 
-    FluidProperty operator()(const StateVariables &var) const
+    void operator()(const StateVariables &var, FluidProperty &v) const
     {
-        FluidProperty v;
         if (density) v.rho = (*density)(&var);
         if (viscosity) v.mu = (*viscosity)(&var);
         if (specific_heat) v.cp = (*specific_heat)(&var);
         if (thermal_conductivity) v.lambda = (*thermal_conductivity)(&var);
-        return v;
     }
 };
 
