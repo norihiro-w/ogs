@@ -80,8 +80,9 @@ public:
 	{
 		if (std::distance(first,last) <= 0)
 		{
-			ERR("AABB::AABB(InputIterator first, InputIterator last): first > last");
-			std::abort();
+//			ERR("AABB::AABB(InputIterator first, InputIterator last): first > last");
+//			std::abort();
+		    return;
 		}
 		init(*first);
 		InputIterator it(first);
