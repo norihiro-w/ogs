@@ -31,16 +31,15 @@ void getDarcyVelocity(const NumLib::FemNodalFunctionScalar &f_p, NumLib::FEMInte
     FeLiquidFlowAssembler assembler(*feObjects, msh.getCoordinateSystem());
 
     MathLib::LocalVector local_p;
+    std::vector<MathLib::LocalVector> gp_vel;
     for (size_t i_e=0; i_e<msh.getNElements(); i_e++)
     {
         auto e = msh.getElement(i_e);
         local_p.resize(e->getNNodes());
-        local_p.setZero();
         for (size_t j=0; j<e->getNNodes(); j++)
             local_p[j] = f_p.getValue(e->getNodeIndex(j));
 
         assembler.reset(*e);
-        std::vector<MathLib::LocalVector> gp_vel;
         assembler.velocity(local_p, gp_vel);
 
         vel.setNumberOfIntegationPoints(i_e, gp_vel.size());
