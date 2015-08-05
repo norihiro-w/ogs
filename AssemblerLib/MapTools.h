@@ -33,18 +33,18 @@ inline void setLocalVector(
 	}
 }
 
-inline void getLocalVector(const std::vector<std::size_t> &list_vec_entry_id, const MathLib::LocalVector &global_u, MathLib::LocalVector  &local_u)
+inline void getLocalVector(const std::vector<std::size_t> &list_vec_entry_id, const MathLib::IVector &global_u, MathLib::LocalVector &local_u)
 {
-    size_t valid_entry_cnt = 0;
+//    size_t valid_entry_cnt = 0;
+//    for (size_t i=0; i<list_vec_entry_id.size(); i++) {
+//        if (list_vec_entry_id[i] != BaseLib::index_npos)
+//            valid_entry_cnt++;
+//    }
+//    local_u.resize(valid_entry_cnt);
+//    valid_entry_cnt = 0;
     for (size_t i=0; i<list_vec_entry_id.size(); i++) {
-        if (list_vec_entry_id[i] != BaseLib::index_npos)
-            valid_entry_cnt++;
-    }
-    local_u.resize(valid_entry_cnt);
-    valid_entry_cnt = 0;
-    for (size_t i=0; i<list_vec_entry_id.size(); i++) {
-        if (list_vec_entry_id[i] != BaseLib::index_npos)
-            local_u[valid_entry_cnt++] = global_u[list_vec_entry_id[i]];
+//        if (list_vec_entry_id[i] != BaseLib::index_npos)
+            local_u[i] = global_u[list_vec_entry_id[i]];
     }
 }
 
