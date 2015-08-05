@@ -111,17 +111,16 @@ inline void computeMappingMatrices(
 
     if (shapemat.detJ>.0) {
         //J^-1, dshape/dx
-#if 0
-        shapemat.invJ.noalias() = shapemat.J.inverse();
-#else
         if (ele.getDimension()==2) {
             shapemat.invJ(0,0) = shapemat.J(1,1);
             shapemat.invJ(0,1) = -shapemat.J(0,1);
             shapemat.invJ(1,0) = -shapemat.J(1,0);
             shapemat.invJ(1,1) = shapemat.J(0,0);
             shapemat.invJ /= shapemat.detJ;
+        } else {
+            shapemat.invJ.noalias() = shapemat.J.inverse();
         }
-#endif
+
         auto const nnodes(shapemat.dNdr.cols());
         auto const ele_dim(shapemat.dNdr.rows());
         assert(shapemat.dNdr.rows()==ele.getDimension());
