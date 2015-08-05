@@ -61,6 +61,9 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
     K.setZero();
     F.setZero();
     auto& q = fe->getIntegrationMethod();
+    MaterialLib::SolidProperty s;
+    MaterialLib::FluidProperty f;
+    MaterialLib::PorousMediumProperty pm;
     for (size_t j=0; j<q.getNPoints(); j++)
     {
         auto wp = q.getWeightedPoint(j);
@@ -74,9 +77,9 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
-        auto f = (*_fluid_model)(var);
-        auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
+        (*_solid_model)(var, _global_coords.getDimension(), *_e, s);
+        (*_fluid_model)(var, f);
+        (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
 
         //-----------------------------------------
@@ -93,7 +96,7 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
 //    std::cout << "F=\n" << F << std::endl;
 
     const double theta = 1.0;
-    localA.noalias() = 1/time.dt() * M + theta * K;
+    localA.noalias() = 1./time.dt() * M + theta * K;
     localRHS.noalias() = (1/time.dt() * M - (1-theta) * K)*fe_data.p0 + F;
 }
 
@@ -122,6 +125,9 @@ void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::
     //-----------------------------------------
     M.setZero();
     K.setZero();
+    MaterialLib::SolidProperty s;
+    MaterialLib::FluidProperty f;
+    MaterialLib::PorousMediumProperty pm;
     auto &q = fe->getIntegrationMethod();
     for (size_t j=0; j<q.getNPoints(); j++)
     {
@@ -136,9 +142,9 @@ void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
-        auto f = (*_fluid_model)(var);
-        auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
+        (*_solid_model)(var, _global_coords.getDimension(), *_e, s);
+        (*_fluid_model)(var, f);
+        (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
 
         //-----------------------------------------
         // Evaluation of FEM equations
@@ -156,6 +162,9 @@ void FeLiquidFlowAssembler::velocity(const MathLib::LocalVector &p, std::vector<
 {
     auto &q = fe->getIntegrationMethod();
     gp_v.resize(q.getNPoints());
+    MaterialLib::SolidProperty s;
+    MaterialLib::FluidProperty f;
+    MaterialLib::PorousMediumProperty pm;
     for (size_t ip=0; ip<q.getNPoints(); ip++)
     {
         auto wp = q.getWeightedPoint(ip);
@@ -163,9 +172,9 @@ void FeLiquidFlowAssembler::velocity(const MathLib::LocalVector &p, std::vector<
         const MathLib::LocalMatrix &dN_p = _sh.dNdx;
 
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
-        auto f = (*_fluid_model)(var);
-        auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
+        (*_solid_model)(var, _global_coords.getDimension(), *_e, s);
+        (*_fluid_model)(var, f);
+        (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
 
         gp_v[ip].noalias() = - pm.k / f.mu * (dN_p * p - f.rho * _vec_g);
     }

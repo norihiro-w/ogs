@@ -59,6 +59,9 @@ void FeHeatTransportAssembler::linear(const NumLib::TimeStep &time,
     M.setZero();
     K.setZero();
     F.setZero();
+    MaterialLib::SolidProperty s;
+    MaterialLib::FluidProperty f;
+    MaterialLib::PorousMediumProperty pm;
     auto& q = fe->getIntegrationMethod();
     for (size_t j=0; j<q.getNPoints(); j++)
     {
@@ -73,9 +76,9 @@ void FeHeatTransportAssembler::linear(const NumLib::TimeStep &time,
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto f = (*_fluid_model)(var);
-        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
-        auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
+        (*_solid_model)(var, _global_coords.getDimension(), *_e, s);
+        (*_fluid_model)(var, f);
+        (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
         const MathLib::LocalVector &v = fe_data.v1[j];
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
 
@@ -111,6 +114,9 @@ void FeHeatTransportAssembler::jacobian(const NumLib::TimeStep &ts, const MathLi
     //-----------------------------------------
     M.setZero();
     K.setZero();
+    MaterialLib::SolidProperty s;
+    MaterialLib::FluidProperty f;
+    MaterialLib::PorousMediumProperty pm;
     auto& q = fe->getIntegrationMethod();
     for (size_t j=0; j<q.getNPoints(); j++)
     {
@@ -125,9 +131,9 @@ void FeHeatTransportAssembler::jacobian(const NumLib::TimeStep &ts, const MathLi
         // Gauss point values
         //-----------------------------------------
         MaterialLib::StateVariables var(THMCLib::getStateVariables(fe_data, _sh));
-        auto f = (*_fluid_model)(var);
-        auto s = (*_solid_model)(var, _global_coords.getDimension(), *_e);
-        auto pm = (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f);
+        (*_solid_model)(var, _global_coords.getDimension(), *_e, s);
+        (*_fluid_model)(var, f);
+        (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
         const MathLib::LocalVector &v = fe_data.v1[j];
         const double fac =  pm.geo_area * _sh.detJ * wp.getWeight();
 
