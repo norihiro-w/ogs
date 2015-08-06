@@ -32,7 +32,7 @@ TARGET_LINK_LIBRARIES( ogs6
     THMCLib
     FileIO
     InSituLib
-    ApplicationsLib
+#    ApplicationsLib
     ${Boost_LIBRARIES}
     ${CATALYST_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}

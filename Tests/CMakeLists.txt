@@ -5,7 +5,7 @@ if(MSVC)
 endif()
 
 APPEND_SOURCE_FILES(TEST_SOURCES .)
-APPEND_SOURCE_FILES(TEST_SOURCES ApplicationsLib)
+#APPEND_SOURCE_FILES(TEST_SOURCES ApplicationsLib)
 APPEND_SOURCE_FILES(TEST_SOURCES AssemblerLib)
 APPEND_SOURCE_FILES(TEST_SOURCES BaseLib)
 APPEND_SOURCE_FILES(TEST_SOURCES GeoLib)
@@ -43,7 +43,7 @@ add_executable(testrunner testrunner.cpp ${TEST_SOURCES})
 set_target_properties(testrunner PROPERTIES FOLDER Testing)
 
 target_link_libraries(testrunner
-	ApplicationsLib
+#	ApplicationsLib
 	AssemblerLib
 	FileIO
 	MeshGeoToolsLib

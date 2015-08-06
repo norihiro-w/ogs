@@ -1,4 +1,4 @@
-add_subdirectory(ApplicationsLib)
+#add_subdirectory(ApplicationsLib)
 
 if(OGS_BUILD_UTILS AND NOT IS_SUBPROJECT)
 	add_subdirectory(Utils)
