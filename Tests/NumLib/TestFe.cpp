@@ -95,6 +95,7 @@ class NumLibFemIsoTest : public ::testing::Test, public T::TestFeType
     typedef typename TestFeType::MeshElementType MeshElementType;
 
     static const unsigned dim = TestFeType::dim;
+    static const unsigned global_dim = TestFeType::global_dim;
     static const unsigned e_nnodes = TestFeType::e_nnodes;
     static const unsigned n_sample_pt_order2 = TestFeType::n_sample_pt_order2;
     static const unsigned n_sample_pt_order3 = TestFeType::n_sample_pt_order3;
@@ -116,8 +117,11 @@ class NumLibFemIsoTest : public ::testing::Test, public T::TestFeType
         // set a conductivity tensor
         setIdentityMatrix(dim, D);
         D *= conductivity;
+        MathLib::LocalMatrix gD(global_dim, global_dim);
         MeshLib::ElementCoordinatesMappingLocal ele_local_coord(*mesh_element, MeshLib::CoordinateSystem(*mesh_element));
-        auto R = ele_local_coord.getRotationMatrixToGlobal().topLeftCorner(TestFeType::global_dim, TestFeType::global_dim);
+        gD.setZero();
+        gD.topLeftCorner(dim, dim) = D;
+        auto R = ele_local_coord.getRotationMatrixToGlobal().topLeftCorner(global_dim, global_dim);
         globalD.noalias() = R.transpose() * (D * R);
 
         // set expected matrices
@@ -175,6 +179,9 @@ const unsigned NumLibFemIsoTest<T>::n_sample_pt_order2;
 
 template <class T>
 const unsigned NumLibFemIsoTest<T>::n_sample_pt_order3;
+
+template <class T>
+const unsigned NumLibFemIsoTest<T>::global_dim;
 
 TYPED_TEST_CASE(NumLibFemIsoTest, TestTypes);
 
