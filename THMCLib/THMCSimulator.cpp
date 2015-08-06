@@ -19,6 +19,8 @@
 #include <tclap/CmdLine.h>
 #ifdef USE_LIS
 #include <lis.h>
+#undef _min
+#undef _max
 #endif
 #ifdef USE_PETSC
 #include <petscksp.h>
