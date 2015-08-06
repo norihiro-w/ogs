@@ -99,10 +99,16 @@ inline void computeMappingMatrices(
         }
     }
 
-    if (ele.getDimension()==2)
+    //shapemat.detJ = shapemat.J.determinant();
+    if (ele.getDimension()==1)
+        shapemat.detJ = shapemat.J(0,0);
+    else if (ele.getDimension()==2)
         shapemat.detJ = shapemat.J(0,0) * shapemat.J(1,1) - shapemat.J(0,1) * shapemat.J(1,0);
-    else
-        shapemat.detJ = shapemat.J.determinant();
+    else if (ele.getDimension()==3)
+        shapemat.detJ = shapemat.J(0,0) * (shapemat.J(1,1) * shapemat.J(2,2) - shapemat.J(2,1) * shapemat.J(1,2))
+                 + shapemat.J(2,0) * (shapemat.J(0,1) * shapemat.J(1,2) - shapemat.J(1,1) * shapemat.J(0,2))
+                 + shapemat.J(1,0) * (shapemat.J(0,2) * shapemat.J(2,1) - shapemat.J(2,2) * shapemat.J(0,1));
+
 #ifndef NDEBUG
     if (shapemat.detJ<=.0)
         ERR("***error: det|J|=%e is not positive.\n", shapemat.detJ);
@@ -136,14 +142,28 @@ inline void computeMappingMatrices(
 
     if (shapemat.detJ>.0) {
         //J^-1, dshape/dx
-        if (ele.getDimension()==2) {
+        //shapemat.invJ.noalias() = shapemat.J.inverse();
+        if (ele.getDimension()==1) {
+            shapemat.invJ(0,0) = 1./shapemat.detJ;
+        } else if (ele.getDimension()==2) {
             shapemat.invJ(0,0) = shapemat.J(1,1);
             shapemat.invJ(0,1) = -shapemat.J(0,1);
             shapemat.invJ(1,0) = -shapemat.J(1,0);
             shapemat.invJ(1,1) = shapemat.J(0,0);
+            shapemat.invJ *= 1./shapemat.detJ;
+        } else if (ele.getDimension()==3) {
+            shapemat.invJ(0,0) =  shapemat.J(1,1) * shapemat.J(2,2) - shapemat.J(2,1) * shapemat.J(1,2);
+            shapemat.invJ(0,1) =  shapemat.J(0,2) * shapemat.J(2,1) - shapemat.J(0,1) * shapemat.J(2,2);
+            shapemat.invJ(0,2) =  shapemat.J(0,1) * shapemat.J(1,2) - shapemat.J(0,2) * shapemat.J(1,1);
+            //
+            shapemat.invJ(1,0) =  shapemat.J(1,2) * shapemat.J(2,0) - shapemat.J(2,2) * shapemat.J(1,0);
+            shapemat.invJ(1,1) =  shapemat.J(0,0) * shapemat.J(2,2) - shapemat.J(2,0) * shapemat.J(0,2);
+            shapemat.invJ(1,2) =  shapemat.J(0,2) * shapemat.J(1,0) - shapemat.J(1,2) * shapemat.J(0,0);
+            //
+            shapemat.invJ(2,0) =  shapemat.J(1,0) * shapemat.J(2,1) - shapemat.J(2,0) * shapemat.J(1,1);
+            shapemat.invJ(2,1) =  shapemat.J(0,1) * shapemat.J(2,0) - shapemat.J(2,1) * shapemat.J(0,0);
+            shapemat.invJ(2,2) =  shapemat.J(0,0) * shapemat.J(1,1) - shapemat.J(1,0) * shapemat.J(0,1);
             shapemat.invJ /= shapemat.detJ;
-        } else {
-            shapemat.invJ.noalias() = shapemat.J.inverse();
         }
 
         auto const nnodes(shapemat.dNdr.cols());
