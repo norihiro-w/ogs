@@ -10,6 +10,8 @@
 #ifndef ASSEMBLERLIB_MAPTOOLS_H_
 #define ASSEMBLERLIB_MAPTOOLS_H_
 
+#include "BaseLib/CodingTools.h"
+
 #include "MathLib/LinAlg/IVector.h"
 #include "MathLib/DataType.h"
 
