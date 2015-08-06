@@ -26,6 +26,31 @@ namespace detail
 
 template <ShapeMatrixType FIELD_TYPE> struct FieldType {};
 
+
+#ifdef OGS_USE_EIGEN
+
+template <class T>
+class Wrapper
+{
+public:
+    Wrapper(Eigen::MatrixBase<T>& v) : _v(v) {}
+    double& operator[](unsigned pos)
+    {
+#ifdef OGS_USE_EIGEN
+        unsigned i = pos /_v.cols();
+        unsigned j = pos % _v.cols();
+#else
+        unsigned i = pos /_v.columns();
+        unsigned j = pos % _v.columns();
+#endif
+        return _v(i,j);
+    }
+private:
+    Eigen::MatrixBase<T>& _v;
+};
+
+#endif
+
 template <class T_MESH_ELEMENT, class T_SHAPE_FUNC, class T_SHAPE_MATRICES>
 inline void computeMappingMatrices(
         const T_MESH_ELEMENT &/*ele*/,
@@ -45,8 +70,8 @@ inline void computeMappingMatrices(
         T_SHAPE_MATRICES &shapemat,
         FieldType<ShapeMatrixType::DNDR>)
 {
-    double* const dNdr = shapemat.dNdr.data();
-    T_SHAPE_FUNC::computeGradShapeFunction(natural_pt, dNdr);
+    Wrapper<typename T_SHAPE_MATRICES::DrShapeType> w(shapemat.dNdr);
+    T_SHAPE_FUNC::computeGradShapeFunction(natural_pt, w);
 }
 
 template <class T_MESH_ELEMENT, class T_SHAPE_FUNC, class T_SHAPE_MATRICES>
