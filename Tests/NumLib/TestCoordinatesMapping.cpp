@@ -16,6 +16,8 @@
 #include <Eigen/Eigen>
 #endif
 
+#include "BaseLib/DebugTools.h"
+
 #include "NumLib/Fem/CoordinatesMapping/ShapeMatrices.h"
 #include "NumLib/Fem/CoordinatesMapping/NaturalCoordinatesMapping.h"
 
@@ -52,12 +54,10 @@ public:
     static const unsigned e_nnodes = T_TEST::e_nnodes;
     static const unsigned global_dim = T_TEST::global_dim;
     // Matrix types
-#ifdef OGS_USE_EIGEN
-    typedef Eigen::Matrix<double, e_nnodes, 1> NodalVector;
-    typedef Eigen::Matrix<double, dim, e_nnodes, Eigen::RowMajor> DimNodalMatrix;
-    typedef Eigen::Matrix<double, dim, dim, Eigen::RowMajor> DimMatrix;
-    typedef Eigen::Matrix<double, global_dim, e_nnodes, Eigen::RowMajor> GlobalDimNodalMatrix;
-#endif
+    typedef MathLib::LocalVector NodalVector;
+    typedef MathLib::LocalMatrix DimNodalMatrix;
+    typedef MathLib::LocalMatrix DimMatrix;
+    typedef MathLib::LocalMatrix GlobalDimNodalMatrix;
     // Shape data type
     typedef ShapeMatrices<NodalVector,DimNodalMatrix,DimMatrix,GlobalDimNodalMatrix> ShapeMatricesType;
     // Natural coordinates mapping type
