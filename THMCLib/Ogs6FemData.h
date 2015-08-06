@@ -12,7 +12,6 @@
 
 #include "BaseLib/OrderedMap.h"
 #include "MathLib/LinAlg/LinAlgLibType.h"
-#include "MathLib/DataType.h"
 #include "GeoLib/GEOObjects.h"
 #include "MeshGeoToolsLib/MeshNodeSearcher.h"
 #include "MeshGeoToolsLib/BoundaryElementsSearcher.h"
