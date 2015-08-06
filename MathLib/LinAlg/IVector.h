@@ -13,8 +13,6 @@
 #include <iostream>
 #include <vector>
 
-#include "BaseLib/CodingTools.h"
-#include "MathLib/DataType.h"
 #include "LinAlgLibType.h"
 
 namespace MathLib
