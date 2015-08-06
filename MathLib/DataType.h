@@ -9,6 +9,23 @@
 
 #pragma once
 
+#ifdef OGS_USE_BLAZE
+
+#include <blaze/Math.h>
+
+namespace MathLib
+{
+/// Local dense matrix type (row-majored)
+typedef blaze::DynamicMatrix<double,blaze::rowMajor> LocalMatrix;
+/// Local dense vector type
+typedef blaze::DynamicVector<double> LocalVector;
+
+typedef blaze::StaticMatrix<double, 3u, 3u, blaze::rowMajor> RotationMatrix;
+
+}
+
+#else
+
 #include <Eigen/Eigen>
 
 namespace MathLib
@@ -25,3 +42,5 @@ typedef MathLib::DenseMatrix<double> RotationMatrix;
 #endif
 
 }
+
+#endif

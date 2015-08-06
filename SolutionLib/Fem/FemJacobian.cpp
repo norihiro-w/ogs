@@ -47,7 +47,11 @@ void TransientFEMJacobianFunction::operator()(const MathLib::IVector &u_n1, Math
 
         // local assembly
         localA.resize(rowColIndeces.rows.size(), rowColIndeces.columns.size());
+#ifdef OGS_USE_EIGEN
         localA.setZero();
+#else
+        localA = 0;
+#endif
         // previous and current results
         auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);

@@ -56,6 +56,7 @@ void FeHeatTransportAssembler::linear(const NumLib::TimeStep &time,
     //-----------------------------------------
     // Numerical integration
     //-----------------------------------------
+#if 0
     M.setZero();
     K.setZero();
     F.setZero();
@@ -93,6 +94,7 @@ void FeHeatTransportAssembler::linear(const NumLib::TimeStep &time,
     const double theta = 1.0;
     localA.noalias() = 1/time.dt() * M + theta * K;
     localRHS.noalias() = (1/time.dt() * M - (1-theta) * K)*fe_data.T0 + F;
+#endif
 }
 
 void FeHeatTransportAssembler::residual(const NumLib::TimeStep &t, const MathLib::LocalVector &p1,
@@ -102,12 +104,15 @@ void FeHeatTransportAssembler::residual(const NumLib::TimeStep &t, const MathLib
     A.resize(n_dof, n_dof);
     RHS.resize(n_dof);
     linear(t, p1, p0, A, RHS);
+#if 0
     residual.noalias() = A*p1 - RHS;
+#endif
 }
 
 void FeHeatTransportAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::LocalVector &T1,
         const MathLib::LocalVector &/*T0*/,  MathLib::LocalMatrix &localJ)
 {
+#if 0
     fe_data.T1 = T1;
     //-----------------------------------------
     // Numerical integration
@@ -147,6 +152,7 @@ void FeHeatTransportAssembler::jacobian(const NumLib::TimeStep &ts, const MathLi
 
     const double theta = 1.0;
     localJ.noalias() = 1/ts.dt() * M + theta * K;
+#endif
 }
 
 

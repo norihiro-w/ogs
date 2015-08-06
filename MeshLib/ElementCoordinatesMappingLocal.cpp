@@ -47,7 +47,11 @@ void getRotationMatrixToGlobal(
             GeoLib::compute2DRotationMatrixToX(xx, matR);
         else
             GeoLib::compute3DRotationMatrixToX(xx, matR);
+#ifdef OGS_USE_EIGEN
         matR.transposeInPlace();
+#else
+        matR.transpose();
+#endif
     } else if (global_dim == 3 && element_dimension == 2) {
         // get plane normal
         MathLib::Vector3 plane_normal;
@@ -57,7 +61,11 @@ void getRotationMatrixToGlobal(
         // compute a rotation matrix to XY
         GeoLib::computeRotationMatrixToXY(plane_normal, matR);
         // set a transposed matrix
+#ifdef OGS_USE_EIGEN
         matR.transposeInPlace();
+#else
+        matR.transpose();
+#endif
     }
 
 }
@@ -69,7 +77,7 @@ namespace MeshLib
 ElementCoordinatesMappingLocal::ElementCoordinatesMappingLocal(
     const Element& e,
     const CoordinateSystem &global_coords)
-: _coords(global_coords), _matR2global(3,3)
+: _coords(global_coords) //, _matR2global(3,3)
 {
     assert(e.getDimension() <= global_coords.getDimension());
     _points.reserve(e.getNNodes());
@@ -81,13 +89,21 @@ ElementCoordinatesMappingLocal::ElementCoordinatesMappingLocal(
 
     if (global_dimension == element_dimension)
     {
+#if defined(OGS_USE_EIGEN)
         _matR2global.setIdentity();
+#else
+        _matR2global = 0;
+        for (unsigned i=0; i<global_dimension; i++)
+            _matR2global(i,i) = 1;
+#endif
         return;
     }
 
     detail::getRotationMatrixToGlobal(element_dimension, global_dimension, _points, _matR2global);
-#ifdef OGS_USE_EIGEN
+#if defined(OGS_USE_EIGEN)
     detail::rotateToLocal(_matR2global.transpose(), _points);
+#elif defined(OGS_USE_BLAZE)
+    detail::rotateToLocal(blaze::trans(_matR2global), _points);
 #else
     RotationMatrix* m(_matR2global.transpose());
     detail::rotateToLocal(*m, _points);

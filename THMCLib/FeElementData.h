@@ -108,8 +108,13 @@ inline void updateFeData(FeMeshData &mshData, const NumLib::IFiniteElement &fe, 
 inline MaterialLib::StateVariables getStateVariables(const FeElementData &fe_data, const NumLib::DynamicShapeMatrices& sh)
 {
     MaterialLib::StateVariables var;
+#ifdef OGS_USE_EIGEN
     if (fe_data.p1.size()>0) var.p = sh.N.transpose()*fe_data.p1;
     if (fe_data.T1.size()>0) var.T = sh.N.transpose()*fe_data.T1;
+#else
+    if (fe_data.p1.size()>0) var.p = blaze::trans(sh.N)*fe_data.p1;
+    if (fe_data.T1.size()>0) var.T = blaze::trans(sh.N)*fe_data.T1;
+#endif
     return var;
 }
 } //THMCLib

@@ -24,10 +24,15 @@ template<class T>
 void setMatrixZero(T &mat)
 {
     //mat.setZero();
+#ifdef OGS_USE_EIGEN
     const auto n = mat.rows()*mat.cols();
     auto* v = mat.data();
     for (std::size_t i=0; i<n; i++)
         v[i] = .0;
+#else
+    //const auto n = mat.rows()*mat.columns();
+    mat = 0;
+#endif
 }
 
 template<class T>

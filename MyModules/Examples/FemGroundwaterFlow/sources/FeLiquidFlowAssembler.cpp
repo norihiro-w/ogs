@@ -22,7 +22,12 @@
 
 
 FeLiquidFlowAssembler::FeLiquidFlowAssembler(const NumLib::IFeObjectContainer &feObjects, const MeshLib::CoordinateSystem &problem_coordinates)
-: _feObjects(feObjects), _global_coords(problem_coordinates), _vec_g(MathLib::LocalVector::Zero(_global_coords.getDimension())),
+: _feObjects(feObjects), _global_coords(problem_coordinates),
+#ifdef OGS_USE_EIGEN
+  _vec_g(MathLib::LocalVector::Zero(_global_coords.getDimension())),
+#else
+  _vec_g(_global_coords.getDimension(), 0),
+#endif
   _e(nullptr), /*_dof(nullptr),*/ fe(nullptr), /*fe_data(nullptr),*/ _pm_model(nullptr), _fluid_model(nullptr)
 {
     if (_global_coords.hasZ())
@@ -57,9 +62,15 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
     //-----------------------------------------
     // Numerical integration
     //-----------------------------------------
+#ifdef OGS_USE_EIGEN
     M.setZero();
     K.setZero();
     F.setZero();
+#else
+    M = 0;
+    K = 0;
+    F = 0;
+#endif
     auto& q = fe->getIntegrationMethod();
     MaterialLib::SolidProperty s;
     MaterialLib::FluidProperty f;
@@ -85,10 +96,17 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
         //-----------------------------------------
         // Evaluation of matrices
         //-----------------------------------------
+#ifdef OGS_USE_EIGEN
         M.noalias() += W * pm.Ss * N_p.transpose() * fac;
         K.noalias() += dW.transpose() * pm.k / f.mu * dN_p * fac;
         if (_global_coords.hasZ())
             F.noalias() += dW.transpose() * pm.k / f.mu * f.rho * _vec_g * fac;
+#else
+        M += W * pm.Ss * blaze::trans(N_p) * fac;
+        K += blaze::trans(dW) * pm.k / f.mu * dN_p * fac;
+        if (_global_coords.hasZ())
+            F += blaze::trans(dW) * pm.k / f.mu * f.rho * _vec_g * fac;
+#endif
     }
 //    std::cout << "# Element " << _e->getID() << std::endl;
 //    std::cout << "M=\n" << M << std::endl;
@@ -96,8 +114,13 @@ void FeLiquidFlowAssembler::linear(const NumLib::TimeStep &time,
 //    std::cout << "F=\n" << F << std::endl;
 
     const double theta = 1.0;
+#ifdef OGS_USE_EIGEN
     localA.noalias() = 1./time.dt() * M + theta * K;
     localRHS.noalias() = (1/time.dt() * M - (1-theta) * K)*fe_data.p0 + F;
+#else
+    localA = 1./time.dt() * M + theta * K;
+    localRHS = (1/time.dt() * M - (1-theta) * K)*fe_data.p0 + F;
+#endif
 }
 
 void FeLiquidFlowAssembler::residual(const NumLib::TimeStep &t, const MathLib::LocalVector &p1,
@@ -107,7 +130,11 @@ void FeLiquidFlowAssembler::residual(const NumLib::TimeStep &t, const MathLib::L
     A.resize(n_dof, n_dof);
     RHS.resize(n_dof);
     linear(t, p1, p0, A, RHS);
+#ifdef OGS_USE_EIGEN
     residual.noalias() = A*p1 - RHS;
+#else
+    residual = A*p1 - RHS;
+#endif
     //std::stringstream ss;
     //ss << "# Element " << _e->getID() << std::endl;
     //ss << "p1 = " << p1.transpose() << std::endl;
@@ -123,6 +150,7 @@ void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::
     //-----------------------------------------
     // Numerical integration
     //-----------------------------------------
+#if 0
     M.setZero();
     K.setZero();
     MaterialLib::SolidProperty s;
@@ -156,6 +184,7 @@ void FeLiquidFlowAssembler::jacobian(const NumLib::TimeStep &ts, const MathLib::
 
     double theta = 1.0;
     localJ.noalias() = 1./ts.dt() * M + theta * K;
+#endif
 }
 
 void FeLiquidFlowAssembler::velocity(const MathLib::LocalVector &p, std::vector<MathLib::LocalVector> &gp_v)
@@ -176,8 +205,11 @@ void FeLiquidFlowAssembler::velocity(const MathLib::LocalVector &p, std::vector<
         (*_fluid_model)(var, f);
         (*_pm_model)(var, _global_coords.getDimension(), *_e, s, f, pm);
 
+#ifdef OGS_USE_EIGEN
         gp_v[ip].noalias() = - pm.k / f.mu * (dN_p * p - f.rho * _vec_g);
+#else
+        gp_v[ip] = - pm.k / f.mu * (dN_p * p - f.rho * _vec_g);
+#endif
     }
-
 }
 

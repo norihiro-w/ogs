@@ -11,9 +11,11 @@
 
 #include <vector>
 #include <cmath>
-#ifdef OGS_USE_EIGEN
+//#ifdef OGS_USE_EIGEN
 #include <Eigen/Eigen>
-#endif
+//#endif
+
+#include "BaseLib/DebugTools.h"
 
 #include "MeshLib/ElementCoordinatesMappingLocal.h"
 #include "MeshLib/CoordinateSystem.h"
@@ -68,6 +70,13 @@ typedef ::testing::Types<
         TestCase<TestFeTET4, EigenFixedShapeMatrixPolicy>,
         TestCase<TestFePRISM6, EigenFixedShapeMatrixPolicy>,
         TestCase<TestFePYRA5, EigenFixedShapeMatrixPolicy>
+#else
+        TestCase<TestFeLINE2, BlazeDynamicShapeMatrixPolicy>,
+        TestCase<TestFeLINE2Y, BlazeDynamicShapeMatrixPolicy>,
+        TestCase<TestFeLINE3, BlazeDynamicShapeMatrixPolicy>,
+        TestCase<TestFeTRI3, BlazeDynamicShapeMatrixPolicy>,
+        TestCase<TestFeQUAD4, BlazeDynamicShapeMatrixPolicy>,
+        TestCase<TestFeHEX8, BlazeDynamicShapeMatrixPolicy>
 #endif
         > TestTypes;
 }
@@ -119,10 +128,17 @@ class NumLibFemIsoTest : public ::testing::Test, public T::TestFeType
         D *= conductivity;
         MathLib::LocalMatrix gD(global_dim, global_dim);
         MeshLib::ElementCoordinatesMappingLocal ele_local_coord(*mesh_element, MeshLib::CoordinateSystem(*mesh_element));
+#ifdef OGS_USE_EIGEN
         gD.setZero();
         gD.topLeftCorner(dim, dim) = D;
         auto R = ele_local_coord.getRotationMatrixToGlobal().topLeftCorner(global_dim, global_dim);
         globalD.noalias() = R.transpose() * (D * R);
+#else
+        gD = 0;
+        blaze::submatrix(gD, 0, 0, dim, dim) = D;
+        auto R = blaze::submatrix(ele_local_coord.getRotationMatrixToGlobal(), 0, 0, global_dim, global_dim);
+        globalD = blaze::trans(R) * (gD * R);
+#endif
 
         // set expected matrices
         this->setExpectedMassMatrix(expectedM);
@@ -147,8 +163,11 @@ class NumLibFemIsoTest : public ::testing::Test, public T::TestFeType
     static const double conductivity;
     static const double eps;
     DimMatrix D;
-    NodalMatrix expectedM;
-    NodalMatrix expectedK;
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> ExpectedMatrixType;
+    ExpectedMatrixType expectedM;
+    ExpectedMatrixType expectedK;
+//    NodalMatrix expectedM;
+//    NodalMatrix expectedK;
     IntegrationMethod integration_method;
     GlobalDimMatrixType globalD;
 
@@ -197,16 +216,26 @@ TYPED_TEST(NumLibFemIsoTest, CheckMassMatrix)
 
     // evaluate a mass matrix M = int{ N^T D N }dA_e
     NodalMatrix M(this->e_nnodes, this->e_nnodes);
+#ifdef OGS_USE_EIGEN
     M.setZero();
+#else
+    M = 0;
+#endif
     ShapeMatricesType shape(this->dim, this->e_nnodes);
     for (std::size_t i=0; i < this->integration_method.getNPoints(); i++) {
         shape.setZero();
         auto wp = this->integration_method.getWeightedPoint(i);
         fe.template computeShapeFunctions<ShapeMatrixType::N_J>(wp.getCoords(), shape);
+#ifdef OGS_USE_EIGEN
         M.noalias() += shape.N * shape.N.transpose() * shape.detJ * wp.getWeight();
+#else
+        M += shape.N * blaze::trans(shape.N) * shape.detJ * wp.getWeight();
+#endif
     }
-    //std::cout << "M=\n" << M;
-    ASSERT_ARRAY_NEAR(this->expectedM.data(), M.data(), M.size(), this->eps);
+//    std::cout << "M=\n" << M;
+//    std::cout << "M=\n" << r_M;
+    std::vector<double> r_M(to_array(M));
+    ASSERT_ARRAY_NEAR(this->expectedM.data(), r_M, r_M.size(), this->eps);
 }
 
 TYPED_TEST(NumLibFemIsoTest, CheckLaplaceMatrix)
@@ -221,16 +250,25 @@ TYPED_TEST(NumLibFemIsoTest, CheckLaplaceMatrix)
 
     // evaluate a Laplace matrix K = int{ dNdx^T D dNdx }dA_e
     NodalMatrix K(this->e_nnodes, this->e_nnodes);
+#ifdef OGS_USE_EIGEN
     K.setZero();
+#else
+    K = 0;
+#endif
     ShapeMatricesType shape(this->dim, this->e_nnodes);
     for (std::size_t i=0; i < this->integration_method.getNPoints(); i++) {
         shape.setZero();
         auto wp = this->integration_method.getWeightedPoint(i);
         fe.template computeShapeFunctions<ShapeMatrixType::DNDX>(wp.getCoords(), shape);
+#ifdef OGS_USE_EIGEN
         K.noalias() += shape.dNdx.transpose() * this->globalD * shape.dNdx * shape.detJ * wp.getWeight();
+#else
+        K += blaze::trans(shape.dNdx) * this->globalD * shape.dNdx * shape.detJ * wp.getWeight();
+#endif
     }
     //std::cout << "K=\n" << K << std::endl;
-    ASSERT_ARRAY_NEAR(this->expectedK.data(), K.data(), K.size(), this->eps);
+    std::vector<double> r_K(to_array(K));
+    ASSERT_ARRAY_NEAR(this->expectedK.data(), r_K, r_K.size(), this->eps);
 }
 
 TYPED_TEST(NumLibFemIsoTest, CheckMassLaplaceMatrices)
@@ -245,20 +283,32 @@ TYPED_TEST(NumLibFemIsoTest, CheckMassLaplaceMatrices)
 
     // evaluate both mass and laplace matrices at once
     NodalMatrix M(this->e_nnodes, this->e_nnodes);
-    M.setZero();
     NodalMatrix K(this->e_nnodes, this->e_nnodes);
+#ifdef OGS_USE_EIGEN
+    M.setZero();
     K.setZero();
+#else
+    M = 0;
+    K = 0;
+#endif
     ShapeMatricesType shape(this->dim, this->e_nnodes);
     for (std::size_t i=0; i < this->integration_method.getNPoints(); i++) {
         shape.setZero();
         auto wp = this->integration_method.getWeightedPoint(i);
         fe.computeShapeFunctions(wp.getCoords(), shape);
+#ifdef OGS_USE_EIGEN
         M.noalias() += shape.N * shape.N.transpose() * shape.detJ * wp.getWeight();
         K.noalias() += shape.dNdx.transpose() * (this->globalD * shape.dNdx) * shape.detJ * wp.getWeight();
+#else
+        M += shape.N * blaze::trans(shape.N) * shape.detJ * wp.getWeight();
+        K += blaze::trans(shape.dNdx) * (this->globalD * shape.dNdx) * shape.detJ * wp.getWeight();
+#endif
     }
 
-    ASSERT_ARRAY_NEAR(this->expectedM.data(), M.data(), M.size(), this->eps);
-    ASSERT_ARRAY_NEAR(this->expectedK.data(), K.data(), K.size(), this->eps);
+    std::vector<double> r_M(to_array(M));
+    std::vector<double> r_K(to_array(K));
+    ASSERT_ARRAY_NEAR(this->expectedM.data(), r_M, r_M.size(), this->eps);
+    ASSERT_ARRAY_NEAR(this->expectedK.data(), r_K, r_K.size(), this->eps);
 }
 
 #if 0

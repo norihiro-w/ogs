@@ -49,6 +49,23 @@ private:
     Eigen::MatrixBase<T>& _v;
 };
 
+#else
+
+template <class T>
+class Wrapper
+{
+public:
+    Wrapper(T& v) : _v(v) {}
+    double& operator[](unsigned pos)
+    {
+        unsigned i = pos /_v.columns();
+        unsigned j = pos % _v.columns();
+        return _v(i,j);
+    }
+private:
+    T& _v;
+};
+
 #endif
 
 template <class T_MESH_ELEMENT, class T_SHAPE_FUNC, class T_SHAPE_MATRICES>
@@ -99,7 +116,6 @@ inline void computeMappingMatrices(
         }
     }
 
-    //shapemat.detJ = shapemat.J.determinant();
     if (ele.getDimension()==1)
         shapemat.detJ = shapemat.J(0,0);
     else if (ele.getDimension()==2)
@@ -108,6 +124,12 @@ inline void computeMappingMatrices(
         shapemat.detJ = shapemat.J(0,0) * (shapemat.J(1,1) * shapemat.J(2,2) - shapemat.J(2,1) * shapemat.J(1,2))
                  + shapemat.J(2,0) * (shapemat.J(0,1) * shapemat.J(1,2) - shapemat.J(1,1) * shapemat.J(0,2))
                  + shapemat.J(1,0) * (shapemat.J(0,2) * shapemat.J(2,1) - shapemat.J(2,2) * shapemat.J(0,1));
+#ifdef OGS_USE_EIGEN
+    else
+        shapemat.detJ = shapemat.J.determinant();
+#else
+
+#endif
 
 #ifndef NDEBUG
     if (shapemat.detJ<=.0)
@@ -142,7 +164,6 @@ inline void computeMappingMatrices(
 
     if (shapemat.detJ>.0) {
         //J^-1, dshape/dx
-        //shapemat.invJ.noalias() = shapemat.J.inverse();
         if (ele.getDimension()==1) {
             shapemat.invJ(0,0) = 1./shapemat.detJ;
         } else if (ele.getDimension()==2) {
@@ -150,7 +171,8 @@ inline void computeMappingMatrices(
             shapemat.invJ(0,1) = -shapemat.J(0,1);
             shapemat.invJ(1,0) = -shapemat.J(1,0);
             shapemat.invJ(1,1) = shapemat.J(0,0);
-            shapemat.invJ *= 1./shapemat.detJ;
+            //shapemat.invJ *= 1./shapemat.detJ;
+            shapemat.invJ.scale(1./shapemat.detJ);
         } else if (ele.getDimension()==3) {
             shapemat.invJ(0,0) =  shapemat.J(1,1) * shapemat.J(2,2) - shapemat.J(2,1) * shapemat.J(1,2);
             shapemat.invJ(0,1) =  shapemat.J(0,2) * shapemat.J(2,1) - shapemat.J(0,1) * shapemat.J(2,2);
@@ -164,19 +186,36 @@ inline void computeMappingMatrices(
             shapemat.invJ(2,1) =  shapemat.J(0,1) * shapemat.J(2,0) - shapemat.J(2,1) * shapemat.J(0,0);
             shapemat.invJ(2,2) =  shapemat.J(0,0) * shapemat.J(1,1) - shapemat.J(1,0) * shapemat.J(0,1);
             shapemat.invJ /= shapemat.detJ;
+        } else {
+#ifdef OGS_USE_EIGEN
+            shapemat.invJ.noalias() = shapemat.J.inverse();
+#endif
         }
 
+#ifdef OGS_USE_EIGEN
         auto const nnodes(shapemat.dNdr.cols());
+#else
+        auto const nnodes(shapemat.dNdr.columns());
+#endif
         auto const ele_dim(shapemat.dNdr.rows());
         assert(shapemat.dNdr.rows()==ele.getDimension());
         const unsigned global_dim(ele_local_coord.getGlobalCoordinateSystem().getDimension());
         if (global_dim==ele_dim) {
+#ifdef OGS_USE_EIGEN
             shapemat.dNdx.topLeftCorner(ele_dim, nnodes).noalias() = shapemat.invJ * shapemat.dNdr;
+#else
+            blaze::submatrix( shapemat.dNdx, 0UL, 0UL, ele_dim, nnodes ) = shapemat.invJ * shapemat.dNdr;
+#endif
         } else {
             auto const& matR = ele_local_coord.getRotationMatrixToGlobal(); // 3 x 3
             auto invJ_dNdr = shapemat.invJ * shapemat.dNdr;
+#ifdef OGS_USE_EIGEN
             auto dshape_global = matR.topLeftCorner(3u, ele_dim) * invJ_dNdr; //3 x nnodes
             shapemat.dNdx = dshape_global.topLeftCorner(global_dim, nnodes);;
+#else
+            auto dshape_global = blaze::submatrix( matR, 0UL, 0UL, 3UL, ele_dim ) * invJ_dNdr; //3 x nnodes
+            shapemat.dNdx = blaze::submatrix(dshape_global, 0UL, 0UL, global_dim, nnodes);
+#endif
         }
     }
 }

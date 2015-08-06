@@ -96,7 +96,14 @@ public:
         {
         case Type::Constant:                   // rho = const
             {
+#ifdef OGS_USE_EIGEN
                 ret.setIdentity(_dim, _dim);
+#else
+                ret.resize(_dim, _dim);
+                ret = 0;
+                for (unsigned i=0; i<_dim; i++)
+                    ret(i,i) = 1.;
+#endif
                 ret *= _parameters[0];
             }
             break;
@@ -111,9 +118,16 @@ private:
     {
         if (local.rows() < global_dim) {
             assert(matR!=nullptr);
+#ifdef OGS_USE_EIGEN
             MathLib::LocalMatrix local2 = MathLib::LocalMatrix::Zero(global_dim, global_dim);
             local2.block(0, 0, local.rows(), local.cols()) = local.block(0, 0, local.rows(), local.cols());
             local.noalias() = (*matR) * local2 * matR->transpose();
+#else
+            MathLib::LocalMatrix local2(global_dim, global_dim);
+            local2 = 0;
+            blaze::submatrix(local2, 0, 0, local.rows(), local.columns()) = local;
+            local = (*matR) * local2 * blaze::trans(*matR);
+#endif
         }
     }
 

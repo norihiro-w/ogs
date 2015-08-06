@@ -66,7 +66,11 @@ option(OGS_USE_MPI "Use MPI" OFF)
 
 # Eigen
 option(OGS_USE_EIGEN "Use EIGEN for local matrix and vector" ON)
+option(OGS_USE_EIGEN_LS "Use EIGEN for linear solve" ON)
 option(EIGEN_NO_DEBUG "Disables Eigen's assertions" ON)
+
+# blaze
+option(OGS_USE_BLAZE "Use blaze for local matrix and vector" ON)
 
 # Logging
 option(OGS_DISABLE_LOGGING "Disables all logog messages." OFF)
@@ -133,6 +137,20 @@ if(OGS_USE_EIGEN)
 		add_definitions(-DEIGEN_NO_DEBUG)
 	endif()
 	include_directories (SYSTEM ${EIGEN3_INCLUDE_DIR})
+endif()
+if (OGS_USE_EIGEN_LS)
+	add_definitions(-DEIGEN_INITIALIZE_MATRICES_BY_ZERO)
+	add_definitions(-DOGS_USE_EIGEN_LS)
+	if (EIGEN_NO_DEBUG)
+		add_definitions(-DEIGEN_NO_DEBUG)
+	endif()
+	include_directories (SYSTEM ${EIGEN3_INCLUDE_DIR})
+endif()
+
+if(OGS_USE_BLAZE)
+	add_definitions(-DOGS_USE_BLAZE)
+	find_package(BLAZE REQUIRED)
+	include_directories (SYSTEM ${BLAZE_INCLUDE_DIR})
 endif()
 
 add_subdirectory( Applications )

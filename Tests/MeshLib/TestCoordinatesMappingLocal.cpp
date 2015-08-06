@@ -130,14 +130,21 @@ void debugOutput(MeshLib::Element *ele, MeshLib::ElementCoordinatesMappingLocal 
         std::cout << *ele->getNode(i) << std::endl;
     std::cout << "local coords=" << std::endl;
     for (unsigned i=0; i<ele->getNNodes(); i++)
-        std::cout << *mapping.getMappedCoordinates(i) << std::endl;
+        std::cout << mapping.getMappedCoordinates(i) << std::endl;
     std::cout << "R=\n" << mapping.getRotationMatrixToGlobal() << std::endl;
     auto matR(mapping.getRotationMatrixToGlobal());
     std::cout << "global coords=" << std::endl;
     for (unsigned i=0; i<ele->getNNodes(); i++) {
-        double* raw = const_cast<double*>(&(*mapping.getMappedCoordinates(i))[0]);
+        double* raw = const_cast<double*>(&mapping.getMappedCoordinates(i)[0]);
+#ifdef OGS_USE_EIGEN
         Eigen::Map<Eigen::Vector3d> v(raw);
         std::cout << (matR*v).transpose() << std::endl;
+#else
+        MathLib::LocalVector v(3);
+        for (unsigned j=0; j<3; j++)
+            v[j] = raw[j];
+        std::cout << blaze::trans(matR*v) << std::endl;
+#endif
     }
 }
 #endif
@@ -157,13 +164,20 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimLineY)
     auto ele = TestLine2::createY();
     MeshLib::ElementCoordinatesMappingLocal mapping(*ele, MeshLib::CoordinateSystem(MeshLib::CoordinateSystemType::Y));
     auto matR(mapping.getRotationMatrixToGlobal());
-    //debugOutput(ele, mapping);
+    //debugOutput(&(*ele), mapping);
 
     double exp_R[3*3] = {0, -1, 0,
                          1,  0, 0,
                          0,  0, 1};
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
@@ -180,7 +194,14 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimLineZ)
 
     double exp_R[3*3] = {0, 0, -1, 0, 1, 0, 1, 0, 0};
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
@@ -198,7 +219,14 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimLineXY)
                          0.70710678118654757,  0.70710678118654757, 0,
                          0,                    0,                   1};
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
@@ -216,7 +244,14 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimLineXYZ)
                          0.57735026918962584,  0.40824829046386313, -0.70710678118654757,
                          0.57735026918962584,  0.40824829046386313,  0.70710678118654757};
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
@@ -236,9 +271,15 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimQuadXZ)
                            0, 1,  0};
 
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
-
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
         delete ele->getNode(n);
 }
@@ -256,7 +297,14 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimQuadYZ)
                          -1, 0, 0};
 
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)
@@ -276,7 +324,14 @@ TEST(MeshLib, CoordinatesMappingLocalLowerDimQuadXYZ)
                            0, 0.70710678118654757,  0.70710678118654757};
 
     const double eps(std::numeric_limits<double>::epsilon());
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(exp_R, matR.data(), matR.size(), eps);
+#else
+    double res_R[9];
+    for (unsigned i=0;i<3;i++)
+        for (unsigned j=0;j<3;j++) res_R[i*3+j] = matR(i,j);
+    ASSERT_ARRAY_NEAR(exp_R, res_R, matR.rows()*matR.columns(), eps);
+#endif
     CHECK_COORDS(ele,mapping);
 
     for (std::size_t n = 0; n < ele->getNNodes(); ++n)

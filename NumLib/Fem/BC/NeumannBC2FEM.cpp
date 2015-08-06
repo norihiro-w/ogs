@@ -80,14 +80,23 @@ NeumannBC2FEM::NeumannBC2FEM(
                 IFiniteElement *fe_edge = feObjects.getFeObject(*e);
                 fe_edge->setMeshElement(*e);
                 auto q = NumLib::getIntegrationMethod(e->getCellType());
+#ifdef OGS_USE_EIGEN
                 MathLib::LocalMatrix M = MathLib::LocalMatrix::Zero(edge_nnodes, edge_nnodes);
+#else
+                MathLib::LocalMatrix M(edge_nnodes, edge_nnodes);
+                M = .0;
+#endif
                 //double x_ref[3];
                 NumLib::DynamicShapeMatrices shapeMat(e->getDimension(), msh->getDimension(), e->getNNodes());
                 for (size_t j=0; j<q->getNPoints(); j++) {
                     shapeMat.setZero();
                     auto wp = q->getWeightedPoint(j);
                     fe_edge->computeShapeFunctionsd(wp.getCoords(), shapeMat);
+#ifdef OGS_USE_EIGEN
                     M.noalias() += (shapeMat.N * shapeMat.N.transpose()) * shapeMat.detJ * wp.getWeight();
+#else
+                    M += (shapeMat.N * blaze::trans(shapeMat.N)) * shapeMat.detJ * wp.getWeight();
+#endif
                 }
                 delete q;
                 MathLib::LocalVector result = M * nodal_val;

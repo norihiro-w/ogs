@@ -34,7 +34,11 @@ void TransientFEMResidualFunction::operator()(const MathLib::IVector &u_n1, Math
 
         // local assembly
         localRes.resize(rowColIndeces.rows.size());
+#ifdef OGS_USE_EIGEN
         localRes.setZero();
+#else
+        localRes = 0;
+#endif
         // previous and current results
         auto local_u_n1 = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n1);
         auto local_u_n = AssemblerLib::getLocalVector(rowColIndeces.columns, u_n);

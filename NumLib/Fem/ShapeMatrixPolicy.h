@@ -68,12 +68,49 @@ struct EigenDynamicShapeMatrixPolicy
             GlobalDimNodalMatrixType>;
 };
 
+#endif  // OGS_USE_EIGEN
+
+#ifdef OGS_USE_BLAZE
+
+#include <blaze/Math.h>
+
+/// An implementation of ShapeMatrixPolicy using dynamic size eigen matrices and
+/// vectors.
+template <typename ShapeFunction, unsigned GlobalDim>
+struct BlazeDynamicShapeMatrixPolicy
+{
+    // Dynamic size local matrices are much slower in allocation than their
+    // fixed counterparts.
+
+     using _MatrixType =
+        blaze::DynamicMatrix<double, blaze::rowMajor>;
+     using _VectorType =
+        blaze::DynamicVector<double>;
+
+    using NodalMatrixType = _MatrixType;
+    using NodalVectorType = _VectorType;
+    using DimNodalMatrixType = _MatrixType;
+    using DimMatrixType = _MatrixType;
+    using GlobalDimNodalMatrixType = _MatrixType;
+    using GlobalDimMatrixType = _MatrixType;
+
+    using ShapeMatrices =
+        NumLib::ShapeMatrices<
+            NodalVectorType,
+            DimNodalMatrixType,
+            DimMatrixType,
+            GlobalDimNodalMatrixType>;
+};
+#endif  // OGS_USE_BLAZE
+
 /// Default choice of the ShapeMatrixPolicy.
 template <typename ShapeFunction, unsigned GlobalDim>
-using ShapeMatrixPolicyType = EigenFixedShapeMatrixPolicy<ShapeFunction, GlobalDim>;
-//using ShapeMatrixPolicyType = EigenDynamicShapeMatrixPolicy<ShapeFunction, GlobalDim>;
-
-#endif  // OGS_USE_EIGEN
+#ifdef OGS_USE_EIGEN
+using ShapeMatrixPolicyType = EigenDynamicShapeMatrixPolicy<ShapeFunction, GlobalDim>;
+//using ShapeMatrixPolicyType = EigenFixedShapeMatrixPolicy<ShapeFunction, GlobalDim>;
+#else
+using ShapeMatrixPolicyType = BlazeDynamicShapeMatrixPolicy<ShapeFunction, GlobalDim>;
+#endif
 
 //static_assert(std::is_class<ShapeMatrixPolicyType<>::value,
         //"ShapeMatrixPolicyType was not defined.");

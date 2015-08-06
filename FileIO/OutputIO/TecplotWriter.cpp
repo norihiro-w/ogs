@@ -95,11 +95,13 @@ void TecplotWriter::writeNodeDataDomain(bool init, double time, const MeshLib::M
             {
                 MathLib::LocalMatrix v;
                 nodal[k].second.f->eval(NumLib::TXPosition(NumLib::TXPosition::Node, j, msh.getNode(j)->getCoords()), v);
+#ifdef OGS_USE_EIGEN
                 const size_t n_dummy = nodal[k].second.nr_of_components - static_cast<size_t>(v.array().size());
                 for (int k=0; k<v.array().size(); k++)
                     tec_file << v.array()(k) << " ";
                 for (size_t k=0; k<n_dummy; k++)
                     tec_file << 0.0 << " ";
+#endif
             }
             tec_file << "\n";
         }
@@ -148,11 +150,13 @@ void TecplotWriter::writeElementDataDomain(bool init, double time, const MeshLib
         {
             MathLib::LocalMatrix v;
             elemental[j].second.f->eval(NumLib::TXPosition(NumLib::TXPosition::Element, i), v);
+#ifdef OGS_USE_EIGEN
             const size_t n_dummy = elemental[j].second.nr_of_components - static_cast<size_t>(v.array().size());
             for (int k = 0; k < v.array().size(); k++)
                 tec_file << v.array()(k) << " ";
             for (size_t k = 0; k < n_dummy; k++)
                 tec_file << 0.0 << " ";
+#endif
         }
         tec_file << "\n";
     }
@@ -206,11 +210,13 @@ void TecplotWriter::writeNodeDataPoly(bool init, double time, const MeshLib::Mes
         {
             MathLib::LocalMatrix v;
             nodal[k].second.f->eval(NumLib::TXPosition(NumLib::TXPosition::Node, nodeid, msh.getNode(nodeid)->getCoords()), v);
+#ifdef OGS_USE_EIGEN
             const size_t n_dummy = nodal[k].second.nr_of_components - static_cast<size_t>(v.array().size());
             for (int k=0; k<v.array().size(); k++)
                 tec_file << v.array()(k) << " ";
             for (size_t k=0; k<n_dummy; k++)
                 tec_file << 0.0 << " ";
+#endif
         }
         tec_file << "\n";
     }
@@ -261,9 +267,16 @@ void TecplotWriter::writeNodeDataPoint(
         {
             MathLib::LocalMatrix v;
             nodal[k].second.f->eval(NumLib::TXPosition(NumLib::TXPosition::Node, nodeid, msh.getNode(nodeid)->getCoords()), v);
+#ifdef OGS_USE_EIGEN
             const size_t n_dummy = nodal[k].second.nr_of_components - static_cast<size_t>(v.array().size());
             for (int k=0; k<v.array().size(); k++)
                 tec_file << v.array()(k) << " ";
+#else
+            const size_t n_dummy = nodal[k].second.nr_of_components - static_cast<size_t>(v.rows()*v.columns());
+            for (int k=0; k<v.rows(); k++)
+                for (int l=0; l<v.columns(); l++)
+                    tec_file << v(k,l) << " ";
+#endif
             for (size_t k=0; k<n_dummy; k++)
                 tec_file << 0.0 << " ";
         }

@@ -34,14 +34,27 @@ public:
         case Type::Constant:                   // rho = const
         {
             double rho_0 = _parameters[0];
+#ifdef OGS_USE_EIGEN
             val.setIdentity(global_dim, global_dim);
+#else
+            val.resize(global_dim, global_dim);
+            val = 0;
+            for (unsigned i=0; i<global_dim; i++)
+                val(i,i) = 1.;
+#endif
             val *= rho_0;
         }
             break;
 
         case Type::ARITHMETIC:
         {
+#ifdef OGS_USE_EIGEN
             val.noalias() = (1-pm.n)*s.lambda + pm.n*f[0].lambda*MathLib::LocalMatrix::Identity(global_dim, global_dim);
+#else
+            val = (1-pm.n)*s.lambda;
+            for (unsigned i=0; i<global_dim; i++)
+                val(i,i) += pm.n*f[0].lambda;
+#endif
             break;
         }
         default:

@@ -15,6 +15,9 @@
 #ifdef OGS_USE_EIGEN
 #include <Eigen/Eigen>
 #endif
+#ifdef OGS_USE_BLAZE
+#include <blaze/Math.h>
+#endif
 
 #include "BaseLib/DebugTools.h"
 
@@ -110,12 +113,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_N)
 
     //only N
     NaturalCoordsMappingType::template computeShapeMatrices<ShapeMatrixType::N>(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_FALSE(shape.N.isZero());
     ASSERT_TRUE(shape.dNdr.isZero());
     ASSERT_TRUE(shape.J.isZero());
     ASSERT_TRUE(shape.detJ == .0);
     ASSERT_TRUE(shape.invJ.isZero());
     ASSERT_TRUE(shape.dNdx.isZero());
+#else
+    ASSERT_FALSE(shape.N.nonZeros()==0);
+    ASSERT_TRUE(shape.dNdr.nonZeros()==0);
+    ASSERT_TRUE(shape.J.nonZeros()==0);
+    ASSERT_TRUE(shape.detJ == .0);
+    ASSERT_TRUE(shape.invJ.nonZeros()==0);
+    ASSERT_TRUE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDR)
@@ -126,12 +138,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDR)
 
     // dNdr
     NaturalCoordsMappingType::template computeShapeMatrices<ShapeMatrixType::DNDR>(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_TRUE(shape.N.isZero());
     ASSERT_FALSE(shape.dNdr.isZero());
     ASSERT_TRUE(shape.J.isZero());
     ASSERT_TRUE(shape.detJ == .0);
     ASSERT_TRUE(shape.invJ.isZero());
     ASSERT_TRUE(shape.dNdx.isZero());
+#else
+    ASSERT_TRUE(shape.N.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdr.nonZeros()==0);
+    ASSERT_TRUE(shape.J.nonZeros()==0);
+    ASSERT_TRUE(shape.detJ == .0);
+    ASSERT_TRUE(shape.invJ.nonZeros()==0);
+    ASSERT_TRUE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_N_J)
@@ -143,12 +164,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_N_J)
     // N_J
     shape.setZero();
     NaturalCoordsMappingType::template computeShapeMatrices<ShapeMatrixType::N_J>(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_FALSE(shape.N.isZero());
     ASSERT_FALSE(shape.dNdr.isZero());
     ASSERT_FALSE(shape.J.isZero());
     ASSERT_FALSE(shape.detJ == .0);
     ASSERT_TRUE(shape.invJ.isZero());
     ASSERT_TRUE(shape.dNdx.isZero());
+#else
+    ASSERT_FALSE(shape.N.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdr.nonZeros()==0);
+    ASSERT_FALSE(shape.J.nonZeros()==0);
+    ASSERT_FALSE(shape.detJ == .0);
+    ASSERT_TRUE(shape.invJ.nonZeros()==0);
+    ASSERT_TRUE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDR_J)
@@ -159,12 +189,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDR_
 
     // dNdr, J
     NaturalCoordsMappingType::template computeShapeMatrices<ShapeMatrixType::DNDR_J>(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_TRUE(shape.N.isZero());
     ASSERT_FALSE(shape.dNdr.isZero());
     ASSERT_FALSE(shape.J.isZero());
     ASSERT_FALSE(shape.detJ == .0);
     ASSERT_TRUE(shape.invJ.isZero());
     ASSERT_TRUE(shape.dNdx.isZero());
+#else
+    ASSERT_TRUE(shape.N.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdr.nonZeros()==0);
+    ASSERT_FALSE(shape.J.nonZeros()==0);
+    ASSERT_FALSE(shape.detJ == .0);
+    ASSERT_TRUE(shape.invJ.nonZeros()==0);
+    ASSERT_TRUE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDX)
@@ -176,12 +215,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_DNDX)
     // DNDX
     shape.setZero();
     NaturalCoordsMappingType::template computeShapeMatrices<ShapeMatrixType::DNDX>(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_TRUE(shape.N.isZero());
     ASSERT_FALSE(shape.dNdr.isZero());
     ASSERT_FALSE(shape.J.isZero());
     ASSERT_FALSE(shape.detJ == .0);
     ASSERT_FALSE(shape.invJ.isZero());
     ASSERT_FALSE(shape.dNdx.isZero());
+#else
+    ASSERT_TRUE(shape.N.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdr.nonZeros()==0);
+    ASSERT_FALSE(shape.J.nonZeros()==0);
+    ASSERT_FALSE(shape.detJ == .0);
+    ASSERT_FALSE(shape.invJ.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_ALL)
@@ -193,12 +241,21 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckFieldSpecification_ALL)
     // ALL
     shape.setZero();
     NaturalCoordsMappingType::computeShapeMatrices(*this->naturalEle, this->r, shape);
+#ifdef OGS_USE_EIGEN
     ASSERT_FALSE(shape.N.isZero());
     ASSERT_FALSE(shape.dNdr.isZero());
     ASSERT_FALSE(shape.J.isZero());
     ASSERT_FALSE(shape.detJ == .0);
     ASSERT_FALSE(shape.invJ.isZero());
     ASSERT_FALSE(shape.dNdx.isZero());
+#else
+    ASSERT_FALSE(shape.N.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdr.nonZeros()==0);
+    ASSERT_FALSE(shape.J.nonZeros()==0);
+    ASSERT_FALSE(shape.detJ == .0);
+    ASSERT_FALSE(shape.invJ.nonZeros()==0);
+    ASSERT_FALSE(shape.dNdx.nonZeros()==0);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckNaturalShape)
@@ -214,11 +271,25 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckNaturalShape)
         exp_J[i+this->dim*i] = 1.0;
 
     ASSERT_ARRAY_NEAR(this->nat_exp_N, shape.N.data(), shape.N.size(), this->eps);
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, shape.dNdr.data(), shape.dNdr.size(), this->eps);
     ASSERT_ARRAY_NEAR(exp_J, shape.J.data(), shape.J.size(), this->eps);
     ASSERT_ARRAY_NEAR(exp_J, shape.invJ.data(), shape.invJ.size(), this->eps);
     ASSERT_NEAR(1.0, shape.detJ, this->eps);
     ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, shape.dNdx.data(), shape.dNdx.size(), this->eps);
+#else
+    std::vector<double> r_dNdr(to_array(shape.dNdr));
+    std::cout << shape.dNdr;
+    std::cout << r_dNdr;
+    ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, r_dNdr, r_dNdr.size(), this->eps);
+    std::vector<double> r_J(to_array(shape.J));
+    ASSERT_ARRAY_NEAR(exp_J, r_J, r_J.size(), this->eps);
+    std::vector<double> r_invJ(to_array(shape.invJ));
+    ASSERT_ARRAY_NEAR(exp_J, r_invJ, r_invJ.size(), this->eps);
+    ASSERT_NEAR(1.0, shape.detJ, this->eps);
+    std::vector<double> r_dNdx(to_array(shape.dNdx));
+    ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, r_dNdx, r_dNdx.size(), this->eps);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckIrregularShape)
@@ -232,11 +303,23 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckIrregularShape)
     //std::cout <<  std::setprecision(16) << shape;
 
     ASSERT_ARRAY_NEAR(this->nat_exp_N, shape.N.data(), shape.N.size(), this->eps);
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, shape.dNdr.data(), shape.dNdr.size(), this->eps);
     ASSERT_ARRAY_NEAR(this->ir_exp_J, shape.J.data(), shape.J.size(), this->eps);
     ASSERT_NEAR(this->ir_exp_detJ, shape.detJ, this->eps);
     ASSERT_ARRAY_NEAR(this->ir_exp_invJ, shape.invJ.data(), shape.invJ.size(), this->eps);
     ASSERT_ARRAY_NEAR(this->ir_exp_dNdx, shape.dNdx.data(), shape.dNdx.size(), this->eps);
+#else
+    std::vector<double> r_dNdr(to_array(shape.dNdr));
+    ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, r_dNdr, r_dNdr.size(), this->eps);
+    std::vector<double> r_J(to_array(shape.J));
+    ASSERT_ARRAY_NEAR(this->ir_exp_J, r_J, r_J.size(), this->eps);
+    std::vector<double> r_invJ(to_array(shape.invJ));
+    ASSERT_ARRAY_NEAR(this->ir_exp_invJ, r_invJ, r_invJ.size(), this->eps);
+    ASSERT_NEAR(this->ir_exp_detJ, shape.detJ, this->eps);
+    std::vector<double> r_dNdx(to_array(shape.dNdx));
+    ASSERT_ARRAY_NEAR(this->ir_exp_dNdx, r_dNdx, r_dNdx.size(), this->eps);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckClockwise)
@@ -253,11 +336,23 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckClockwise)
     double exp_dNdx[TestFixture::dim*TestFixture::e_nnodes]= {0.0};
 
     ASSERT_ARRAY_NEAR(this->nat_exp_N, shape.N.data(), shape.N.size(), this->eps);
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, shape.dNdr.data(), shape.dNdr.size(), this->eps);
     ASSERT_ARRAY_NEAR(this->cl_exp_J, shape.J.data(), shape.J.size(), this->eps);
     ASSERT_NEAR(this->cl_exp_detJ, shape.detJ, this->eps);
     ASSERT_ARRAY_NEAR(exp_invJ, shape.invJ.data(), shape.invJ.size(), this->eps);
     ASSERT_ARRAY_NEAR(exp_dNdx, shape.dNdx.data(), shape.dNdx.size(), this->eps);
+#else
+    std::vector<double> r_dNdr(to_array(shape.dNdr));
+    ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, r_dNdr, r_dNdr.size(), this->eps);
+    std::vector<double> r_J(to_array(shape.J));
+    ASSERT_ARRAY_NEAR(this->cl_exp_J, r_J, r_J.size(), this->eps);
+    ASSERT_NEAR(this->cl_exp_detJ, shape.detJ, this->eps);
+    std::vector<double> r_invJ(to_array(shape.invJ));
+    ASSERT_ARRAY_NEAR(exp_invJ, r_invJ, r_invJ.size(), this->eps);
+    std::vector<double> r_dNdx(to_array(shape.dNdx));
+    ASSERT_ARRAY_NEAR(exp_dNdx, r_dNdx, r_dNdx.size(), this->eps);
+#endif
 }
 
 TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckZeroVolume)
@@ -273,11 +368,23 @@ TYPED_TEST(NumLibFemNaturalCoordinatesMappingTest, CheckZeroVolume)
     double exp_dNdx[TestFixture::dim*TestFixture::e_nnodes]= {0.0};
 
     ASSERT_ARRAY_NEAR(this->nat_exp_N, shape.N.data(), shape.N.size(), this->eps);
+#ifdef OGS_USE_EIGEN
     ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, shape.dNdr.data(), shape.dNdr.size(), this->eps);
     ASSERT_ARRAY_NEAR(this->ze_exp_J, shape.J.data(), shape.J.size(), this->eps);
     ASSERT_NEAR(0.0, shape.detJ, this->eps);
     ASSERT_ARRAY_NEAR(exp_invJ, shape.invJ.data(), shape.invJ.size(), this->eps);
     ASSERT_ARRAY_NEAR(exp_dNdx, shape.dNdx.data(), shape.dNdx.size(), this->eps);
+#else
+    std::vector<double> r_dNdr(to_array(shape.dNdr));
+    ASSERT_ARRAY_NEAR(this->nat_exp_dNdr, r_dNdr, r_dNdr.size(), this->eps);
+    std::vector<double> r_J(to_array(shape.J));
+    ASSERT_ARRAY_NEAR(this->ze_exp_J, r_J, r_J.size(), this->eps);
+    ASSERT_NEAR(0.0, shape.detJ, this->eps);
+    std::vector<double> r_invJ(to_array(shape.invJ));
+    ASSERT_ARRAY_NEAR(exp_invJ, r_invJ, r_invJ.size(), this->eps);
+    std::vector<double> r_dNdx(to_array(shape.dNdx));
+    ASSERT_ARRAY_NEAR(exp_dNdx, r_dNdx, r_dNdx.size(), this->eps);
+#endif
 }
 
 TEST(NumLib, FemNaturalCoordinatesMappingLineY)
@@ -287,6 +394,11 @@ TEST(NumLib, FemNaturalCoordinatesMappingLineY)
 	typedef Eigen::Matrix<double, 1, 2, Eigen::RowMajor> DimNodalMatrix;
 	typedef Eigen::Matrix<double, 1, 1, Eigen::RowMajor> DimMatrix;
 	typedef Eigen::Matrix<double, 2, 2, Eigen::RowMajor> GlobalDimNodalMatrix;
+#else
+    typedef MathLib::LocalVector NodalVector;
+    typedef MathLib::LocalMatrix DimNodalMatrix;
+    typedef MathLib::LocalMatrix DimMatrix;
+    typedef MathLib::LocalMatrix GlobalDimNodalMatrix;
 #endif
 	// Shape data type
 	typedef ShapeMatrices<NodalVector,DimNodalMatrix,DimMatrix,GlobalDimNodalMatrix> ShapeMatricesType;
@@ -303,13 +415,26 @@ TEST(NumLib, FemNaturalCoordinatesMappingLineY)
 		exp_J[i+dim*i] = 1.0;
 
 	const double eps(std::numeric_limits<double>::epsilon());
-	ASSERT_ARRAY_NEAR(TestLine2::nat_exp_N, shape.N.data(), shape.N.size(), eps);
+    ASSERT_ARRAY_NEAR(TestLine2::nat_exp_N, shape.N.data(), shape.N.size(), eps);
+#ifdef OGS_USE_EIGEN
 	ASSERT_ARRAY_NEAR(TestLine2::nat_exp_dNdr, shape.dNdr.data(), shape.dNdr.size(), eps);
 	ASSERT_ARRAY_NEAR(exp_J, shape.J.data(), shape.J.size(), eps);
 	ASSERT_ARRAY_NEAR(exp_J, shape.invJ.data(), shape.invJ.size(), eps);
 	ASSERT_NEAR(1.0, shape.detJ, eps);
 	double exp_dNdx[2*e_nnodes] = {0, 0, -0.5, 0.5};
 	ASSERT_ARRAY_NEAR(exp_dNdx, shape.dNdx.data(), shape.dNdx.size(), eps);
+#else
+	std::vector<double> r_dNdr(to_array(shape.dNdr));
+	ASSERT_ARRAY_NEAR(TestLine2::nat_exp_dNdr, r_dNdr, r_dNdr.size(), eps);
+    std::vector<double> r_J(to_array(shape.J));
+	ASSERT_ARRAY_NEAR(exp_J, r_J, r_J.size(), eps);
+    std::vector<double> r_invJ(to_array(shape.invJ));
+	ASSERT_ARRAY_NEAR(exp_J, r_invJ, r_invJ.size(), eps);
+	ASSERT_NEAR(1.0, shape.detJ, eps);
+	double exp_dNdx[2*e_nnodes] = {0, 0, -0.5, 0.5};
+    std::vector<double> r_dNdx(to_array(shape.dNdx));
+	ASSERT_ARRAY_NEAR(exp_dNdx, r_dNdx, r_dNdx.size(), eps);
+#endif
 
 	for (auto n = 0u; n < line->getNNodes(); ++n)
 		delete line->getNode(n);

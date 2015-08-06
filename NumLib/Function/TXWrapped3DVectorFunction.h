@@ -39,6 +39,7 @@ public:
     {
         DataType tmp_v;
         _f_vec->eval(x, tmp_v);
+#ifdef OGS_USE_EIGEN
         if (tmp_v.array().size()>0) {
             v = DataType::Zero(3, 1);
             if (_coord_type.hasX())
@@ -48,6 +49,7 @@ public:
             if (_coord_type.hasZ())
                 v(2,0) = tmp_v(_coord_type.getIndexOfZ());
         }
+#endif
     }
 
     virtual TXWrapped3DVectorFunction<F_VECTOR>* clone() const

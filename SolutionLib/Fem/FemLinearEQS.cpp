@@ -59,8 +59,13 @@ void TransientFEMLinearFunction::operator()(MathLib::IVector &u_k1)
         // local assembly
         localA.resize(rowColIndeces.rows.size(), rowColIndeces.rows.size());
         localRhs.resize(rowColIndeces.rows.size());
+#ifdef OGS_USE_EIGEN
         localA.setZero();
         localRhs.setZero();
+#else
+        localA = 0;
+        localRhs = 0;
+#endif
 //        MathLib::LocalMatrix localA(rowColIndeces.rows.size(), rowColIndeces.rows.size());
 //        MathLib::LocalVector localRhs(rowColIndeces.rows.size());
         _local_assembler->reset(*e);

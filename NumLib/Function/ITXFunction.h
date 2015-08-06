@@ -57,7 +57,11 @@ public:
     {
         DataType tmp(1,1);
         this->eval(x, tmp);
+#ifdef OGS_USE_EIGEN
         v = tmp(0);
+#else
+        v = tmp(0,0);
+#endif
     }
 
     ///

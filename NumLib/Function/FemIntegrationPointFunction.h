@@ -95,7 +95,9 @@ public:
                 size_t gp_id = x.getId(1);
                 IntegrationPointVectorType &gp_values = (*_values)[ele_id];
                 if (gp_values.size()<gp_id+1) return;
+#ifdef OGS_USE_EIGEN
                 v = gp_values[gp_id]; 
+#endif
             }
             break;
         case NumLib::TXPosition::Element:
@@ -109,13 +111,19 @@ public:
                 for (size_t i=0; i<gp_values.size(); i++)
                     val += gp_values[i];
                 val /= gp_values.size();
+#ifdef OGS_USE_EIGEN
                 v = val;
+#else
+#endif
             }
             break;
         default:
             if (_values->size() == 0) return;
             if ((*_values)[0].size() == 0) return;
+#ifdef OGS_USE_EIGEN
             v = (*_values)[0][0];
+#else
+#endif
             break;
         }
     };
