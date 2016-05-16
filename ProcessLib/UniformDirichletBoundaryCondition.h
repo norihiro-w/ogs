@@ -58,7 +58,7 @@ public:
             MeshGeoToolsLib::MeshNodeSearcher& searcher,
             AssemblerLib::LocalToGlobalIndexMap const& dof_table,
             std::size_t component_id,
-            DirichletBc<GlobalIndexType>& bc)
+            DirichletBc<MathLib::GlobalIndexType>& bc)
     {
         // Find nodes' ids on the given mesh on which this boundary condition
         // is defined.

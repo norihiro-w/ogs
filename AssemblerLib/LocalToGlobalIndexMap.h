@@ -37,6 +37,7 @@ namespace AssemblerLib
 class LocalToGlobalIndexMap final
 {
 public:
+    using GlobalIndexType = MathLib::GlobalIndexType;
     typedef MathLib::RowColumnIndices<GlobalIndexType> RowColumnIndices;
     typedef RowColumnIndices::LineIndex LineIndex;
 

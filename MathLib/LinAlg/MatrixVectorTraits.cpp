@@ -11,61 +11,61 @@
 #include "MatrixProviderUser.h"
 #include "MatrixVectorTraits.h"
 
-#ifdef OGS_USE_EIGEN
+//#ifdef OGS_USE_EIGEN
 
-namespace MathLib
-{
+//namespace MathLib
+//{
 
-std::unique_ptr<Eigen::MatrixXd>
-MatrixVectorTraits<Eigen::MatrixXd>::
-newInstance()
-{
-    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd);
-}
+//std::unique_ptr<Eigen::MatrixXd>
+//MatrixVectorTraits<Eigen::MatrixXd>::
+//newInstance()
+//{
+//    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd);
+//}
 
-std::unique_ptr<Eigen::MatrixXd>
-MatrixVectorTraits<Eigen::MatrixXd>::
-newInstance(Eigen::MatrixXd const& A)
-{
-    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd(A));
-}
+//std::unique_ptr<Eigen::MatrixXd>
+//MatrixVectorTraits<Eigen::MatrixXd>::
+//newInstance(Eigen::MatrixXd const& A)
+//{
+//    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd(A));
+//}
 
-std::unique_ptr<Eigen::MatrixXd>
-MatrixVectorTraits<Eigen::MatrixXd>::
-newInstance(MatrixSpecifications const& spec)
-{
-    auto const nrows = spec.dof_table ? spec.dof_table->dofSizeWithGhosts() : spec.nrows;
-    auto const ncols = spec.dof_table ? nrows : spec.ncols;
+//std::unique_ptr<Eigen::MatrixXd>
+//MatrixVectorTraits<Eigen::MatrixXd>::
+//newInstance(MatrixSpecifications const& spec)
+//{
+//    auto const nrows = spec.dof_table ? spec.dof_table->dofSizeWithGhosts() : spec.nrows;
+//    auto const ncols = spec.dof_table ? nrows : spec.ncols;
 
-    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd(nrows, ncols));
-}
+//    return std::unique_ptr<Eigen::MatrixXd>(new Eigen::MatrixXd(nrows, ncols));
+//}
 
-std::unique_ptr<Eigen::VectorXd>
-MatrixVectorTraits<Eigen::VectorXd>::
-newInstance()
-{
-    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd);
-}
+//std::unique_ptr<Eigen::VectorXd>
+//MatrixVectorTraits<Eigen::VectorXd>::
+//newInstance()
+//{
+//    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd);
+//}
 
-std::unique_ptr<Eigen::VectorXd>
-MatrixVectorTraits<Eigen::VectorXd>::
-newInstance(Eigen::VectorXd const& A)
-{
-    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd(A));
-}
+//std::unique_ptr<Eigen::VectorXd>
+//MatrixVectorTraits<Eigen::VectorXd>::
+//newInstance(Eigen::VectorXd const& A)
+//{
+//    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd(A));
+//}
 
-std::unique_ptr<Eigen::VectorXd>
-MatrixVectorTraits<Eigen::VectorXd>::
-newInstance(MatrixSpecifications const& spec)
-{
-    auto const nrows = spec.dof_table ? spec.dof_table->dofSizeWithGhosts() : spec.nrows;
+//std::unique_ptr<Eigen::VectorXd>
+//MatrixVectorTraits<Eigen::VectorXd>::
+//newInstance(MatrixSpecifications const& spec)
+//{
+//    auto const nrows = spec.dof_table ? spec.dof_table->dofSizeWithGhosts() : spec.nrows;
 
-    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd(nrows));
-}
+//    return std::unique_ptr<Eigen::VectorXd>(new Eigen::VectorXd(nrows));
+//}
 
-} // namespace MathLib
+//} // namespace MathLib
 
-#endif // OGS_USE_EIGEN
+//#endif // OGS_USE_EIGEN
 
 
 #ifdef USE_PETSC

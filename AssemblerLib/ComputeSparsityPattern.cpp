@@ -22,7 +22,7 @@ MathLib::SparsityPattern computeSparsityPattern(
 
     // A mapping   mesh node id -> global indices
     // It acts as a cache for dof table queries.
-    std::vector<std::vector<GlobalIndexType> > global_idcs;
+    std::vector<std::vector<MathLib::GlobalIndexType> > global_idcs;
 
     global_idcs.reserve(mesh.getNNodes());
     for (std::size_t n=0; n<mesh.getNNodes(); ++n)

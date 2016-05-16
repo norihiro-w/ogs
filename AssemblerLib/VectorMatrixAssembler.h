@@ -19,7 +19,7 @@ namespace
 inline AssemblerLib::LocalToGlobalIndexMap::RowColumnIndices
 getRowColumnIndices(std::size_t const id,
                     AssemblerLib::LocalToGlobalIndexMap const& dof_table,
-                    std::vector<GlobalIndexType>& indices)
+                    std::vector<MathLib::GlobalIndexType>& indices)
 {
     assert(dof_table.size() > id);
     assert(indices.empty());
@@ -42,7 +42,7 @@ void passLocalVector_(Callback& cb, std::size_t const id,
                       AssemblerLib::LocalToGlobalIndexMap const& dof_table,
                       GlobalVector const& x, Args&&... args)
 {
-    std::vector<GlobalIndexType> indices;
+    std::vector<MathLib::GlobalIndexType> indices;
     auto const r_c_indices = getRowColumnIndices(id, dof_table, indices);
 
     std::vector<double> local_x;
@@ -200,7 +200,7 @@ public:
         LocalAssembler& local_assembler,
         const double t, GlobalVector& b) const
     {
-        std::vector<GlobalIndexType> indices;
+        std::vector<MathLib::GlobalIndexType> indices;
         auto const r_c_indices = getRowColumnIndices(id, _data_pos, indices);
 
         local_assembler.assemble(t);

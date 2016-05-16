@@ -22,6 +22,7 @@ namespace AssemblerLib
 {
 
 using namespace detail;
+using GlobalIndexType = MathLib::GlobalIndexType;
 
 GlobalIndexType const MeshComponentMap::nop =
     std::numeric_limits<GlobalIndexType>::max();

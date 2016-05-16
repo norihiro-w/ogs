@@ -238,7 +238,7 @@ private:
 		{
 			MeshLib::Location const l(_mesh.getID(),
 			                          MeshLib::MeshItemType::Node, node_id);
-			auto global_index = std::abs(
+			auto global_index = std::abs<MathLib::GlobalIndexType>(
 			    _local_to_global_index_map->getGlobalIndex(l, component_id));
 #ifdef USE_PETSC
 			// The global indices of the ghost entries of the global
@@ -308,7 +308,7 @@ private:
 
 	MathLib::SparsityPattern _sparsity_pattern;
 
-	std::vector<DirichletBc<GlobalIndexType>> _dirichlet_bcs;
+	std::vector<DirichletBc<MathLib::GlobalIndexType>> _dirichlet_bcs;
 	std::vector<std::unique_ptr<NeumannBc<GlobalSetup>>> _neumann_bcs;
 
 	NonlinearSolver& _nonlinear_solver;

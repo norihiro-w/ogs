@@ -69,7 +69,7 @@ public:
 	{
 		for (auto& bc_config : _dirichlet_bc_configs)
 		{
-			DirichletBc<GlobalIndexType> bc;
+			DirichletBc<MathLib::GlobalIndexType> bc;
 			bc_config->initialize(searcher, dof_table, nodal_dof_idx, bc);
 			output_bcs++ = bc;
 		}

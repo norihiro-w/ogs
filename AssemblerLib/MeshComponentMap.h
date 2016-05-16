@@ -13,6 +13,8 @@
 #ifndef ASSEMBLERLIB_MESHCOMPONENTMAP_H_
 #define ASSEMBLERLIB_MESHCOMPONENTMAP_H_
 
+#include <vector>
+
 #include "ComponentGlobalIndexDict.h"
 
 namespace MeshLib
@@ -70,7 +72,7 @@ public:
     /// | Location | ComponentID | GlobalIndex |
     /// | -------- | ----------- | ----------- |
     /// | l        | comp_id     | gi          |
-    GlobalIndexType getGlobalIndex(Location const &l, std::size_t const comp_id) const;
+    MathLib::GlobalIndexType getGlobalIndex(Location const &l, std::size_t const comp_id) const;
 
     /// Global indices for all components at the given location \c l.
     ///
@@ -82,7 +84,7 @@ public:
     /// | l        | comp_id_1   | gi23        |
     /// | ...      |  ...        | ...         |
     /// | l        | comp_id_k   | gi45        |
-    std::vector<GlobalIndexType> getGlobalIndices(const Location &l) const;
+    std::vector<MathLib::GlobalIndexType> getGlobalIndices(const Location &l) const;
 
     /// Global indices for all components at all given locations \c ls ordered
     /// by location. The return list is sorted first by location.
@@ -97,7 +99,7 @@ public:
     /// | l_2      | comp_id_m   | gi67        |
     /// | ...      |  ...        | ...         |
     /// | l_n      | comp_id_n   | gi78        |
-    std::vector<GlobalIndexType> getGlobalIndicesByLocation(
+    std::vector<MathLib::GlobalIndexType> getGlobalIndicesByLocation(
         const std::vector<Location>& ls) const;
 
     /// Global indices for all components at all given locations \c ls ordered
@@ -112,7 +114,7 @@ public:
     /// | l_m      | comp_id_2   | gi78        |
     /// | ...      |  ...        | ...         |
     /// | l_n      | comp_id_n   | gi89        |
-    std::vector<GlobalIndexType> getGlobalIndicesByComponent(
+    std::vector<MathLib::GlobalIndexType> getGlobalIndicesByComponent(
         const std::vector<Location>& ls) const;
 
     /// Get the number of local unknowns excluding those associated
@@ -123,7 +125,7 @@ public:
     }
 
     /// Get ghost indices (for DDC).
-    std::vector<GlobalIndexType> const& getGhostIndices() const
+    std::vector<MathLib::GlobalIndexType> const& getGhostIndices() const
     {
         return _ghosts_indices;
     }
@@ -133,13 +135,13 @@ public:
     /// When domain decomposition is not used, it is equal to getGlobalIndex().
     /// The range is needed to compute the offset for non-ghost locations and
     /// also to map ghost locations.
-    GlobalIndexType getLocalIndex(Location const& l, std::size_t const comp_id,
+    MathLib::GlobalIndexType getLocalIndex(Location const& l, std::size_t const comp_id,
                                   std::size_t const range_begin,
                                   std::size_t const range_end) const;
 
     /// A value returned if no global index was found for the requested
     /// location/component. The value is implementation dependent.
-    static GlobalIndexType const nop;
+    static MathLib::GlobalIndexType const nop;
 
 #ifndef NDEBUG
     const detail::ComponentGlobalIndexDict& getDictionary() const
@@ -169,7 +171,7 @@ private:
     /// \return a copy of the line.
     detail::Line getLine(Location const& l, std::size_t const component_id) const;
 
-    void renumberByLocation(GlobalIndexType offset=0);
+    void renumberByLocation(MathLib::GlobalIndexType offset=0);
 
     detail::ComponentGlobalIndexDict _dict;
 
@@ -187,7 +189,7 @@ private:
     unsigned const _num_components;
 
     /// Global ID for ghost entries
-    std::vector<GlobalIndexType> _ghosts_indices;
+    std::vector<MathLib::GlobalIndexType> _ghosts_indices;
 };
 
 }   // namespace AssemblerLib

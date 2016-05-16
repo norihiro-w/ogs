@@ -17,6 +17,7 @@
 
 #include <Eigen/Sparse>
 
+#include "MathLib/Types.h"
 #include "MathLib/LinAlg/RowColumnIndices.h"
 #include "MathLib/LinAlg/SetMatrixSparsity.h"
 #include "EigenVector.h"
@@ -33,7 +34,8 @@ class EigenMatrix final
 {
 public:
     using RawMatrixType = Eigen::SparseMatrix<double, Eigen::RowMajor>;
-    using IndexType = RawMatrixType::Index;
+    using IndexType = GlobalIndexType;
+//    using IndexType = RawMatrixType::Index;
 
     // TODO The matrix constructor should take num_rows and num_cols as arguments
     //      that is left for a later refactoring.

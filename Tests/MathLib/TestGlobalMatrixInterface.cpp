@@ -46,7 +46,7 @@ void checkGlobalMatrixInterface(T_MATRIX &m)
     m.setZero();
 
     MathLib::DenseMatrix<double> local_m(2, 2, 1.0);
-    std::vector<GlobalIndexType> vec_pos(2);
+    std::vector<MathLib::DenseMatrix<double>::IDX_T> vec_pos(2);
     vec_pos[0] = 1;
     vec_pos[1] = 3;
     m.add(vec_pos, vec_pos, local_m);

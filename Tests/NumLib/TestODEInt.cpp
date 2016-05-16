@@ -11,8 +11,8 @@
 #include "ODEs.h"
 
 
-using EDMatrix = Eigen::MatrixXd;
-using EVector = Eigen::VectorXd;
+//using EDMatrix = Eigen::MatrixXd;
+//using EVector = Eigen::VectorXd;
 
 using GMatrix = GlobalSetupType::MatrixType;
 using GVector = GlobalSetupType::VectorType;
@@ -189,28 +189,29 @@ struct TestCase;
 //  Put new test cases to that list
 //
 // /////////////////////////////////////
+//#define TESTCASESLIST \
+//    /* Eigen dense matrix */ \
+//    TCLITEM(EDMatrix, EVector, ODE1, BackwardEuler,                  Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, ForwardEuler,                   Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, CrankNicolson,                  Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, BackwardDifferentiationFormula, Newton) TCLSEP \
+//    \
+//    TCLITEM(EDMatrix, EVector, ODE1, BackwardEuler,                  Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, ForwardEuler,                   Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, CrankNicolson,                  Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE1, BackwardDifferentiationFormula, Picard) TCLSEP \
+//    \
+//    TCLITEM(EDMatrix, EVector, ODE2, BackwardEuler,                  Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, ForwardEuler,                   Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, CrankNicolson,                  Newton) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, BackwardDifferentiationFormula, Newton) TCLSEP \
+//    \
+//    TCLITEM(EDMatrix, EVector, ODE2, BackwardEuler,                  Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, ForwardEuler,                   Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, CrankNicolson,                  Picard) TCLSEP \
+//    TCLITEM(EDMatrix, EVector, ODE2, BackwardDifferentiationFormula, Picard) TCLSEP \
+//
 #define TESTCASESLIST \
-    /* Eigen dense matrix */ \
-    TCLITEM(EDMatrix, EVector, ODE1, BackwardEuler,                  Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, ForwardEuler,                   Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, CrankNicolson,                  Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, BackwardDifferentiationFormula, Newton) TCLSEP \
-    \
-    TCLITEM(EDMatrix, EVector, ODE1, BackwardEuler,                  Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, ForwardEuler,                   Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, CrankNicolson,                  Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE1, BackwardDifferentiationFormula, Picard) TCLSEP \
-    \
-    TCLITEM(EDMatrix, EVector, ODE2, BackwardEuler,                  Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, ForwardEuler,                   Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, CrankNicolson,                  Newton) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, BackwardDifferentiationFormula, Newton) TCLSEP \
-    \
-    TCLITEM(EDMatrix, EVector, ODE2, BackwardEuler,                  Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, ForwardEuler,                   Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, CrankNicolson,                  Picard) TCLSEP \
-    TCLITEM(EDMatrix, EVector, ODE2, BackwardDifferentiationFormula, Picard) TCLSEP \
-    \
     /* Global sparse matrix */ \
     TCLITEM(GMatrix,  GVector, ODE1, BackwardEuler,                  Newton) TCLSEP \
     TCLITEM(GMatrix,  GVector, ODE1, ForwardEuler,                   Newton) TCLSEP \
@@ -308,13 +309,13 @@ TYPED_TEST(NumLibODEIntTyped, T1)
 TEST(NumLibODEInt, ODE3)
 {
     const char* name = "dummy";
-    {
+//    {
 
-        // only make sure ODE3 compiles
-        run_test_case<EDMatrix, EVector, NumLib::BackwardEuler<EVector>,
-                      ODE3<EDMatrix, EVector>,
-                      NumLib::NonlinearSolverTag::Newton>(0u, name);
-    }
+//        // only make sure ODE3 compiles
+//        run_test_case<EDMatrix, EVector, NumLib::BackwardEuler<EVector>,
+//                      ODE3<EDMatrix, EVector>,
+//                      NumLib::NonlinearSolverTag::Newton>(0u, name);
+//    }
 
     {
         run_test_case<GMatrix, GVector, NumLib::BackwardEuler<GVector>,

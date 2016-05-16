@@ -12,7 +12,7 @@
 
 #include <vector>
 
-#include "ProcessLib/NumericsConfig.h"
+#include "MathLib/Types.h"
 
 namespace MathLib
 {

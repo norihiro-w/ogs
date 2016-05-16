@@ -139,8 +139,4 @@ static_assert(std::is_same<detail::GlobalMatrixType::IndexType,
               "The global matrix and vector index types do not match.");
 // Both types are integral types and equal, define a single GlobalIndexType.
 
-/// A type used for indexing of global vectors and matrices. It is equal to the
-/// GlobalMatrixType::IndexType and the GlobalVectorType::IndexType.
-using GlobalIndexType = detail::GlobalMatrixType::IndexType;
-
 #endif  // APPLICATIONS_NUMERICSCONFIG_H_

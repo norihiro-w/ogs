@@ -38,7 +38,7 @@
 TEST(AssemblerLibSerialLinearSolver, Steady2DdiffusionQuadElem)
 {
     // example
-    using Example = SteadyDiffusion2DExample1<GlobalIndexType>;
+    using Example = SteadyDiffusion2DExample1<MathLib::GlobalIndexType>;
     Example ex1;
 
     //--------------------------------------------------------------------------

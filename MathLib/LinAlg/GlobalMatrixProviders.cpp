@@ -32,8 +32,8 @@
 
 #ifdef OGS_USE_EIGEN
 
-INITIALIZE_GLOBAL_MATRIX_VECTOR_PROVIDER(Eigen::MatrixXd, Eigen::VectorXd,
-                                         eigenGlobalMatrixVectorProvider)
+//INITIALIZE_GLOBAL_MATRIX_VECTOR_PROVIDER(Eigen::MatrixXd, Eigen::VectorXd,
+//                                         eigenGlobalMatrixVectorProvider)
 
 #endif
 
@@ -49,7 +49,7 @@ namespace MathLib
 {
 void cleanupGlobalMatrixProviders()
 {
-    eigenGlobalMatrixVectorProvider.reset();
+//    eigenGlobalMatrixVectorProvider.reset();
     globalSetupGlobalMatrixVectorProvider.reset();
 }
 }

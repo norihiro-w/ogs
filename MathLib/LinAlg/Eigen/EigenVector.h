@@ -19,6 +19,8 @@
 #include <Eigen/Eigen>
 #include <Eigen/Sparse>
 
+#include "MathLib/Types.h"
+
 namespace MathLib
 {
 
@@ -31,7 +33,8 @@ public:
     // The Index type of the Eigen::VectorXd class differs from the
     // Eigen::SparseMatrix<double> index type. Maybe an Eigen::SparseVector is a
     // more appropriate RawVectorType for the global vectors.
-    using IndexType = Eigen::SparseMatrix<double>::Index;
+    //using IndexType = Eigen::SparseMatrix<double>::Index;
+    using IndexType = GlobalIndexType;
 
     // TODO: preliminary
     EigenVector() {}
