@@ -20,10 +20,11 @@ namespace MeshLib { class Mesh; }
 namespace MathLib
 {
 
+template <typename IndexType>
 struct MatrixSpecifications
 {
     MatrixSpecifications(std::size_t const nrows_, std::size_t const ncols_,
-                         SparsityPattern const*const sparsity_pattern_,
+                         SparsityPattern<IndexType> const*const sparsity_pattern_,
                          AssemblerLib::LocalToGlobalIndexMap const*const dof_table_,
                          MeshLib::Mesh const*const mesh_)
         : nrows(nrows_), ncols(ncols_), sparsity_pattern(sparsity_pattern_)
@@ -32,15 +33,16 @@ struct MatrixSpecifications
 
     std::size_t const nrows;
     std::size_t const ncols;
-    SparsityPattern const*const sparsity_pattern;
+    SparsityPattern<IndexType> const*const sparsity_pattern;
     AssemblerLib::LocalToGlobalIndexMap const*const dof_table;
     MeshLib::Mesh const*const mesh;
 };
 
+template <typename IndexType>
 class MatrixSpecificationsProvider
 {
 public:
-    virtual MatrixSpecifications getMatrixSpecifications() const = 0;
+    virtual MatrixSpecifications<IndexType> getMatrixSpecifications() const = 0;
 
     virtual ~MatrixSpecificationsProvider() = default;
 };
@@ -87,11 +89,11 @@ public:
     virtual Vector& getVector(Vector const& x, std::size_t& id) = 0;
 
     //! Get a vector according to the given specifications.
-    virtual Vector& getVector(MatrixSpecifications const& ms) = 0;
+    virtual Vector& getVector(MatrixSpecifications<typename Vector::IndexType> const& ms) = 0;
 
     //! Get a vector according to the given specifications in the storage
     //! of the vector with the given \c id.
-    virtual Vector& getVector(MatrixSpecifications const& ms, std::size_t& id) = 0;
+    virtual Vector& getVector(MatrixSpecifications<typename Vector::IndexType> const& ms, std::size_t& id) = 0;
 
     //! Release the given vector.
     //!
@@ -123,11 +125,11 @@ public:
     virtual Matrix& getMatrix(Matrix const& A, std::size_t& id) = 0;
 
     //! Get a matrix according to the given specifications.
-    virtual Matrix& getMatrix(MatrixSpecifications const& ms) = 0;
+    virtual Matrix& getMatrix(MatrixSpecifications<typename Matrix::IndexType> const& ms) = 0;
 
     //! Get a matrix according to the given specifications in the storage
     //! of the matrix with the given \c id.
-    virtual Matrix& getMatrix(MatrixSpecifications const& ms, std::size_t& id) = 0;
+    virtual Matrix& getMatrix(MatrixSpecifications<typename Matrix::IndexType> const& ms, std::size_t& id) = 0;
 
     //! Release the given matrix.
     //!

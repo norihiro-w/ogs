@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "MathLib/LinAlg/SparsityPattern.h"
-#include "ProcessLib/NumericsConfig.h"
+#include "LocalToGlobalIndexMap.h"
 
 namespace MeshLib
 {
@@ -22,7 +22,6 @@ class Mesh;
 
 namespace AssemblerLib
 {
-class LocalToGlobalIndexMap;
 
 /**
  * @brief Computes a sparsity pattern for the given inputs.
@@ -32,7 +31,7 @@ class LocalToGlobalIndexMap;
  *
  * @return The computed sparsity pattern.
  */
-MathLib::SparsityPattern computeSparsityPattern(
+MathLib::SparsityPattern<LocalToGlobalIndexMap::GlobalIndexType> computeSparsityPattern(
     LocalToGlobalIndexMap const& dof_table, MeshLib::Mesh const& mesh);
 }
 

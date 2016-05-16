@@ -135,9 +135,9 @@ MeshComponentMap::MeshComponentMap(
             std::size_t const mesh_id = mesh_subset.getMeshID();
             // mesh items are ordered first by node, cell, ....
             for (std::size_t j=0; j<mesh_subset.getNNodes(); j++)
-                _dict.insert(Line(Location(mesh_id, MeshLib::MeshItemType::Node, mesh_subset.getNodeID(j)), comp_id, global_index++));
+                _dict.insert(Line_(Location(mesh_id, MeshLib::MeshItemType::Node, mesh_subset.getNodeID(j)), comp_id, global_index++));
             for (std::size_t j=0; j<mesh_subset.getNElements(); j++)
-                _dict.insert(Line(Location(mesh_id, MeshLib::MeshItemType::Cell, mesh_subset.getElementID(j)), comp_id, global_index++));
+                _dict.insert(Line_(Location(mesh_id, MeshLib::MeshItemType::Cell, mesh_subset.getElementID(j)), comp_id, global_index++));
         }
         comp_id++;
     }
@@ -153,7 +153,7 @@ MeshComponentMap MeshComponentMap::getSubset(
 {
     assert(component_id < _num_components);
     // New dictionary for the subset.
-    ComponentGlobalIndexDict subset_dict;
+    ComponentGlobalIndexDict_ subset_dict;
 
     for (auto const& mesh_subset : mesh_subsets)
     {
@@ -182,7 +182,7 @@ void MeshComponentMap::renumberByLocation(GlobalIndexType offset)
     auto &m = _dict.get<ByLocation>(); // view as sorted by mesh item
     for (auto itr_mesh_item=m.begin(); itr_mesh_item!=m.end(); ++itr_mesh_item)
     {
-        Line pos = *itr_mesh_item;
+        Line_ pos = *itr_mesh_item;
         pos.global_index = global_index++;
         m.replace(itr_mesh_item, pos);
     }
@@ -191,18 +191,18 @@ void MeshComponentMap::renumberByLocation(GlobalIndexType offset)
 std::vector<std::size_t> MeshComponentMap::getComponentIDs(const Location &l) const
 {
     auto const &m = _dict.get<ByLocation>();
-    auto const p = m.equal_range(Line(l));
+    auto const p = m.equal_range(Line_(l));
     std::vector<std::size_t> vec_compID;
     for (auto itr=p.first; itr!=p.second; ++itr)
         vec_compID.push_back(itr->comp_id);
     return vec_compID;
 }
 
-Line MeshComponentMap::getLine(Location const& l,
+Line_ MeshComponentMap::getLine(Location const& l,
     std::size_t const comp_id) const
 {
     auto const &m = _dict.get<ByLocationAndComponent>();
-    auto const itr = m.find(Line(l, comp_id));
+    auto const itr = m.find(Line_(l, comp_id));
     assert(itr != m.end());     // The line must exist in the current dictionary.
     return *itr;
 }
@@ -211,14 +211,14 @@ GlobalIndexType MeshComponentMap::getGlobalIndex(Location const& l,
     std::size_t const comp_id) const
 {
     auto const &m = _dict.get<ByLocationAndComponent>();
-    auto const itr = m.find(Line(l, comp_id));
+    auto const itr = m.find(Line_(l, comp_id));
     return itr!=m.end() ? itr->global_index : nop;
 }
 
 std::vector<GlobalIndexType> MeshComponentMap::getGlobalIndices(const Location &l) const
 {
     auto const &m = _dict.get<ByLocation>();
-    auto const p = m.equal_range(Line(l));
+    auto const p = m.equal_range(Line_(l));
     std::vector<GlobalIndexType> global_indices;
     for (auto itr=p.first; itr!=p.second; ++itr)
         global_indices.push_back(itr->global_index);
@@ -237,7 +237,7 @@ std::vector<GlobalIndexType> MeshComponentMap::getGlobalIndicesByLocation(
     auto const &m = _dict.get<ByLocation>();
     for (auto l = ls.cbegin(); l != ls.cend(); ++l)
     {
-        auto const p = m.equal_range(Line(*l));
+        auto const p = m.equal_range(Line_(*l));
         for (auto itr = p.first; itr != p.second; ++itr)
             global_indices.push_back(itr->global_index);
     }
@@ -257,7 +257,7 @@ std::vector<GlobalIndexType> MeshComponentMap::getGlobalIndicesByComponent(
     auto const &m = _dict.get<ByLocation>();
     for (auto l = ls.cbegin(); l != ls.cend(); ++l)
     {
-        auto const p = m.equal_range(Line(*l));
+        auto const p = m.equal_range(Line_(*l));
         for (auto itr = p.first; itr != p.second; ++itr)
             pairs.emplace_back(itr->comp_id, itr->global_index);
     }

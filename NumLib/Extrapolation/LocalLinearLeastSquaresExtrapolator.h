@@ -49,7 +49,7 @@ public:
      * dof_table for one single component variable.
      */
     explicit LocalLinearLeastSquaresExtrapolator(
-            MathLib::MatrixSpecifications const& matrix_specs)
+            MathLib::MatrixSpecifications<typename GlobalVector::IndexType> const& matrix_specs)
         : _nodal_values(MathLib::GlobalVectorProvider<GlobalVector>::provider.
                         getVector(matrix_specs))
 #ifndef USE_PETSC

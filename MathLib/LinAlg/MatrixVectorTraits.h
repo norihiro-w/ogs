@@ -17,6 +17,7 @@ namespace MathLib
 template<typename Matrix>
 struct MatrixVectorTraits;
 
+template<typename IndexType>
 struct MatrixSpecifications;
 }
 
@@ -25,21 +26,21 @@ struct MatrixSpecifications;
         using Index = IDX; \
         static std::unique_ptr<MATVEC> newInstance(); \
         static std::unique_ptr<MATVEC> newInstance(MATVEC const& A); \
-        static std::unique_ptr<MATVEC> newInstance(MatrixSpecifications const& spec); \
+        static std::unique_ptr<MATVEC> newInstance(MatrixSpecifications<Index> const& spec); \
     };
 
 
-#ifdef OGS_USE_EIGEN
+//#ifdef OGS_USE_EIGEN
 
-#include<Eigen/Core>
+//#include<Eigen/Core>
 
-namespace MathLib
-{
-SPECIALIZE_MATRIX_VECTOR_TRAITS(Eigen::MatrixXd, Eigen::MatrixXd::Index);
-SPECIALIZE_MATRIX_VECTOR_TRAITS(Eigen::VectorXd, Eigen::VectorXd::Index);
-}
+//namespace MathLib
+//{
+//SPECIALIZE_MATRIX_VECTOR_TRAITS(Eigen::MatrixXd, Eigen::MatrixXd::Index);
+//SPECIALIZE_MATRIX_VECTOR_TRAITS(Eigen::VectorXd, Eigen::VectorXd::Index);
+//}
 
-#endif
+//#endif
 
 
 #ifdef USE_PETSC

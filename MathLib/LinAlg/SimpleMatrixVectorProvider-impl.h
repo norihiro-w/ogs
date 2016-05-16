@@ -116,7 +116,7 @@ getMatrix(std::size_t& id)
 template<typename Matrix, typename Vector>
 Matrix&
 SimpleMatrixVectorProvider<Matrix, Vector>::
-getMatrix(MatrixSpecifications const& ms)
+getMatrix(MatrixSpecifications<IndexType> const& ms)
 {
     std::size_t id = 0u;
     return *getMatrix_<false>(id, ms).first;
@@ -126,7 +126,7 @@ getMatrix(MatrixSpecifications const& ms)
 template<typename Matrix, typename Vector>
 Matrix&
 SimpleMatrixVectorProvider<Matrix, Vector>::
-getMatrix(MatrixSpecifications const& ms, std::size_t& id)
+getMatrix(MatrixSpecifications<IndexType> const& ms, std::size_t& id)
 {
     return *getMatrix_<true>(id, ms).first;
     // TODO assert that the returned object always is of the right size
@@ -199,7 +199,7 @@ getVector(std::size_t& id)
 template<typename Matrix, typename Vector>
 Vector&
 SimpleMatrixVectorProvider<Matrix, Vector>::
-getVector(MatrixSpecifications const& ms)
+getVector(MatrixSpecifications<IndexType> const& ms)
 {
     std::size_t id = 0u;
     return *getVector_<false>(id, ms).first;
@@ -209,7 +209,7 @@ getVector(MatrixSpecifications const& ms)
 template<typename Matrix, typename Vector>
 Vector&
 SimpleMatrixVectorProvider<Matrix, Vector>::
-getVector(MatrixSpecifications const& ms, std::size_t& id)
+getVector(MatrixSpecifications<IndexType> const& ms, std::size_t& id)
 {
     return *getVector_<true>(id, ms).first;
     // TODO assert that the returned object always is of the right size

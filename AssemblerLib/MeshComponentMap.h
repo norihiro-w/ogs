@@ -13,6 +13,8 @@
 #ifndef ASSEMBLERLIB_MESHCOMPONENTMAP_H_
 #define ASSEMBLERLIB_MESHCOMPONENTMAP_H_
 
+#include <vector>
+
 #include "ComponentGlobalIndexDict.h"
 
 namespace MeshLib
@@ -23,6 +25,8 @@ namespace MeshLib
 namespace AssemblerLib
 {
 
+using GlobalIndexType = std::size_t;
+
 /// Ordering of components in global matrix/vector.
 enum class ComponentOrder
 {
@@ -30,11 +34,18 @@ enum class ComponentOrder
     BY_LOCATION     ///< Ordering data by spatial location
 };
 
+namespace detail
+{
+using Line_ = Line<GlobalIndexType>;
+using ComponentGlobalIndexDict_ = detail::ComponentGlobalIndexDict<GlobalIndexType>;
+}
+
 /// Multidirectional mapping between mesh entities and degrees of freedom.
 class MeshComponentMap final
 {
 public:
     typedef MeshLib::Location Location;
+    using GlobalIndexType = AssemblerLib::GlobalIndexType;
 public:
     /// \param components   a vector of components
     /// \param order        type of ordering values in a vector
@@ -142,7 +153,7 @@ public:
     static GlobalIndexType const nop;
 
 #ifndef NDEBUG
-    const detail::ComponentGlobalIndexDict& getDictionary() const
+    const detail::ComponentGlobalIndexDict_& getDictionary() const
     {
         return _dict;
     }
@@ -158,7 +169,7 @@ public:
 
 private:
     /// Private constructor used by internally created mesh component maps.
-    MeshComponentMap(detail::ComponentGlobalIndexDict& dict,
+    MeshComponentMap(detail::ComponentGlobalIndexDict_& dict,
                      unsigned const num_components)
         : _dict(dict), _num_components(num_components)
     { }
@@ -167,11 +178,11 @@ private:
     /// \attention The line for the location l and component id must exist,
     /// the behaviour is undefined otherwise.
     /// \return a copy of the line.
-    detail::Line getLine(Location const& l, std::size_t const component_id) const;
+    detail::Line_ getLine(Location const& l, std::size_t const component_id) const;
 
     void renumberByLocation(GlobalIndexType offset=0);
 
-    detail::ComponentGlobalIndexDict _dict;
+    detail::ComponentGlobalIndexDict_ _dict;
 
     /// Number of local unknowns excluding those associated
     /// with ghost nodes (for domain decomposition).

@@ -32,7 +32,7 @@ enum class IterationResult : char
  */
 template<typename Vector>
 class EquationSystem
-        : public MathLib::MatrixSpecificationsProvider
+        : public MathLib::MatrixSpecificationsProvider<typename Vector::IndexType>
 {
 public:
     /*! Check whether this is actually a linear equation system.

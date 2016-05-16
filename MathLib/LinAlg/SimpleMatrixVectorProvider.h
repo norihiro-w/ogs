@@ -31,6 +31,8 @@ class SimpleMatrixVectorProvider final
         , public VectorProvider<Vector>
 {
 public:
+    using IndexType = typename Matrix::IndexType;
+
     SimpleMatrixVectorProvider() = default;
 
     // no copies
@@ -43,8 +45,8 @@ public:
     Vector& getVector(Vector const& x) override;
     Vector& getVector(Vector const& x, std::size_t& id) override;
 
-    Vector& getVector(MatrixSpecifications const& ms) override;
-    Vector& getVector(MatrixSpecifications const& ms, std::size_t& id) override;
+    Vector& getVector(MatrixSpecifications<IndexType> const& ms) override;
+    Vector& getVector(MatrixSpecifications<IndexType> const& ms, std::size_t& id) override;
 
     void releaseVector(Vector const& x) override;
 
@@ -54,8 +56,8 @@ public:
     Matrix& getMatrix(Matrix const& A) override;
     Matrix& getMatrix(Matrix const& A, std::size_t& id) override;
 
-    Matrix& getMatrix(MatrixSpecifications const& ms) override;
-    Matrix& getMatrix(MatrixSpecifications const& ms, std::size_t& id) override;
+    Matrix& getMatrix(MatrixSpecifications<IndexType> const& ms) override;
+    Matrix& getMatrix(MatrixSpecifications<IndexType> const& ms, std::size_t& id) override;
 
     void releaseMatrix(Matrix const& A) override;
 

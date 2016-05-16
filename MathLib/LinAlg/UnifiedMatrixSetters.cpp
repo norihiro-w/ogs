@@ -67,11 +67,11 @@ void setVector(Eigen::VectorXd& v, std::initializer_list<double> values)
     for (std::size_t i=0; i<values.size(); ++i) v[i] = *(it++);
 }
 
-void setVector(Eigen::VectorXd& v, MatrixVectorTraits<Eigen::VectorXd>::Index const index,
-               double const value)
-{
-    v[index] = value;
-}
+//void setVector(Eigen::VectorXd& v, MatrixVectorTraits<Eigen::VectorXd>::Index const index,
+//               double const value)
+//{
+//    v[index] = value;
+//}
 
 } // namespace MathLib
 

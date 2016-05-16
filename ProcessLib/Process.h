@@ -115,7 +115,7 @@ public:
 		}
 	}
 
-	MathLib::MatrixSpecifications getMatrixSpecifications() const override final
+	MathLib::MatrixSpecifications<Index> getMatrixSpecifications() const override final
 	{
 		return { 0u, 0u,
 		         &_sparsity_pattern,
@@ -238,7 +238,7 @@ private:
 		{
 			MeshLib::Location const l(_mesh.getID(),
 			                          MeshLib::MeshItemType::Node, node_id);
-			auto global_index = std::abs(
+			auto global_index = std::abs<Index>(
 			    _local_to_global_index_map->getGlobalIndex(l, component_id));
 #ifdef USE_PETSC
 			// The global indices of the ghost entries of the global
@@ -306,7 +306,7 @@ private:
 	std::unique_ptr<AssemblerLib::LocalToGlobalIndexMap>
 	    _local_to_global_index_map;
 
-	MathLib::SparsityPattern _sparsity_pattern;
+	MathLib::SparsityPattern<Index> _sparsity_pattern;
 
 	std::vector<DirichletBc<GlobalIndexType>> _dirichlet_bcs;
 	std::vector<std::unique_ptr<NeumannBc<GlobalSetup>>> _neumann_bcs;

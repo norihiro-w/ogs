@@ -9,8 +9,6 @@
 
 #include<memory>
 
-#include "ProcessLib/NumericsConfig.h"
-
 #include "GlobalMatrixProviders.h"
 #include "SimpleMatrixVectorProvider.h"
 
@@ -30,12 +28,12 @@
     }
 
 
-#ifdef OGS_USE_EIGEN
+//#ifdef OGS_USE_EIGEN
 
-INITIALIZE_GLOBAL_MATRIX_VECTOR_PROVIDER(Eigen::MatrixXd, Eigen::VectorXd,
-                                         eigenGlobalMatrixVectorProvider)
+//INITIALIZE_GLOBAL_MATRIX_VECTOR_PROVIDER(Eigen::MatrixXd, Eigen::VectorXd,
+//                                         eigenGlobalMatrixVectorProvider)
 
-#endif
+//#endif
 
 
 using GlobalMatrix = GlobalSetupType::MatrixType;
@@ -49,7 +47,7 @@ namespace MathLib
 {
 void cleanupGlobalMatrixProviders()
 {
-    eigenGlobalMatrixVectorProvider.reset();
+//    eigenGlobalMatrixVectorProvider.reset();
     globalSetupGlobalMatrixVectorProvider.reset();
 }
 }
