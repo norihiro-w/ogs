@@ -19,7 +19,7 @@ APPEND_SOURCE_FILES(TEST_SOURCES MeshLib)
 APPEND_SOURCE_FILES(TEST_SOURCES MeshGeoToolsLib)
 APPEND_SOURCE_FILES(TEST_SOURCES NumLib)
 
-if(QT4_FOUND)
+if(OGS_USE_QT)
     APPEND_SOURCE_FILES(TEST_SOURCES FileIO_Qt)
 endif()
 
@@ -59,7 +59,7 @@ if(OGS_BUILD_GUI)
     )
 endif()
 
-if(QT4_FOUND)
+if(OGS_USE_QT)
     target_link_libraries(testrunner Qt4::QtCore Qt4::QtGui Qt4::QtXml Qt4::QtNetwork)
     if(CMAKE_CROSSCOMPILING)
         target_link_libraries(testrunner

@@ -10,7 +10,7 @@ GET_SOURCE_FILES(SOURCES_IO_BASE_XML IO/XmlIO)
 GET_SOURCE_FILES(SOURCES_IO_BOOST_XML IO/XmlIO/Boost)
 set(SOURCES ${SOURCES} ${SOURCES_IO_BASE_XML} ${SOURCES_IO_BOOST_XML})
 
-if(QT4_FOUND)
+if(OGS_USE_QT)
     GET_SOURCE_FILES(SOURCES_IO_QT_XML IO/XmlIO/Qt)
     set(SOURCES ${SOURCES} ${SOURCES_IO_QT_XML})
 endif()
@@ -24,7 +24,7 @@ target_link_libraries(GeoLib
     MathLib
 )
 
-if(QT4_FOUND)
+if(OGS_USE_QT)
     target_link_libraries(GeoLib Qt4::QtXml Qt4::QtXmlPatterns)
     if(WIN32 AND CMAKE_CROSSCOMPILING AND OPENSSL_FOUND)
         target_link_libraries(GeoLib Qt4::QtNetwork ${OPENSSL_LIBRARIES} ws2_32)

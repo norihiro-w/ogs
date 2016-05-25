@@ -78,16 +78,11 @@ if(OGS_NO_EXTERNAL_LIBS)
 endif() # OGS_NO_EXTERNAL_LIBS
 
 find_package(OpenMP QUIET)
-if(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    message(STATUS "OpenMP enabled.")
-endif()
 
 find_package(Metis QUIET)
 
 ## Qt4 library ##
-if(OGS_BUILD_GUI)
+if(OGS_USE_QT)
     find_package( Qt4 4.7 REQUIRED QtGui QtXml QtXmlPatterns)
     cmake_policy(SET CMP0020 NEW)
     if(CMAKE_CROSSCOMPILING)
@@ -106,9 +101,6 @@ find_package(LAPACK QUIET)
 
 ## geotiff ##
 find_package(LibGeoTiff)
-if(GEOTIFF_FOUND)
-    add_definitions(-DGEOTIFF_FOUND)
-endif() # GEOTIFF_FOUND
 
 ## lis ##
 if(OGS_USE_LIS)
@@ -136,21 +128,11 @@ endif()
 
 find_package(OpenSSL)
 
-## Check MPI package
 if(OGS_USE_MPI)
     find_package(MPI REQUIRED)
-    include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 endif()
 
 find_package(Shapelib)
-if(Shapelib_FOUND)
-    include_directories(SYSTEM ${Shapelib_INCLUDE_DIRS})
-elseif(OGS_BUILD_GUI)
-    message(FATAL_ERROR "Shapelib not found but it is required for OGS_BUILD_GUI!")
-endif()
 
 ## Sundials cvode ode-solver library
 find_package(CVODE)
-if(CVODE_FOUND)
-    add_definitions(-DCVODE_FOUND)
-endif() # CVODE_FOUND

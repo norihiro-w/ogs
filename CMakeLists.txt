@@ -12,18 +12,120 @@ cmake_policy(SET CMP0054 NEW)
 # Project name
 project( OGS-6 )
 
+
+
+#TODO
+#- set OGS_USE_XXX=ON if a package is found
+#- use REQUIRED to FindPackage if OGS_USE_XXX=ON
+#- cmake file for each module? OGS_USE_XXX, find, compiler options, ?
+
+####################################
+### OGS options                  ###
+####################################
+
+#------------------------------------
+# Build targets
+#------------------------------------
+option(OGS_BUILD_CLI "Should the OGS simulator be built?" ON)
+option(OGS_BUILD_GUI "Should the Data Explorer be built?" OFF)
+option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
+option(OGS_BUILD_UTILS "Should the utilities programms be built?" OFF)
+
+#------------------------------------
+# Compiling options
+#------------------------------------
+# Compiler flags
+set(OGS_CXX_FLAGS "" CACHE STRING "Additional C++ compiler flags.")
+option(STL_NO_DEBUG "Disable STL debug in debug build" OFF)
+set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, defaults to native.")
+
+# Logging
+option(OGS_DISABLE_LOGGING "Disables all logog messages." OFF)
+
+# Paralleization
+option(OGS_USE_MPI "Use MPI" OFF)
+option(OGS_USE_OPENMP "Use OpenMP" OFF)
+
+# Options controlling which FEM elements will be compiled
+set(OGS_MAX_ELEMENT_DIM   3 CACHE STRING "Maximum dimension of FEM elements to be built.")
+set(OGS_MAX_ELEMENT_ORDER 2 CACHE STRING "Maximum order of FEM elements to be built.")
+option(OGS_ENABLE_ELEMENT_SIMPLEX "Build FEM elements for simplices (triangles, tetrahedra)." ON)
+option(OGS_ENABLE_ELEMENT_CUBOID  "Build FEM elements for cuboids (quads, hexahedra)." ON)
+option(OGS_ENABLE_ELEMENT_PRISM   "Build FEM elements for prisms." ON)
+option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
+
+#------------------------------------
+# External libraries
+#------------------------------------
+
+option(OGS_NO_EXTERNAL_LIBS "Builds OGS without any external dependencies." OFF)
+
+option(OGS_USE_CVODE "Use CVODE" OFF)
+option(OGS_USE_LAPACK "Use LAPACL" OFF)
+option(OGS_USE_METIS "Use METIS" OFF)
+option(OGS_USE_SHAPELIB "Use ShapeLib" OFF)
+option(OGS_USE_QT "Use Qt" OFF)
+
+# Eigen
+option(OGS_USE_EIGEN "Use EIGEN for local matrix and vector" ON)
+option(OGS_EIGEN_DYNAMIC_SHAPE_MATRICES "Use dynamically allocated shape matrices" ON)
+option(EIGEN_NO_DEBUG "Disables Eigen's assertions" OFF)
+
+# Linear solvers
+option(OGS_USE_LIS "Use Lis" OFF)
+option(OGS_USE_EIGENLIS "Use Lis solver together with Eigen sparse matrices" OFF)
+option(OGS_USE_PETSC "Use PETSc routines" OFF)
+
+# Third-party libraries
+# Default checks for system first, then builds locally
+set(OGS_LIB_VTK "Default" CACHE STRING "Which VTK library should be used?")
+set(OGS_LIB_BOOST "Default" CACHE STRING "Which Boost library should be used?")
+set(OGS_LIB_EIGEN "Default" CACHE STRING "Which Eigen library should be used?")
+set_property(CACHE
+    OGS_LIB_VTK
+    OGS_LIB_BOOST
+    OGS_LIB_EIGEN
+    PROPERTY STRINGS "Default" "System" "Local")
+
+
+#------------------------------------
+# profiling, packaging, etc.
+#------------------------------------
+
+# Code coverage
+option(OGS_COVERAGE "Enables code coverage measurements with gcov/lcov." OFF)
+
+# Profiling
+option(OGS_PROFILE "Enables compiling with flags set for profiling with gprof." OFF)
+
+# Packaging
+option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should addional content such as manuals be downloaded and packaged?" OFF)
+
+
+#######################################
+### OGS options overwrite           ###
+#######################################
+
+if(OGS_BUILD_GUI)
+    set(OGS_USE_QT ON CACHE BOOL "Use Qt" FORCE)
+    set(OGS_USE_SHAPELIB ON CACHE BOOL "Use ShapeLib" FORCE)
+endif()
+
+if (OGS_USE_EIGENLIS)
+    set(OGS_USE_EIGEN ON CACHE BOOL "Use Eigen" FORCE)
+    set(OGS_USE_LIS ON CACHE BOOL "Use Lis" FORCE)
+endif()
+
+
+###########################
+### Setup               ###
+###########################
+set(CMAKE_LIBRARY_SEARCH_PATH "" CACHE PATH
+    "Additional library installation path, e.g. /opt/local or C:/libs")
 list(APPEND CMAKE_PREFIX_PATH
     $ENV{HOMEBREW_ROOT}             # Homebrew package manager on Mac OS
     $ENV{CMAKE_LIBRARY_SEARCH_PATH} # Environment variable, Windows
     ${CMAKE_LIBRARY_SEARCH_PATH})   # CMake option, Windows
-
-###########################
-### Preliminary Options ###
-###########################
-set(CMAKE_LIBRARY_SEARCH_PATH "" CACHE PATH
-    "Additional library installation path, e.g. /opt/local or C:/libs")
-set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, defaults to native.")
-option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
 
 ### CMake includes ###
 include(scripts/cmake/ConanSetup.cmake)
@@ -40,85 +142,31 @@ if(OGS_COVERAGE AND NOT IS_SUBPROJECT)
     include(scripts/cmake/Coverage.cmake)
 endif()
 
-####################
-### More Options ###
-####################
-
-# Profiling
-if((CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC) AND GPROF_PATH)
-    option(OGS_PROFILE "Enables compiling with flags set for profiling with gprof." OFF)
-endif() # GCC AND GPROF_PATH
-
-# Enable / Disable parts
-option(OGS_DONT_USE_QT "Disables all Qt specific code." OFF)
-
-option(OGS_BUILD_CLI "Should the OGS simulator be built?" ON)
-option(OGS_BUILD_GUI "Should the Data Explorer be built?" OFF)
-if(OGS_BUILD_GUI)
-    add_definitions(-DOGS_BUILD_GUI)
-endif()
-option(OGS_BUILD_UTILS "Should the utilities programms be built?" OFF)
-
-option(OGS_NO_EXTERNAL_LIBS "Builds OGS without any external dependencies." OFF)
-
-# Linear solvers
-option(OGS_USE_LIS "Use Lis" OFF)
-
-option(OGS_USE_EIGENLIS "Use Lis solver together with Eigen sparse matrices" OFF)
-
-# Parallel computing: vector and matrix algebraic caculation, solvers
-option(OGS_USE_PETSC "Use PETSc routines" OFF)
-
-# Paralleization
-option(OGS_USE_MPI "Use MPI" OFF)
-
-# Eigen
-option(OGS_USE_EIGEN "Use EIGEN for local matrix and vector" ON)
-option(OGS_EIGEN_DYNAMIC_SHAPE_MATRICES "Use dynamically allocated shape matrices" ON)
-option(EIGEN_NO_DEBUG "Disables Eigen's assertions" OFF)
-
-# Logging
-option(OGS_DISABLE_LOGGING "Disables all logog messages." OFF)
-
-# Compiler flags
-set(OGS_CXX_FLAGS "" CACHE STRING "Additional C++ compiler flags.")
-option(STL_NO_DEBUG "Disable STL debug in debug build" OFF)
-
 # Print CMake variable values
 if (OGS_CMAKE_DEBUG)
     include(ListAllCMakeVariableValues)
     list_all_cmake_variable_values()
 endif ()
 
-# Code coverage
-option(OGS_COVERAGE "Enables code coverage measurements with gcov/lcov." OFF)
-
-# Packaging
-option(OGS_DOWNLOAD_ADDITIONAL_CONTENT "Should addional content such as manuals be downloaded and packaged?" OFF)
 include(scripts/cmake/packaging/Pack.cmake)
 
-# Third-party libraries
-# Default checks for system first, then builds locally
-set(OGS_LIB_VTK "Default" CACHE STRING "Which VTK library should be used?")
-set(OGS_LIB_BOOST "Default" CACHE STRING "Which Boost library should be used?")
-set(OGS_LIB_EIGEN "Default" CACHE STRING "Which Eigen library should be used?")
-set_property(CACHE
-    OGS_LIB_VTK
-    OGS_LIB_BOOST
-    OGS_LIB_EIGEN
-    PROPERTY STRINGS "Default" "System" "Local")
-
-# Options controlling which FEM elements will be compiled
-set(OGS_MAX_ELEMENT_DIM   3 CACHE STRING "Maximum dimension of FEM elements to be built.")
-set(OGS_MAX_ELEMENT_ORDER 2 CACHE STRING "Maximum order of FEM elements to be built.")
-option(OGS_ENABLE_ELEMENT_SIMPLEX "Build FEM elements for simplices (triangles, tetrahedra)." ON)
-option(OGS_ENABLE_ELEMENT_CUBOID  "Build FEM elements for cuboids (quads, hexahedra)." ON)
-option(OGS_ENABLE_ELEMENT_PRISM   "Build FEM elements for prisms." ON)
-option(OGS_ENABLE_ELEMENT_PYRAMID "Build FEM elements for pyramids." ON)
 
 ###################
 ### Definitions ###
 ###################
+if(OGS_BUILD_GUI)
+    add_definitions(-DOGS_BUILD_GUI)
+endif()
+
+if(OGS_BUILD_TESTS)
+    set(Data_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data CACHE INTERNAL "")
+    set(Data_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Tests/Data CACHE INTERNAL "")
+endif()
+
+if(OGS_USE_CVODE)
+    add_definitions(-DCVODE_FOUND)
+endif()
+
 if(OGS_USE_LIS)
     add_definitions(-DUSE_LIS)
     include_directories(SYSTEM ${LIS_INCLUDE_DIR})
@@ -129,9 +177,15 @@ if(OGS_USE_PETSC)
     set(OGS_USE_MPI ON CACHE BOOL "Use MPI" FORCE)
 endif()
 
-# Use MPI
 if(OGS_USE_MPI)
     add_definitions(-DUSE_MPI)
+    include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+endif()
+
+if(OGS_USE_OPENMP)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    message(STATUS "OpenMP enabled.")
 endif()
 
 if(OGS_USE_EIGEN)
@@ -146,20 +200,13 @@ if(OGS_USE_EIGEN)
 endif()
 
 if (OGS_USE_EIGENLIS)
-    if (NOT OGS_USE_EIGEN)
-        message(FATAL_ERROR "OGS_USE_EIGENLIS needs OGS_USE_EIGEN to be set!")
-    endif()
-    if (NOT OGS_USE_LIS)
-        message(FATAL_ERROR "OGS_USE_EIGENLIS needs OGS_USE_LIS to be set!")
-    endif()
-
     add_definitions(-DOGS_USE_EIGENLIS)
 endif()
 
-if(OGS_BUILD_TESTS)
-    set(Data_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Tests/Data CACHE INTERNAL "")
-    set(Data_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Tests/Data CACHE INTERNAL "")
+if(OGS_USE_SHAPELIB)
+    include_directories(SYSTEM ${Shapelib_INCLUDE_DIRS})
 endif()
+
 
 ######################
 ### Subdirectories ###

@@ -46,7 +46,7 @@ if(OGS_USE_PETSC)
     set(SOURCES ${SOURCES} ${SOURCES_LINALG_PETSC})
 endif()
 
-if(METIS_FOUND)
+if(OGS_USE_METIS)
     GET_SOURCE_FILES(SOURCES_LINALG_SPARSE_NESTEDDISSECTION LinAlg/Sparse/NestedDissectionPermutation)
     set(SOURCES ${SOURCES} ${SOURCES_LINALG_SPARSE_NESTEDDISSECTION})
 endif ()
@@ -54,7 +54,7 @@ endif ()
 GET_SOURCE_FILES(SOURCES_NONLINEAR Nonlinear)
 set(SOURCES ${SOURCES} ${SOURCES_NONLINEAR})
 
-if(METIS_FOUND)
+if(OGS_USE_METIS)
     include_directories(${METIS_INCLUDE_DIR})
 endif()
 
@@ -67,15 +67,15 @@ target_link_libraries(MathLib
     AssemblerLib
 )
 
-if (CVODE_FOUND)
+if (OGS_USE_CVODE)
     target_link_libraries(MathLib ${CVODE_LIBRARIES})
 endif()
 
-if(METIS_FOUND)
+if(OGS_USE_METIS)
     target_link_libraries(MathLib ${METIS_LIBRARIES})
 endif()
 
-if(LAPACK_FOUND)
+if(OGS_USE_LAPACK)
     target_link_libraries(MathLib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()
 

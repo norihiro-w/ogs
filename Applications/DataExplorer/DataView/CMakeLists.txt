@@ -121,6 +121,7 @@ if(VTKOSGCONVERTER_FOUND)
 endif()
 
 if(GEOTIFF_FOUND)
+    add_definitions(-DGEOTIFF_FOUND)
     include_directories(${GEOTIFF_INCLUDE_DIRS})
 endif() # GEOTIFF_FOUND
 
