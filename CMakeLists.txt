@@ -86,24 +86,25 @@ option(OGS_BUILD_UTILS "Should the utilities programms be built?" OFF)
 # A list of processes to be build. Also used in the ProcessLib to select
 # processes to be build.
 set(ProcessesList
-    ComponentTransport
-    GroundwaterFlow
-    HT
-    HeatConduction
+#    ComponentTransport
+#    GroundwaterFlow
+#    HT
+#    HeatConduction
     HydroMechanics
-    LiquidFlow
+#    LiquidFlow
     LIE
-    PhaseField
-    RichardsComponentTransport
-    RichardsFlow
-    RichardsMechanics
+#    PhaseField
+#    RichardsComponentTransport
+#    RichardsFlow
+#    RichardsMechanics
     SmallDeformation
-    TES
-    ThermalTwoPhaseFlowWithPP
-    ThermoMechanicalPhaseField
-    ThermoMechanics
-    TwoPhaseFlowWithPP
-    TwoPhaseFlowWithPrho)
+#    TES
+#    ThermalTwoPhaseFlowWithPP
+#    ThermoMechanicalPhaseField
+#    ThermoMechanics
+#    TwoPhaseFlowWithPP
+#    TwoPhaseFlowWithPrho
+)
 
 # Add a cmake option for each process.
 foreach(process ${ProcessesList})
