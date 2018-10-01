@@ -127,6 +127,8 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
             std::make_unique<MeshLib::MeshSubset const>(
                 _mesh, _vec_fracture_nodes[i]));
     }
+    // enrichment for junctions
+    //TODO
 
     // Collect the mesh subsets in a vector.
     std::vector<MeshLib::MeshSubset> all_mesh_subsets;

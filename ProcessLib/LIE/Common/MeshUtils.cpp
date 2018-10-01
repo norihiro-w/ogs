@@ -128,6 +128,29 @@ void getFractureMatrixDataInMesh(
         DBUG("-> found %d nodes on the fracture %d", vec_nodes.size(), frac_id);
     }
 
+    // all fracture nodes
+    std::vector<std::size_t> all_fracture_nodes;
+    for (unsigned frac_id = 0; frac_id < vec_fracture_mat_IDs.size(); frac_id++)
+        for (auto* node : vec_fracture_nodes[frac_id])
+            all_fracture_nodes.push_back(node->getID());
+
+    // create a table of a node id and connected material IDs
+    std::map<std::size_t, std::vector<std::size_t>> frac_nodeID_to_matIDs;
+    for (unsigned frac_id = 0; frac_id < vec_fracture_mat_IDs.size(); frac_id++)
+        for (auto* node : vec_fracture_nodes[frac_id])
+            frac_nodeID_to_matIDs[node->getID()].insert(frac_id);
+
+    // find branch/junction nodes which connect to multiple fractures
+    std::vector<std::size_t> branch_nodeIDs;
+    std::vector<std::size_t> junction_nodeIDs;
+    for (auto entry : frac_nodeID_to_matIDs)
+    {
+        if (entry.second.size() == 1)
+            continue;
+        junction_nodeIDs.push_back(entry.first);
+    }
+
+
     // create a vector fracture elements and connected matrix elements,
     // which are passed to a DoF table
     for (auto fracture_elements : vec_fracture_elements)

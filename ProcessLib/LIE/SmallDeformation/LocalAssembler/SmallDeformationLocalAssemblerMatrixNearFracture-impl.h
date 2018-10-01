@@ -130,6 +130,9 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
 
     auto const N_DOF_PER_VAR = ShapeFunction::NPOINTS * DisplacementDim;
     auto const n_fractures = _fracture_props.size();
+    //TODO
+    auto const n_branchs = 0;
+    auto const n_junctions = 0;
 
     using BlockVectorType =
         typename Eigen::VectorXd::FixedSegmentReturnType<N_DOF_PER_VAR>::Type;
@@ -140,18 +143,20 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
     // prepare sub vectors, matrices for regular displacement (u) and
     // displacement jumps (g)
     //
-    // example with two fractures:
+    // example with two fractures with one intersection:
     //     |b(u)|
     // b = |b(g1)|
     //     |b(g2)|
+    //     |b(j1)|
     //
-    //     |J(u,u)  J(u,g1)  J(u,g2) |
-    // J = |J(g1,u) J(g1,g1) J(g1,g2)|
-    //     |J(g2,u) J(g2,g1) J(g2,g2)|
+    //     |J(u,u)  J(u,g1)  J(u,g2)  J(u,j1) |
+    // J = |J(g1,u) J(g1,g1) J(g1,g2) J(g1,j1)|
+    //     |J(g2,u) J(g2,g1) J(g2,g2) J(g2,j1)|
+    //     |J(j1,u) J(j1,g1) J(j1,g2) J(j1,j1)|
     //--------------------------------------------------------------------------------------
     auto local_b_u = local_b.segment<N_DOF_PER_VAR>(0);
     std::vector<BlockVectorType> vec_local_b_g;
-    for (unsigned i = 0; i < n_fractures; i++)
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
     {
         vec_local_b_g.push_back(
             local_b.segment<N_DOF_PER_VAR>(N_DOF_PER_VAR * (i + 1)));
@@ -160,8 +165,8 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
     auto local_J_uu = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(0, 0);
     std::vector<BlockMatrixType> vec_local_J_ug;
     std::vector<BlockMatrixType> vec_local_J_gu;
-    std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_fractures);
-    for (unsigned i = 0; i < n_fractures; i++)
+    std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_fractures + n_junctions);
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
     {
         auto sub_ug = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
             0, N_DOF_PER_VAR * (i + 1));
@@ -181,7 +186,7 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
 
     auto const nodal_u = local_u.segment<N_DOF_PER_VAR>(0);
     std::vector<BlockVectorType> vec_nodal_g;
-    for (unsigned i = 0; i < n_fractures; i++)
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
     {
         auto sub = const_cast<Eigen::VectorXd&>(local_u).segment<N_DOF_PER_VAR>(
             N_DOF_PER_VAR * (i + 1));
@@ -209,16 +214,31 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
 
         // levelset functions
         auto const ip_physical_coords = computePhysicalCoordinates(_element, N);
-        std::vector<double> levelsets(n_fractures);
+        std::vector<double> levelsets(n_fractures + n_junctions);
         for (unsigned i = 0; i < n_fractures; i++)
         {
             levelsets[i] = calculateLevelSetFunction(
                 *_fracture_props[i], ip_physical_coords.getCoords());
         }
+        if (n_branches > 0)
+        {
+            for (unsigned i = 0; i < n_fractures; i++)
+            {
+                if (levelsets[i] == 0.0)
+                    continue;
+
+                levelsets[i] = calculateLevelSet4Branch(_fracture_props, i,
+                                levelsets, ip_physical_coords.getCoords());
+            }
+        }
+        for (unsigned i = 0; i < n_junctions; i++)
+        {
+            levelsets[n_fractures+i] = calculateLevelSet4Junction(*_junction_info[i], levelsets);
+        }
 
         // nodal displacement = u^hat + sum_i(levelset_i(x) * [u]_i)
         NodalDisplacementVectorType nodal_total_u = nodal_u;
-        for (unsigned i = 0; i < n_fractures; i++)
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
         {
             nodal_total_u += levelsets[i] * vec_nodal_g[i];
         }
@@ -257,7 +277,7 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
         // r_u = B^T * Sigma = B^T * C * B * (u+phi*[u])
         // r_[u] = (phi*B)^T * Sigma = (phi*B)^T * C * B * (u+phi*[u])
         local_b_u.noalias() -= B.transpose() * sigma * w;
-        for (unsigned i = 0; i < n_fractures; i++)
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
         {
             vec_local_b_g[i].noalias() -=
                 levelsets[i] * B.transpose() * sigma * w;
@@ -266,7 +286,7 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
         // J_uu += B^T * C * B
         local_J_uu.noalias() += B.transpose() * C * B * w;
 
-        for (unsigned i = 0; i < n_fractures; i++)
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
         {
             // J_u[u] += B^T * C * (levelset * B)
             vec_local_J_ug[i].noalias() +=
@@ -276,7 +296,7 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
             vec_local_J_gu[i].noalias() +=
                 (levelsets[i] * B.transpose()) * C * B * w;
 
-            for (unsigned j = 0; j < n_fractures; j++)
+            for (unsigned j = 0; j < n_fractures + n_junctions; j++)
             {
                 // J_[u][u] += (levelset * B)^T * C * (levelset * B)
                 vec_local_J_gg[i][j].noalias() +=

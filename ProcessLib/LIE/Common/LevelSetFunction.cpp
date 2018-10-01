@@ -55,16 +55,19 @@ bool isConnectingToThisBranch(int this_discon_id, t_BranchInfo &this_branch)
 	return is_connected_to_this_branch;
 }
 
-double levelSet4Branch(FractureProperty const& frac, 
-					   std::vector<double> const& local_levelsets, double const* x_)
+double calculateLevelSet4Branch(
+	std::vector<FractureProperty*> const& fracture_props, std::size_t master_frac_index,
+	std::vector<double> const& local_levelsets, double const* x_)
 {
 	Eigen::Map<Eigen::Vector3d const> x(x_, 3);
 
+	FractureProperty const& master_frac = *fracture_props[master_frac_index];
+
 	// for branches: psi_b_i(x) = sign(n_a*n_ab_i)*H(f_b_i)
-	double global_levelset = local_levelsets[frac.fracture_id];
+	double global_levelset = local_levelsets[master_frac_index];
 	for (t_BranchInfo &branch : vec_branches)
 	{
-		if (branch.list_connected_discontinuity[1] != frac.fracture_id)
+		if (branch.list_connected_discontinuity[1] != master_frac.fracture_id)
 			continue; // should be branch
 
 		// Get the signed distance from the branch point to the reference point
@@ -79,34 +82,16 @@ double levelSet4Branch(FractureProperty const& frac,
 }
 
 
-void levelSet4Junction(std::vector<double> const& local_levelsets, double const* x_)
+void calculateLevelSet4Junction(
+	std::pair<int,int> const& junction_info, std::vector<double> const& local_levelsets)
 {
-	std::vector<double> vec_global_levelset_fct;
+	// Junction information
+	int dis1_id = junction_info.first;
+	int dis2_id = junction_info.second;
 
-	Eigen::Map<Eigen::Vector3d const> x(x_, 3);
-
-	int this_discon_id;
-	FractureProperty* frac;
-
-	int nr_discontinuity_junctions;
-	int nr_discontinuous_features;
-	// for junctions: %psi_r_i = H(f_r_i)
-	for (int i=0; i<nr_discontinuity_junctions; i++) 
-	{
-		const int junction_delta_id = nr_discontinuous_features + i;
-		// Junction information
-		int dis1_id = vec_junction_discon_id[i].first;
-		int dis2_id = vec_junction_discon_id[i].second;
-		if (dis1_id != this_discon_id && dis2_id != this_discon_id)
-			continue;
-
-		int conneced_discon_id = dis1_id;
-		if (dis1_id == this_discon_id)
-			conneced_discon_id = dis2_id;
-
-		// Set the level set
-		vec_global_levelset_fct[junction_delta_id] = Heaviside(local_levelsets[conneced_discon_id]);
-	}
+	// Set the level set
+	double global_levelset = Heaviside(local_levelsets[dis1_id]) * Heaviside(local_levelsets[dis2_id]);
+	return global_levelset;
 }
 
 }  // namespace LIE
