@@ -60,7 +60,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
                 "'displacement' or 'displacement_jumpN' or 'displacement_junctionN'");
         }
         if (pv_name.find("displacement_jump") == 0)
-            n_var_du_branch++;
+            n_var_du++;
         else if (pv_name.find("displacement_junction") == 0)
             n_var_du_junction++;
 
@@ -83,7 +83,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         per_process_variables.emplace_back(const_cast<ProcessVariable&>(*variable));
     }
 
-    auto const n_fractures = n_var_du_branch;
+    auto const n_fractures = n_var_du;
     if (n_fractures < 1)
     {
         OGS_FATAL("No displacement jump variables are specified");

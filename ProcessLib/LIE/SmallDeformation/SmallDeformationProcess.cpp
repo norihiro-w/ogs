@@ -352,7 +352,7 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
                 continue;
             }
 
-            double const levelsets = calculateLevelSetFunction(
+            double const levelsets = levelset_fracture(
                 *fracture_prop, e->getCenterOfGravity().getCoords());
             (*mesh_prop_levelset)[e->getID()] = levelsets;
         }

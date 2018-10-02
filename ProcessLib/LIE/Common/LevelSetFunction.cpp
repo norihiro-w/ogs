@@ -10,7 +10,9 @@
 
 #include <boost/math/special_functions/sign.hpp>
 
+#include "BranchProperty.h"
 #include "FractureProperty.h"
+#include "JunctionProperty.h"
 
 namespace
 {
@@ -26,72 +28,65 @@ namespace ProcessLib
 {
 namespace LIE
 {
-double calculateLevelSetFunction(FractureProperty const& frac, double const* x_)
+
+double levelset_fracture(FractureProperty const& frac, const double* x)
 {
-    Eigen::Map<Eigen::Vector3d const> x(x_, 3);
-    return Heaviside(
-        boost::math::sign(frac.normal_vector.dot(x - frac.point_on_fracture)));
+	Eigen::Vector3d xx(x);
+    return levelset_fracture(frac, xx);
 }
 
-typedef struct BranchInfo
-{
-	std::vector<int> list_connected_discontinuity;
-	long node_id;
-	Eigen::Vector3d branch_vector;
-} t_BranchInfo;
 
-std::vector<long> vec_junction_nodes;
-std::vector<std::pair<int, int> > vec_junction_discon_id;
-std::vector<t_BranchInfo> vec_branches;
-
-bool isConnectingToThisBranch(int this_discon_id, t_BranchInfo &this_branch)
+double levelset_fracture(FractureProperty const& frac, Eigen::Vector3d const& x)
 {
-	bool is_connected_to_this_branch = false;
-	for (int k = 0; k<this_branch.list_connected_discontinuity.size(); k++)
+    return boost::math::sign(frac.normal_vector.dot(x - frac.point_on_fracture));
+}
+
+double levelset_branch(BranchProperty const& branch, Eigen::Vector3d const& x)
+{
+	return boost::math::sign(branch.normal_vector_branch.dot(x - branch.coords));
+}
+
+std::vector<double> u_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	Eigen::Vector3d const& x)
+{
+	//pre-calculate levelsets for all fractures
+	std::vector<double> levelsets(frac_props.size());
+	for (auto const* frac : frac_props)
+		levelsets[frac->fracture_id] = Heaviside(levelset_fracture(*frac, x));
+
+	return levelsets;
+}
+
+
+std::vector<double> u_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	std::vector<JunctionProperty*> const& junction_props,
+	Eigen::Vector3d const& x)
+{
+	//pre-calculate levelsets for all fractures
+	std::vector<double> levelsets(frac_props.size());
+	for (auto const* frac : frac_props)
+		levelsets[frac->fracture_id] = Heaviside(levelset_fracture(*frac, x));
+
+	std::vector<double> enrichments(frac_props.size() + junction_props.size());
+	//fractures possibly with branches
+	for (auto const* frac : frac_props)
 	{
-		if (this_branch.list_connected_discontinuity[k] == this_discon_id)
-			is_connected_to_this_branch = true;
+		double enrich = levelsets[frac->fracture_id];
+		for (std::size_t i=0; i<frac->branches.size(); i++)
+			enrich *= Heaviside(levelset_branch(*frac->branches[i], x));
+		enrichments[frac->fracture_id] = enrich;
 	}
-	return is_connected_to_this_branch;
-}
 
-double calculateLevelSet4Branch(
-	std::vector<FractureProperty*> const& fracture_props, std::size_t master_frac_index,
-	std::vector<double> const& local_levelsets, double const* x_)
-{
-	Eigen::Map<Eigen::Vector3d const> x(x_, 3);
-
-	FractureProperty const& master_frac = *fracture_props[master_frac_index];
-
-	// for branches: psi_b_i(x) = sign(n_a*n_ab_i)*H(f_b_i)
-	double global_levelset = local_levelsets[master_frac_index];
-	for (t_BranchInfo &branch : vec_branches)
+	// junctions
+	for (auto const* junction : junction_props)
 	{
-		if (branch.list_connected_discontinuity[1] != master_frac.fracture_id)
-			continue; // should be branch
-
-		// Get the signed distance from the branch point to the reference point
-		Eigen::Vector3d point_on_branch; // = (double*)m_msh->nod_vector[this_branch.node_id]->GetCoordinates();
-		Eigen::Vector3d rel_vector = x - point_on_branch;
-		double singned = boost::math::sign(branch.branch_vector.dot(rel_vector));
-		// Update the level set function
-		global_levelset *= Heaviside(singned);
+		double enrich = levelsets[junction->fracture1_ID]*levelsets[junction->fracture2_ID];
+		enrichments[junction->junction_id + frac_props.size()] *= enrich;
 	}
 
-	return global_levelset;
-}
-
-
-void calculateLevelSet4Junction(
-	std::pair<int,int> const& junction_info, std::vector<double> const& local_levelsets)
-{
-	// Junction information
-	int dis1_id = junction_info.first;
-	int dis2_id = junction_info.second;
-
-	// Set the level set
-	double global_levelset = Heaviside(local_levelsets[dis1_id]) * Heaviside(local_levelsets[dis2_id]);
-	return global_levelset;
+	return enrichments;
 }
 
 }  // namespace LIE

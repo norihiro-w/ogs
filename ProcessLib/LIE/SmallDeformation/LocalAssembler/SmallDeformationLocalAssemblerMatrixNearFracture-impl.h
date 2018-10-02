@@ -113,6 +113,8 @@ SmallDeformationLocalAssemblerMatrixNearFracture<ShapeFunction,
         _fracture_props.push_back(
             _process_data._vec_fracture_property[fid].get());
     }
+
+    //TODO set _junction_props
 }
 
 template <typename ShapeFunction,
@@ -130,9 +132,7 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
 
     auto const N_DOF_PER_VAR = ShapeFunction::NPOINTS * DisplacementDim;
     auto const n_fractures = _fracture_props.size();
-    //TODO
-    auto const n_branchs = 0;
-    auto const n_junctions = 0;
+    auto const n_junctions = _junction_props.size();
 
     using BlockVectorType =
         typename Eigen::VectorXd::FixedSegmentReturnType<N_DOF_PER_VAR>::Type;
@@ -213,28 +213,9 @@ void SmallDeformationLocalAssemblerMatrixNearFracture<
         auto const& dNdx = ip_data.dNdx;
 
         // levelset functions
-        auto const ip_physical_coords = computePhysicalCoordinates(_element, N);
-        std::vector<double> levelsets(n_fractures + n_junctions);
-        for (unsigned i = 0; i < n_fractures; i++)
-        {
-            levelsets[i] = calculateLevelSetFunction(
-                *_fracture_props[i], ip_physical_coords.getCoords());
-        }
-        if (n_branches > 0)
-        {
-            for (unsigned i = 0; i < n_fractures; i++)
-            {
-                if (levelsets[i] == 0.0)
-                    continue;
+        Eigen::Vector3d const ip_physical_coords(computePhysicalCoordinates(_element, N).getCoords());
 
-                levelsets[i] = calculateLevelSet4Branch(_fracture_props, i,
-                                levelsets, ip_physical_coords.getCoords());
-            }
-        }
-        for (unsigned i = 0; i < n_junctions; i++)
-        {
-            levelsets[n_fractures+i] = calculateLevelSet4Junction(*_junction_info[i], levelsets);
-        }
+        std::vector<double> const levelsets(u_global_enrichments(_fracture_props, ip_physical_coords));
 
         // nodal displacement = u^hat + sum_i(levelset_i(x) * [u]_i)
         NodalDisplacementVectorType nodal_total_u = nodal_u;

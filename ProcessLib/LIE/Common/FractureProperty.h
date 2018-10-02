@@ -11,6 +11,7 @@
 
 #include <Eigen/Eigen>
 
+#include "BranchProperty.h"
 #include "Utils.h"
 
 namespace MeshLib
@@ -36,6 +37,7 @@ struct FractureProperty
     Eigen::MatrixXd R;
     /// Initial aperture
     ProcessLib::Parameter<double> const* aperture0 = nullptr;
+    std::vector<BranchProperty*> branches;
 
     virtual ~FractureProperty() = default;
 };

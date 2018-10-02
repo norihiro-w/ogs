@@ -138,7 +138,7 @@ void getFractureMatrixDataInMesh(
     std::map<std::size_t, std::vector<std::size_t>> frac_nodeID_to_matIDs;
     for (unsigned frac_id = 0; frac_id < vec_fracture_mat_IDs.size(); frac_id++)
         for (auto* node : vec_fracture_nodes[frac_id])
-            frac_nodeID_to_matIDs[node->getID()].insert(frac_id);
+            frac_nodeID_to_matIDs[node->getID()].push_back(frac_id);
 
     // find branch/junction nodes which connect to multiple fractures
     std::vector<std::size_t> branch_nodeIDs;

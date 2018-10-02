@@ -76,7 +76,7 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     // levelset value of the element
     // remark: this assumes the levelset function is uniform within an element
     auto const& fracture_props = *_process_data.fracture_property;
-    double const ele_levelset = calculateLevelSetFunction(
+    double const ele_levelset = levelset_fracture(
         fracture_props, _element.getCenterOfGravity().getCoords());
 
     if (ele_levelset == 0)
@@ -139,7 +139,7 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     // levelset value of the element
     // remark: this assumes the levelset function is uniform within an element
     auto const& fracture_props = *_process_data.fracture_property;
-    double const ele_levelset = calculateLevelSetFunction(
+    double const ele_levelset = levelset_fracture(
         fracture_props, _element.getCenterOfGravity().getCoords());
 
     if (ele_levelset == 0)

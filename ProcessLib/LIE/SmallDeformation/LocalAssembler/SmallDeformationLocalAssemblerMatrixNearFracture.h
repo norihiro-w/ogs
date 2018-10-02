@@ -18,6 +18,7 @@
 #include "ProcessLib/Utils/InitShapeMatrices.h"
 
 #include "ProcessLib/LIE/Common/FractureProperty.h"
+#include "ProcessLib/LIE/Common/JunctionProperty.h"
 #include "ProcessLib/LIE/SmallDeformation/SmallDeformationProcessData.h"
 
 #include "IntegrationPointDataMatrix.h"
@@ -260,6 +261,7 @@ private:
 
     SmallDeformationProcessData<DisplacementDim>& _process_data;
     std::vector<FractureProperty*> _fracture_props;
+    std::vector<JunctionProperty*> _junction_props;
 
     std::vector<IntegrationPointDataMatrix<ShapeMatricesType, BMatricesType,
                                            DisplacementDim>,
