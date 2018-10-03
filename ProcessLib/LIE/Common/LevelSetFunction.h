@@ -42,5 +42,14 @@ std::vector<double> u_global_enrichments(
 	std::vector<JunctionProperty*> const& junction_props,
 	Eigen::Vector3d const& x);
 
+std::vector<double> du_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	Eigen::Vector3d const& x);
+
+std::vector<double> du_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	std::vector<JunctionProperty*> const& junction_props,
+	Eigen::Vector3d const& x);
+
 }  // namespace LIE
 }  // namespace ProcessLib

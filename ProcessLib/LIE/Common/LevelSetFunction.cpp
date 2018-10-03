@@ -89,5 +89,22 @@ std::vector<double> u_global_enrichments(
 	return enrichments;
 }
 
+std::vector<double> du_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	Eigen::Vector3d const& x)
+{
+	std::vector<double> enrichments(frac_props.size());
+	return enrichments;
+}
+
+std::vector<double> du_global_enrichments(
+	std::vector<FractureProperty*> const& frac_props,
+	std::vector<JunctionProperty*> const& junction_props,
+	Eigen::Vector3d const& x)
+{
+	std::vector<double> enrichments(frac_props.size());
+	return enrichments;
+}
+
 }  // namespace LIE
 }  // namespace ProcessLib

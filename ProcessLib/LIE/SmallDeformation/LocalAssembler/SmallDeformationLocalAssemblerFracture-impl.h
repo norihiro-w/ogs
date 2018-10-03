@@ -103,6 +103,7 @@ void SmallDeformationLocalAssemblerFracture<
                                            Eigen::VectorXd& local_b,
                                            Eigen::MatrixXd& local_J)
 {
+	//TODO
     auto const& nodal_jump = local_u;
 
     auto const& R = _fracture_property->R;
