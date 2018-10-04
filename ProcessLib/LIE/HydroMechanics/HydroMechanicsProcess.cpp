@@ -299,7 +299,7 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
 
             double const levelsets =
                 levelset_fracture(*_process_data.fracture_property,
-                                          e->getCenterOfGravity().getCoords());
+                                          Eigen::Vector3d(e->getCenterOfGravity().getCoords()));
             (*mesh_prop_levelset)[e->getID()] = levelsets;
         }
 

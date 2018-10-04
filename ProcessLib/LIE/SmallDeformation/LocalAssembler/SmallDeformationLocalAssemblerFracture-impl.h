@@ -57,6 +57,11 @@ SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
     auto mat_id = (*_process_data._mesh_prop_materialIDs)[e.getID()];
     auto frac_id = _process_data._map_materialID_to_fractureID[mat_id];
     _fracture_property = _process_data._vec_fracture_property[frac_id].get();
+    for (auto fid : process_data._vec_ele_connected_fractureIDs[e.getID()])
+    {
+        _fracture_props.push_back(
+            _process_data._vec_fracture_property[fid].get());
+    }
 
     SpatialPosition x_position;
     x_position.setElementID(_element.getID());
@@ -103,8 +108,9 @@ void SmallDeformationLocalAssemblerFracture<
                                            Eigen::VectorXd& local_b,
                                            Eigen::MatrixXd& local_J)
 {
-	//TODO
-    auto const& nodal_jump = local_u;
+    auto const N_DOF_PER_VAR = ShapeFunction::NPOINTS * DisplacementDim;
+    auto const n_fractures = _fracture_props.size();
+    auto const n_junctions = _junction_props.size();
 
     auto const& R = _fracture_property->R;
 
@@ -117,6 +123,14 @@ void SmallDeformationLocalAssemblerFracture<
 
     SpatialPosition x_position;
     x_position.setElementID(_element.getID());
+
+    std::vector<Eigen::VectorXd> vec_nodal_g;
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    {
+        auto sub = const_cast<Eigen::VectorXd&>(local_u).segment<N_DOF_PER_VAR>(
+            N_DOF_PER_VAR * (i + 1));
+        vec_nodal_g.push_back(sub);
+    }
 
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
@@ -132,9 +146,20 @@ void SmallDeformationLocalAssemblerFracture<
         auto const& w_prev = ip_data._w_prev;
         auto& C = ip_data._C;
         auto& state = *ip_data._material_state_variables;
+        auto& N = _secondary_data.N[ip];
+
+        Eigen::Vector3d const ip_physical_coords(computePhysicalCoordinates(_element, N).getCoords());
+        std::vector<double> const levelsets(du_global_enrichments(*_fracture_property, _fracture_props, _junction_props, ip_physical_coords));
+
+        // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
+        Eigen::VectorXd nodal_gap(DisplacementDim, 0);
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        {
+            nodal_gap += levelsets[i] * vec_nodal_g[i];
+        }
 
         // displacement jumps
-        w.noalias() = R * H * nodal_jump;
+        w.noalias() = R * H * nodal_gap;
 
         // total aperture
         ip_data._aperture = ip_data._aperture0 + w[index_normal];

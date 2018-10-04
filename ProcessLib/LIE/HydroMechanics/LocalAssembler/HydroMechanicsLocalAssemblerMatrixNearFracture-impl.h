@@ -77,7 +77,7 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     // remark: this assumes the levelset function is uniform within an element
     auto const& fracture_props = *_process_data.fracture_property;
     double const ele_levelset = levelset_fracture(
-        fracture_props, _element.getCenterOfGravity().getCoords());
+        fracture_props, Eigen::Vector3d(_element.getCenterOfGravity().getCoords()));
 
     if (ele_levelset == 0)
     {
@@ -140,7 +140,7 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     // remark: this assumes the levelset function is uniform within an element
     auto const& fracture_props = *_process_data.fracture_property;
     double const ele_levelset = levelset_fracture(
-        fracture_props, _element.getCenterOfGravity().getCoords());
+        fracture_props, Eigen::Vector3d(_element.getCenterOfGravity().getCoords()));
 
     if (ele_levelset == 0)
     {

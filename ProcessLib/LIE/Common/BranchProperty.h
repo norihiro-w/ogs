@@ -17,10 +17,10 @@ namespace LIE
 {
 struct BranchProperty
 {
-	std::size_t node_id;
+	int node_id;
 	Eigen::Vector3d coords;
-	std::size_t master_fracture_ID;
-	std::size_t slave_fracture_ID;
+	int master_fracture_ID;
+	int slave_fracture_ID;
 	// unit vector normal to the master fracture in a direction to the slave
 	Eigen::Vector3d normal_vector_branch;
 

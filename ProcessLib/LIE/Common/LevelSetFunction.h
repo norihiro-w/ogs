@@ -28,14 +28,7 @@ struct JunctionProperty;
 // double calculateLevelSetFunction(FractureProperty const& fracture_property,
 //                                  double const* x);
 
-double levelset_fracture(FractureProperty const& frac, const double* x);
-
 double levelset_fracture(FractureProperty const& frac, Eigen::Vector3d const& x);
-
-std::vector<double> u_global_enrichments(
-	std::vector<FractureProperty*> const& frac_props,
-	Eigen::Vector3d const& x);
-
 
 std::vector<double> u_global_enrichments(
 	std::vector<FractureProperty*> const& frac_props,
@@ -43,10 +36,7 @@ std::vector<double> u_global_enrichments(
 	Eigen::Vector3d const& x);
 
 std::vector<double> du_global_enrichments(
-	std::vector<FractureProperty*> const& frac_props,
-	Eigen::Vector3d const& x);
-
-std::vector<double> du_global_enrichments(
+	FractureProperty const& this_frac,
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
 	Eigen::Vector3d const& x);

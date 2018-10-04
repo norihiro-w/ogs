@@ -18,11 +18,10 @@ namespace LIE
 
 struct JunctionProperty
 {
-	std::size_t junction_id;
-	std::size_t node_id;
+	int junction_id;
+	int node_id;
 	Eigen::Vector3d coords;
-	std::size_t fracture1_ID;
-	std::size_t fracture2_ID;
+	std::array<int, 2> fracture_IDs;
 
     virtual ~JunctionProperty() = default;
 };
