@@ -128,7 +128,7 @@ void SmallDeformationLocalAssemblerFracture<
     for (unsigned i = 0; i < n_fractures + n_junctions; i++)
     {
         auto sub = const_cast<Eigen::VectorXd&>(local_u).segment<N_DOF_PER_VAR>(
-            N_DOF_PER_VAR * (i + 1));
+            N_DOF_PER_VAR * i);
         vec_nodal_g.push_back(sub);
     }
 
@@ -152,7 +152,8 @@ void SmallDeformationLocalAssemblerFracture<
         std::vector<double> const levelsets(du_global_enrichments(*_fracture_property, _fracture_props, _junction_props, ip_physical_coords));
 
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
-        Eigen::VectorXd nodal_gap(DisplacementDim, 0);
+        Eigen::VectorXd nodal_gap(N_DOF_PER_VAR);
+        nodal_gap.setZero();
         for (unsigned i = 0; i < n_fractures + n_junctions; i++)
         {
             nodal_gap += levelsets[i] * vec_nodal_g[i];
