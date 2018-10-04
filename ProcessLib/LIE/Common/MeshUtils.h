@@ -42,7 +42,9 @@ void getFractureMatrixDataInMesh(
     std::vector<int>& vec_fracture_mat_IDs,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_elements,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_matrix_elements,
-    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes);
+    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes,
+    std::vector<std::pair<std::size_t,std::vector<int>>>& vec_branch_nodeID_matIDs,
+    std::vector<std::pair<std::size_t,std::vector<int>>>& vec_junction_nodeID_matIDs);
 
 }  // namespace LIE
 }  // namespace ProcessLib

@@ -50,10 +50,9 @@ std::unique_ptr<Process> createSmallDeformationProcess(
     std::vector<std::reference_wrapper<ProcessVariable>> per_process_variables;
 
     std::size_t n_var_du = 0;
-    std::size_t n_var_du_junction = 0;
     for (std::string const& pv_name : range)
     {
-        if (pv_name != "displacement" && pv_name.find("displacement_jump") != 0 && pv_name.find("displacement_junction") != 0)
+        if (pv_name != "displacement" && pv_name.find("displacement_jump") != 0)
         {
             OGS_FATAL(
                 "Found a process variable name '%s'. It should be "
@@ -61,8 +60,6 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         }
         if (pv_name.find("displacement_jump") == 0)
             n_var_du++;
-        else if (pv_name.find("displacement_junction") == 0)
-            n_var_du_junction++;
 
         auto variable = std::find_if(variables.cbegin(), variables.cend(),
                                      [&pv_name](ProcessVariable const& v) {
@@ -83,8 +80,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         per_process_variables.emplace_back(const_cast<ProcessVariable&>(*variable));
     }
 
-    auto const n_fractures = n_var_du;
-    if (n_fractures < 1)
+    if (n_var_du < 1)
     {
         OGS_FATAL("No displacement jump variables are specified");
     }
@@ -167,7 +163,7 @@ std::unique_ptr<Process> createSmallDeformationProcess(
         vec_fracture_property.emplace_back(frac_prop);
     }
 
-    if (n_fractures != vec_fracture_property.size())
+    if (n_var_du < vec_fracture_property.size())
     {
         OGS_FATAL(
             "The number of displacement jumps and the number of "

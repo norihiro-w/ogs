@@ -39,7 +39,12 @@ struct FractureProperty
     ProcessLib::Parameter<double> const* aperture0 = nullptr;
     std::vector<BranchProperty*> branches;
 
-    virtual ~FractureProperty() = default;
+    virtual ~FractureProperty()
+    {
+        for (auto*p : branches)
+            delete p;
+        branches.clear();
+    }
 };
 
 struct FracturePropertyHM : public FractureProperty

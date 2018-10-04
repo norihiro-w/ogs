@@ -17,6 +17,7 @@
 #include "MaterialLib/SolidModels/MechanicsBase.h"
 
 #include "ProcessLib/LIE/Common/FractureProperty.h"
+#include "ProcessLib/LIE/Common/JunctionProperty.h"
 
 namespace MeshLib
 {
@@ -51,6 +52,7 @@ struct SmallDeformationProcessData
         : _material{std::move(other._material)},
           _fracture_model{std::move(other._fracture_model)},
           _vec_fracture_property(std::move(other._vec_fracture_property)),
+          _vec_junction_property(std::move(other._vec_junction_property)),
           _reference_temperature(other._reference_temperature)
     {
     }
@@ -69,6 +71,7 @@ struct SmallDeformationProcessData
     std::unique_ptr<MaterialLib::Fracture::FractureModelBase<DisplacementDim>>
         _fracture_model;
     std::vector<std::unique_ptr<FractureProperty>> _vec_fracture_property;
+    std::vector<std::unique_ptr<JunctionProperty>> _vec_junction_property;
 
     MeshLib::PropertyVector<int> const* _mesh_prop_materialIDs = nullptr;
     std::vector<int> _map_materialID_to_fractureID;

@@ -46,12 +46,15 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
               std::move(named_function_caller)),
       _process_data(std::move(process_data))
 {
+    std::vector<std::pair<std::size_t,std::vector<int>>> vec_branch_nodeID_matIDs;
+    std::vector<std::pair<std::size_t,std::vector<int>>> vec_junction_nodeID_matIDs;
     getFractureMatrixDataInMesh(mesh,
                                 _vec_matrix_elements,
                                 _vec_fracture_mat_IDs,
                                 _vec_fracture_elements,
                                 _vec_fracture_matrix_elements,
-                                _vec_fracture_nodes);
+                                _vec_fracture_nodes,
+                                vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
 
     if (_vec_fracture_mat_IDs.size() !=
         _process_data._vec_fracture_property.size())
@@ -86,6 +89,15 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         }
     }
 
+    //
+    for (std::size_t i=0; i<_process_data._vec_ele_connected_fractureIDs.size(); i++)
+    {
+        if (_process_data._vec_ele_connected_fractureIDs[i].size() <= 1)
+            continue;
+
+
+    }
+
     // set fracture property
     for (auto& fracture_prop : _process_data._vec_fracture_property)
     {
@@ -94,6 +106,37 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
             DisplacementDim,
             *_vec_fracture_elements[fracture_prop->fracture_id][0],
             *fracture_prop.get());
+    }
+
+    // set branches
+    for (std::size_t i=0; i<vec_branch_nodeID_matIDs.size(); i++)
+    {
+        auto master_matId = vec_branch_nodeID_matIDs[i].second[0];
+        auto slave_matId = vec_branch_nodeID_matIDs[i].second[1];
+
+        auto& fracture_prop = _process_data._vec_fracture_property[_process_data._map_materialID_to_fractureID[master_matId]];
+        BranchProperty* branch = new BranchProperty();
+        branch->node_id = vec_branch_nodeID_matIDs[i].first;
+        branch->coords = Eigen::Vector3d(mesh.getNode(branch->node_id)->getCoords());
+        branch->master_fracture_ID = _process_data._map_materialID_to_fractureID[master_matId];
+        branch->slave_fracture_ID = _process_data._map_materialID_to_fractureID[slave_matId];
+        //TODO branch->normal_vector_branch;
+
+        fracture_prop->branches.push_back(branch);
+    }
+
+    // set junctions
+    for (std::size_t i=0; i<vec_junction_nodeID_matIDs.size(); i++)
+    {
+        JunctionProperty* junction = new JunctionProperty();
+        junction->junction_id = i;
+        junction->node_id =  vec_junction_nodeID_matIDs[i].first;
+        junction->coords = Eigen::Vector3d(mesh.getNode(junction->node_id)->getCoords());
+        junction->fracture_IDs[0] = vec_junction_nodeID_matIDs[i].first;
+        for (int j=0; j<2; j++)
+            junction->fracture_IDs[j] = _process_data._map_materialID_to_fractureID[vec_junction_nodeID_matIDs[i].second[j]];
+
+        _process_data._vec_junction_property.emplace_back(junction);
     }
 
     //

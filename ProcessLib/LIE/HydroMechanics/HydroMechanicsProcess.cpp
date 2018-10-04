@@ -56,12 +56,15 @@ HydroMechanicsProcess<GlobalDim>::HydroMechanicsProcess(
     std::vector<std::vector<MeshLib::Element*>>
         vec_vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> vec_vec_fracture_nodes;
+    std::vector<std::pair<std::size_t,std::vector<int>>> vec_branch_nodeID_matIDs;
+    std::vector<std::pair<std::size_t,std::vector<int>>> vec_junction_nodeID_matIDs;
     getFractureMatrixDataInMesh(mesh,
                                 _vec_matrix_elements,
                                 vec_fracture_mat_IDs,
                                 vec_vec_fracture_elements,
                                 vec_vec_fracture_matrix_elements,
-                                vec_vec_fracture_nodes);
+                                vec_vec_fracture_nodes,
+                                vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
     _vec_fracture_elements.insert(_vec_fracture_elements.begin(),
                                   vec_vec_fracture_elements[0].begin(),
                                   vec_vec_fracture_elements[0].end());
