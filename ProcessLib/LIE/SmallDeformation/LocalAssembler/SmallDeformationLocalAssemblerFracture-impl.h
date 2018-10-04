@@ -132,6 +132,11 @@ void SmallDeformationLocalAssemblerFracture<
         vec_nodal_g.push_back(sub);
     }
 
+    std::size_t this_frac_local_index = 0;
+    for (; this_frac_local_index<_fracture_props.size(); this_frac_local_index++)
+        if (_fracture_props[this_frac_local_index] == _fracture_property)
+            break;
+
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
         x_position.setIntegrationPoint(ip);
@@ -149,7 +154,7 @@ void SmallDeformationLocalAssemblerFracture<
         auto& N = _secondary_data.N[ip];
 
         Eigen::Vector3d const ip_physical_coords(computePhysicalCoordinates(_element, N).getCoords());
-        std::vector<double> const levelsets(du_global_enrichments(*_fracture_property, _fracture_props, _junction_props, ip_physical_coords));
+        std::vector<double> const levelsets(du_global_enrichments(this_frac_local_index, _fracture_props, _junction_props, ip_physical_coords));
 
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
         Eigen::VectorXd nodal_gap(N_DOF_PER_VAR);

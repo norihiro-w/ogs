@@ -36,7 +36,7 @@ std::vector<double> u_global_enrichments(
 	Eigen::Vector3d const& x);
 
 std::vector<double> du_global_enrichments(
-	FractureProperty const& this_frac,
+	std::size_t this_frac_index,
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
 	Eigen::Vector3d const& x);
