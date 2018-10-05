@@ -15,6 +15,7 @@
 
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
 
+#include "ProcessLib/LIE/Common/BranchProperty.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
 #include "ProcessLib/LIE/SmallDeformation/LocalAssembler/CreateLocalAssemblers.h"
 #include "ProcessLib/LIE/SmallDeformation/LocalAssembler/SmallDeformationLocalAssemblerFracture.h"
@@ -89,15 +90,6 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         }
     }
 
-    //
-    for (std::size_t i=0; i<_process_data._vec_ele_connected_fractureIDs.size(); i++)
-    {
-        if (_process_data._vec_ele_connected_fractureIDs[i].size() <= 1)
-            continue;
-
-
-    }
-
     // set fracture property
     for (auto& fracture_prop : _process_data._vec_fracture_property)
     {
@@ -113,16 +105,25 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
     {
         auto master_matId = vec_branch_nodeID_matIDs[i].second[0];
         auto slave_matId = vec_branch_nodeID_matIDs[i].second[1];
+        auto& master_frac = *_process_data._vec_fracture_property[_process_data._map_materialID_to_fractureID[master_matId]];
+        auto& slave_frac = *_process_data._vec_fracture_property[_process_data._map_materialID_to_fractureID[slave_matId]];
 
-        auto& fracture_prop = _process_data._vec_fracture_property[_process_data._map_materialID_to_fractureID[master_matId]];
         BranchProperty* branch = new BranchProperty();
-        branch->node_id = vec_branch_nodeID_matIDs[i].first;
-        branch->coords = Eigen::Vector3d(mesh.getNode(branch->node_id)->getCoords());
-        branch->master_fracture_ID = _process_data._map_materialID_to_fractureID[master_matId];
-        branch->slave_fracture_ID = _process_data._map_materialID_to_fractureID[slave_matId];
-        //TODO branch->normal_vector_branch;
+        setBranchProperty(
+            *mesh.getNode(vec_branch_nodeID_matIDs[i].first),
+            master_frac, slave_frac, *branch
+        );
+        // branch->node_id = vec_branch_nodeID_matIDs[i].first;
+        // branch->coords = Eigen::Vector3d(mesh.getNode(branch->node_id)->getCoords());
+        // branch->master_fracture_ID = master_frac->fracture_id;
+        // branch->slave_fracture_ID = slave_frac->fracture_id;
+        // // set a normal vector from the master to the slave fracture
+        // Eigen::Vector3d pt_on_branch(_vec_fracture_elements[branch->slave_fracture_ID][0]->getCenterOfGravity().getCoords());
+        // Eigen::Vector3d branch_vector = pt_on_branch - branch->coords;
+        // double sign = (branch_vector.dot(master_frac->normal_vector) < 0) ? -1 : 1;
+        // branch->normal_vector_branch = sign * master_frac->normal_vector;
 
-        fracture_prop->branches.push_back(branch);
+        master_frac.branches.emplace_back(branch);
     }
 
     // set junctions
@@ -170,8 +171,8 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
             std::make_unique<MeshLib::MeshSubset const>(
                 _mesh, _vec_fracture_nodes[i]));
     }
-    // enrichment for junctions
-    //TODO
+    _mesh_subset_junction_nodes =
+        std::make_unique<MeshLib::MeshSubset>(_mesh, _vec_junction_nodes);
 
     // Collect the mesh subsets in a vector.
     std::vector<MeshLib::MeshSubset> all_mesh_subsets;
@@ -183,8 +184,11 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
                         DisplacementDim,
                         [&]() { return *ms; });
     }
+    std::generate_n(std::back_inserter(all_mesh_subsets),
+                    DisplacementDim,
+                    [&]() { return *_mesh_subset_junction_nodes; });
 
-    std::vector<int> const vec_n_components(1 + _vec_fracture_mat_IDs.size(),
+    std::vector<int> const vec_n_components(1 + _vec_fracture_mat_IDs.size() + _vec_junction_nodes.size(),
                                             DisplacementDim);
 
     std::vector<std::vector<MeshLib::Element*> const*> vec_var_elements;
@@ -192,6 +196,10 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
     for (unsigned i = 0; i < _vec_fracture_matrix_elements.size(); i++)
     {
         vec_var_elements.push_back(&_vec_fracture_matrix_elements[i]);
+    }
+    for (unsigned i = 0; i < _vec_junction_fracture_matrix_elements.size(); i++)
+    {
+        vec_var_elements.push_back(&_vec_junction_fracture_matrix_elements[i]);
     }
 
     _local_to_global_index_map =

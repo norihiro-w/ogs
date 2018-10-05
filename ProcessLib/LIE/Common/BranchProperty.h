@@ -28,6 +28,5 @@ struct BranchProperty
 };
 
 
-
 }  // namespace LIE
 }  // namespace ProcessLib
