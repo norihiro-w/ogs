@@ -166,6 +166,8 @@ void findFracutreIntersections(
 
     for (auto& eles : intersected_fracture_elements)
         BaseLib::makeVectorUnique(eles);
+
+     DBUG("-> found %d branchs and %d junctions", vec_branch_nodeID_matIDs.size(), vec_junction_nodeID_matIDs.size());
 }
 
 }  // namespace
