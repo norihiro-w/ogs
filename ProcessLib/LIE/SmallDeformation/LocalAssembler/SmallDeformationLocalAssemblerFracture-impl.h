@@ -143,20 +143,10 @@ void SmallDeformationLocalAssemblerFracture<
         vec_local_b_g.push_back(
             local_b.segment<N_DOF_PER_VAR>(N_DOF_PER_VAR * i));
     }
-    std::vector<BlockMatrixType> vec_local_J_g1g2;
-    std::vector<BlockMatrixType> vec_local_J_g2g1;
     std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_fractures + n_junctions);
     for (unsigned i = 0; i < n_fractures + n_junctions; i++)
     {
-        auto sub_g1g2 = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
-            0, N_DOF_PER_VAR * i);
-        vec_local_J_g1g2.push_back(sub_g1g2);
-
-        auto sub_g2g1 = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
-            N_DOF_PER_VAR * i, 0);
-        vec_local_J_g2g1.push_back(sub_g2g1);
-
-        for (unsigned j = 0; j < n_fractures; j++)
+        for (unsigned j = 0; j < n_fractures + n_junctions; j++)
         {
             auto sub_gg = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
                 N_DOF_PER_VAR * i, N_DOF_PER_VAR * j);
@@ -247,14 +237,6 @@ void SmallDeformationLocalAssemblerFracture<
         // J_[u][u] += H^T*C*H
         for (unsigned i = 0; i < n_fractures + n_junctions; i++)
         {
-            // J_u[u] += B^T * C * (levelset * B)
-            vec_local_J_g1g2[i].noalias() +=
-                H.transpose() * R.transpose() * C * (levelsets[i] * R * H) * integration_weight;
-
-            // J_[u]u += (levelset * B)^T * C * B
-            vec_local_J_g2g1[i].noalias() +=
-                (levelsets[i] * H.transpose() * R.transpose()) * C * R * H * integration_weight;
-
             for (unsigned j = 0; j < n_fractures + n_junctions; j++)
             {
                 // J_[u][u] += (levelset * B)^T * C * (levelset * B)
