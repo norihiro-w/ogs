@@ -46,7 +46,7 @@ private:
 
     MeshLib::Mesh const& _org_mesh;
     std::unique_ptr<MeshLib::Mesh> _output_mesh;
-    std::map<std::size_t, std::size_t> _map_dup_newNodeIDs;
+    std::map<std::size_t, std::vector<std::size_t>> _map_dup_newNodeIDs;
 };
 
 }  // namespace LIE

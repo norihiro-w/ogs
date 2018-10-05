@@ -44,11 +44,32 @@ PostProcessTool::PostProcessTool(
             auto duplicated_node =
                 new MeshLib::Node(org_node->getCoords(), new_nodes.size());
             new_nodes.push_back(duplicated_node);
-            if (_map_dup_newNodeIDs.count(org_node->getID()) > 0)
-                OGS_FATAL("Intersection of fractures is not supported");
-            _map_dup_newNodeIDs[org_node->getID()] = duplicated_node->getID();
+            _map_dup_newNodeIDs[org_node->getID()].push_back(duplicated_node->getID());
         }
     }
+    // at a junction one more duplicate is needed
+    for (auto entry : _map_dup_newNodeIDs)
+    {
+        if (entry.second.size()==1)
+            continue;
+
+        auto* org_node = org_mesh.getNode(entry.first);
+        unsigned n_frac_eles = 0;
+        for (auto* e : org_node->getElements())
+            if (e->getDimension() == (org_mesh.getDimension()-1))
+                n_frac_eles++;
+
+        if (n_frac_eles>3) { // junction
+            auto duplicated_node =
+                new MeshLib::Node(org_node->getCoords(), new_nodes.size());
+            new_nodes.push_back(duplicated_node);
+            _map_dup_newNodeIDs[org_node->getID()].push_back(duplicated_node->getID());
+        }
+    }
+
+    // for usage count
+    auto const nnodes_old = org_mesh.getNodes().size();
+    std::vector<bool> new_nodes_assigned(new_nodes.size()-nnodes_old, false);
 
     // split elements using the new duplicated nodes
     for (unsigned fracture_id = 0;
@@ -90,7 +111,14 @@ PostProcessTool::PostProcessTool(
                 if (itr2 == vec_fracture_nodes.end())
                     continue;
 
-                e->setNode(i, new_nodes[itr->second]);
+                for (auto new_node_id : itr->second)
+                {
+                    if (new_nodes_assigned[new_node_id - nnodes_old])
+                        continue;
+                    e->setNode(i, new_nodes[new_node_id]);
+                    new_nodes_assigned[new_node_id - nnodes_old] = true;
+                    break;
+                }
             }
         }
     }
@@ -174,8 +202,9 @@ void PostProcessTool::copyProperties()
             for (auto itr : _map_dup_newNodeIDs)
             {
                 for (int j = 0; j < n_dest_comp; j++)
-                    (*dest_prop)[itr.second * n_dest_comp + j] =
-                        (*dest_prop)[itr.first * n_dest_comp + j];
+                    for (unsigned k = 0; k < itr.second.size(); k++)
+                        (*dest_prop)[itr.second[k] * n_dest_comp + j] =
+                            (*dest_prop)[itr.first * n_dest_comp + j];
             }
         }
         else if (src_prop->getMeshItemType() == MeshLib::MeshItemType::Cell)

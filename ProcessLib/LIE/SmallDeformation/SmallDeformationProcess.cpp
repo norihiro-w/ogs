@@ -394,25 +394,75 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         _process_data._mesh_prop_strain_yz = mesh_prop_epsilon_yz;
     }
 
-    for (auto const& fracture_prop : _process_data._vec_fracture_property)
-    {
-        auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
-            const_cast<MeshLib::Mesh&>(mesh),
-            "levelset" + std::to_string(fracture_prop->fracture_id + 1),
-            MeshLib::MeshItemType::Cell, 1);
-        mesh_prop_levelset->resize(mesh.getNumberOfElements());
-        for (MeshLib::Element const* e : _mesh.getElements())
-        {
-            if (e->getDimension() < DisplacementDim)
-            {
-                continue;
-            }
+    // for (auto const& fracture_prop : _process_data._vec_fracture_property)
+    // {
+    //     auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
+    //         const_cast<MeshLib::Mesh&>(mesh),
+    //         "levelset" + std::to_string(fracture_prop->fracture_id + 1),
+    //         MeshLib::MeshItemType::Cell, 1);
+    //     mesh_prop_levelset->resize(mesh.getNumberOfElements());
+    //     for (MeshLib::Element const* e : _mesh.getElements())
+    //     {
+    //         if (e->getDimension() < DisplacementDim)
+    //         {
+    //             continue;
+    //         }
 
-            double const levelsets = levelset_fracture(
-                *fracture_prop, Eigen::Vector3d(e->getCenterOfGravity().getCoords()));
-            (*mesh_prop_levelset)[e->getID()] = levelsets;
+    //         double const levelsets = levelset_fracture(
+    //             *fracture_prop, Eigen::Vector3d(e->getCenterOfGravity().getCoords()));
+    //         (*mesh_prop_levelset)[e->getID()] = levelsets;
+    //     }
+    // }
+    for (MeshLib::Element const* e : _mesh.getElements())
+    {
+        if (e->getDimension() < DisplacementDim)
+            continue;
+
+        Eigen::Vector3d const pt(e->getCenterOfGravity().getCoords());
+        std::vector<FractureProperty*> e_fracture_props;
+        std::unordered_map<int,int> e_fracID_to_local;
+        unsigned tmpi = 0;
+        for (auto fid : _process_data._vec_ele_connected_fractureIDs[e->getID()])
+        {
+            e_fracture_props.push_back(_process_data._vec_fracture_property[fid]);
+            e_fracID_to_local.insert({fid, tmpi});
+        }
+        std::vector<JunctionProperty*> e_junction_props;
+        std::unordered_map<int,int> e_juncID_to_local;
+        tmpi = 0;
+        for (auto fid : _process_data._vec_ele_connected_junctionIDs[e->getID()])
+        {
+            e_junction_props.push_back(_process_data._vec_junction_property[fid]);
+            e_juncID_to_local.insert({fid, tmpi});
+        }
+        std::vector<double> const levelsets(
+            u_global_enrichments(e_fracture_props, e_junction_props,
+                                 e_fracID_to_local, pt));
+
+        for (unsigned i = 0; i < e_fracture_props.size(); i++)
+        {
+            auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
+                const_cast<MeshLib::Mesh&>(mesh),
+                "levelset" +
+                    std::to_string(e_fracture_props[i]->fracture_id + 1),
+                MeshLib::MeshItemType::Cell, 1);
+            mesh_prop_levelset->resize(mesh.getNumberOfElements());
+            (*mesh_prop_levelset)[e->getID()] = levelsets[i];
+        }
+        for (unsigned i = 0; i < e_junction_props.size(); i++)
+        {
+            auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
+                const_cast<MeshLib::Mesh&>(mesh),
+                "levelset" +
+                    std::to_string(e_junction_props[i]->junction_id + 1 +
+                                   _process_data._vec_fracture_property.size()),
+                MeshLib::MeshItemType::Cell, 1);
+            mesh_prop_levelset->resize(mesh.getNumberOfElements());
+            (*mesh_prop_levelset)[e->getID()] =
+                levelsets[i + e_fracture_props.size()];
         }
     }
+
 
     auto mesh_prop_w_n = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "w_n", MeshLib::MeshItemType::Cell,
