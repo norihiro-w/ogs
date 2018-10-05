@@ -63,46 +63,69 @@ void findFracutreIntersections(
     MeshLib::Mesh const& mesh,
     std::vector<int> const& vec_fracture_mat_IDs,
     std::vector<std::vector<MeshLib::Node*>> const& vec_fracture_nodes,
+    std::vector<std::vector<MeshLib::Element*>>& intersected_fracture_elements,
     std::vector<std::pair<std::size_t,std::vector<int>>>& vec_branch_nodeID_matIDs,
     std::vector<std::pair<std::size_t,std::vector<int>>>& vec_junction_nodeID_matIDs
     )
 {
+    auto const n_fractures = vec_fracture_mat_IDs.size();
+    std::map<unsigned, unsigned> matID_to_fid;
+    for (unsigned i=0; i<n_fractures; i++)
+        matID_to_fid[vec_fracture_mat_IDs[i]] = i;
+
     // make a vector all fracture nodes
     std::vector<std::size_t> all_fracture_nodes;
-    for (unsigned mat_id = 0; mat_id < vec_fracture_mat_IDs.size(); mat_id++)
-        for (auto* node : vec_fracture_nodes[mat_id])
+    for (auto& vec : vec_fracture_nodes)
+        for (auto* node : vec)
             all_fracture_nodes.push_back(node->getID());
 
     // create a table of a node id and connected material IDs
     std::map<std::size_t, std::vector<std::size_t>> frac_nodeID_to_matIDs;
-    for (unsigned mat_id = 0; mat_id < vec_fracture_mat_IDs.size(); mat_id++)
-        for (auto* node : vec_fracture_nodes[mat_id])
-            frac_nodeID_to_matIDs[node->getID()].push_back(mat_id);
+    for (unsigned i=0; i<n_fractures; i++)
+        for (auto* node : vec_fracture_nodes[i])
+            frac_nodeID_to_matIDs[node->getID()].push_back(vec_fracture_mat_IDs[i]);
 
     auto opt_material_ids(
         mesh.getProperties().getPropertyVector<int>("MaterialIDs"));
 
     // find branch/junction nodes which connect to multiple fractures
+    intersected_fracture_elements.resize(n_fractures);
     for (auto entry : frac_nodeID_to_matIDs)
     {
         auto nodeID = entry.first;
         auto const* node = mesh.getNode(entry.first);
         auto const& matIDs = entry.second;
-        if (matIDs.size() == 1)
-            continue;
+        if (matIDs.size() < 2)
+            continue; // no intersection
+
+        std::vector<MeshLib::Element*> conn_fracture_elements;
+        {
+            for (auto const* e : node->getElements())
+                if (e->getDimension() == (mesh.getDimension()-1))
+                    conn_fracture_elements.push_back(
+                        const_cast<MeshLib::Element*>(e));
+        }
 
         std::map<int,int> vec_matID_counts;
         {
             for (auto matid : matIDs)
                 vec_matID_counts[matid] = 0;
 
-            auto const& connected_elements = node->getElements();
-            for (auto const* e : connected_elements)
+            for (auto const* e : conn_fracture_elements)
             {
-                if (e->getDimension() == mesh.getDimension())
-                    continue;
                 auto matid = (*opt_material_ids)[e->getID()];
                 vec_matID_counts[matid]++;
+            }
+        }
+
+        for (auto matid : matIDs)
+        {
+            auto fid =  matID_to_fid[matid];
+            for (auto* e : conn_fracture_elements)
+            {
+                auto e_matid = (*opt_material_ids)[e->getID()];
+                if (matID_to_fid[e_matid] != fid) // only slave elements
+                    intersected_fracture_elements[fid].push_back(e);
             }
         }
 
@@ -140,6 +163,9 @@ void findFracutreIntersections(
             vec_junction_nodeID_matIDs.push_back(std::make_pair(nodeID,matIDs));
         }
     }
+
+    for (auto& eles : intersected_fracture_elements)
+        BaseLib::makeVectorUnique(eles);
 }
 
 }  // namespace
@@ -215,14 +241,17 @@ void getFractureMatrixDataInMesh(
     }
 
     // find branch/junction nodes which connect to multiple fractures
+    std::vector<std::vector<MeshLib::Element*>> intersected_fracture_elements;
     findFracutreIntersections(
         mesh, vec_fracture_mat_IDs, vec_fracture_nodes,
+        intersected_fracture_elements,
         vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
 
     // create a vector fracture elements and connected matrix elements,
     // which are passed to a DoF table
-    for (auto fracture_elements : vec_fracture_elements)
+    for (unsigned fid = 0; fid<vec_fracture_elements.size(); fid++)
     {
+        auto const& fracture_elements = vec_fracture_elements[fid];
         std::vector<MeshLib::Element*> vec_ele;
         // first, collect matrix elements
         for (MeshLib::Element* e : fracture_elements)
@@ -252,6 +281,9 @@ void getFractureMatrixDataInMesh(
 
         // second, append fracture elements
         std::copy(fracture_elements.begin(), fracture_elements.end(),
+                  std::back_inserter(vec_ele));
+        // thirdly, append intersected fracture elements
+        std::copy(intersected_fracture_elements[fid].begin(), intersected_fracture_elements[fid].end(),
                   std::back_inserter(vec_ele));
 
         vec_fracture_matrix_elements.push_back(vec_ele);

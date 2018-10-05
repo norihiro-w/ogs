@@ -31,13 +31,14 @@ SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
                                        DisplacementDim>::
     SmallDeformationLocalAssemblerFracture(
         MeshLib::Element const& e,
+        std::size_t const n_variables,
         std::size_t const /*local_matrix_size*/,
         std::vector<unsigned> const& dofIndex_to_localIndex,
         bool const is_axially_symmetric,
         unsigned const integration_order,
         SmallDeformationProcessData<DisplacementDim>& process_data)
     : SmallDeformationLocalAssemblerInterface(
-          ShapeFunction::NPOINTS * DisplacementDim,  // no intersection
+          n_variables * ShapeFunction::NPOINTS * DisplacementDim,
           dofIndex_to_localIndex),
       _process_data(process_data),
       _integration_method(integration_order),

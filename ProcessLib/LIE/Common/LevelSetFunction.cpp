@@ -99,9 +99,9 @@ std::vector<double> du_global_enrichments(
 	enrichments[this_frac_index] = 1.0;
 
 	//fractures possibly with branches
-	for (auto const* frac : frac_props)
+	if (frac_props.size()>1)
 	{
-		for (auto const& branch : frac->branches)
+		for (auto const& branch : this_frac.branches)
 		{
 			if (branch->master_fracture_ID != this_frac.fracture_id)
 				continue;
