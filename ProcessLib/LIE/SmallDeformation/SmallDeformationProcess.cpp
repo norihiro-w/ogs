@@ -109,19 +109,8 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         auto& slave_frac = *_process_data._vec_fracture_property[_process_data._map_materialID_to_fractureID[slave_matId]];
 
         BranchProperty* branch = new BranchProperty();
-        setBranchProperty(
-            *mesh.getNode(vec_branch_nodeID_matIDs[i].first),
-            master_frac, slave_frac, *branch
-        );
-        // branch->node_id = vec_branch_nodeID_matIDs[i].first;
-        // branch->coords = Eigen::Vector3d(mesh.getNode(branch->node_id)->getCoords());
-        // branch->master_fracture_ID = master_frac->fracture_id;
-        // branch->slave_fracture_ID = slave_frac->fracture_id;
-        // // set a normal vector from the master to the slave fracture
-        // Eigen::Vector3d pt_on_branch(_vec_fracture_elements[branch->slave_fracture_ID][0]->getCenterOfGravity().getCoords());
-        // Eigen::Vector3d branch_vector = pt_on_branch - branch->coords;
-        // double sign = (branch_vector.dot(master_frac->normal_vector) < 0) ? -1 : 1;
-        // branch->normal_vector_branch = sign * master_frac->normal_vector;
+        setBranchProperty(*mesh.getNode(vec_branch_nodeID_matIDs[i].first),
+                          master_frac, slave_frac, *branch);
 
         master_frac.branches.emplace_back(branch);
     }
@@ -130,14 +119,26 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
     for (std::size_t i=0; i<vec_junction_nodeID_matIDs.size(); i++)
     {
         JunctionProperty* junction = new JunctionProperty();
-        junction->junction_id = i;
-        junction->node_id =  vec_junction_nodeID_matIDs[i].first;
-        junction->coords = Eigen::Vector3d(mesh.getNode(junction->node_id)->getCoords());
-        junction->fracture_IDs[0] = vec_junction_nodeID_matIDs[i].first;
-        for (int j=0; j<2; j++)
-            junction->fracture_IDs[j] = _process_data._map_materialID_to_fractureID[vec_junction_nodeID_matIDs[i].second[j]];
+        std::vector<int> fracIDs;
+        for (auto matid : vec_junction_nodeID_matIDs[i].second)
+            fracIDs.push_back(_process_data._map_materialID_to_fractureID[matid]);
+        setJunctionProperty(i, *mesh.getNode(junction->node_id), fracIDs,
+                            *junction);
 
         _process_data._vec_junction_property.emplace_back(junction);
+    }
+
+    // create a table of connected junction IDs for each element
+    _process_data._vec_ele_connected_junctionIDs.resize(
+        mesh.getNumberOfElements());
+    for (unsigned i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        auto node = mesh.getNode(vec_junction_nodeID_matIDs[i].first);
+        for (auto e : node->getElements())
+        {
+            _process_data._vec_ele_connected_junctionIDs[e->getID()].push_back(
+                i);
+        }
     }
 
     //

@@ -234,6 +234,7 @@ private:
     SmallDeformationProcessData<DisplacementDim>& _process_data;
     std::vector<FractureProperty*> _fracture_props;
     std::vector<JunctionProperty*> _junction_props;
+    std::unordered_map<int,int> _fracID_to_local;
     FractureProperty const* _fracture_property = nullptr;
 
     std::vector<IntegrationPointDataFracture<HMatricesType, DisplacementDim>,

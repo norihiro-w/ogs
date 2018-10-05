@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 
 #include <Eigen/Eigen>
@@ -33,12 +34,14 @@ double levelset_fracture(FractureProperty const& frac, Eigen::Vector3d const& x)
 std::vector<double> u_global_enrichments(
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
+	std::unordered_map<int,int> const& fracID_to_local,
 	Eigen::Vector3d const& x);
 
 std::vector<double> du_global_enrichments(
 	std::size_t this_frac_index,
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
+	std::unordered_map<int,int> const& fracID_to_local,
 	Eigen::Vector3d const& x);
 
 }  // namespace LIE

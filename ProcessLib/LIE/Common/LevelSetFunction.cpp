@@ -22,6 +22,12 @@ inline double Heaviside(double v)
     return (v < 0.0) ? 0.0 : 1.0;
 }
 
+template <class T_VEC, class T_V>
+inline bool inList(T_VEC const& vec, T_V const& v)
+{
+	return (std::find(vec.begin(), vec.end(), v) != vec.end());
+}
+
 }  // namespace
 
 namespace ProcessLib
@@ -43,6 +49,7 @@ double levelset_branch(BranchProperty const& branch, Eigen::Vector3d const& x)
 std::vector<double> u_global_enrichments(
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
+	std::unordered_map<int,int> const& fracID_to_local,
 	Eigen::Vector3d const& x)
 {
 	//pre-calculate levelsets for all fractures
@@ -65,8 +72,9 @@ std::vector<double> u_global_enrichments(
 	for (std::size_t i=0; i<junction_props.size(); i++)
 	{
 		auto const* junction = junction_props[i];
-		//TODO map a frac ID to a local index
-		double enrich = levelsets[junction->fracture_IDs[0]]*levelsets[junction->fracture_IDs[1]];
+		auto fid1 = fracID_to_local.at(junction->fracture_IDs[0]);
+		auto fid2 = fracID_to_local.at(junction->fracture_IDs[1]);
+		double enrich = levelsets[fid1]*levelsets[fid2];
 		enrichments[i + frac_props.size()] *= enrich;
 	}
 
@@ -78,6 +86,7 @@ std::vector<double> du_global_enrichments(
 	std::size_t this_frac_index,
 	std::vector<FractureProperty*> const& frac_props,
 	std::vector<JunctionProperty*> const& junction_props,
+	std::unordered_map<int,int> const& fracID_to_local,
 	Eigen::Vector3d const& x)
 {
 	auto const& this_frac = *frac_props[this_frac_index];
@@ -98,22 +107,23 @@ std::vector<double> du_global_enrichments(
 				continue;
 
 			double singned = boost::math::sign(this_frac.normal_vector.dot(branch->normal_vector_branch));
-			//TODO slave frac ID to local index
-			double enrich = singned * Heaviside(levelsets[branch->slave_fracture_ID]);
-			enrichments[branch->slave_fracture_ID] = enrich;
+			auto slave_fid = fracID_to_local.at(branch->slave_fracture_ID);
+			double enrich = singned * Heaviside(levelsets[slave_fid]);
+			enrichments[slave_fid] = enrich;
 		}
 	}
 
 	// junctions
-	for (auto const* junction : junction_props)
+	for (unsigned i=0; i<junction_props.size(); i++)
 	{
-		if (std::find(junction->fracture_IDs.begin(), junction->fracture_IDs.end(), this_frac.fracture_id)
-			== junction->fracture_IDs.end())
+		auto const* junction = junction_props[i];
+		if (!inList(junction->fracture_IDs, this_frac.fracture_id))
 			continue;
 
-		auto other_frac_id = (junction->fracture_IDs[0]==this_frac.fracture_id) ? junction->fracture_IDs[1] : junction->fracture_IDs[0];
-		double enrich = Heaviside(levelsets[other_frac_id]);
-		enrichments[junction->junction_id + frac_props.size()] *= enrich;
+		auto another_frac_id = (junction->fracture_IDs[0]==this_frac.fracture_id) ? junction->fracture_IDs[1] : junction->fracture_IDs[0];
+		auto fid = fracID_to_local.at(another_frac_id);
+		double enrich = Heaviside(levelsets[fid]);
+		enrichments[i + frac_props.size()] *= enrich;
 	}
 
 

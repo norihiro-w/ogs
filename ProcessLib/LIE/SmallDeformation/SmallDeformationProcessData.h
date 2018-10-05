@@ -78,6 +78,7 @@ struct SmallDeformationProcessData
 
     // a table of connected fracture IDs for each element
     std::vector<std::vector<int>> _vec_ele_connected_fractureIDs;
+    std::vector<std::vector<int>> _vec_ele_connected_junctionIDs;
 
     double dt = 0.0;
     double t = 0.0;
