@@ -116,7 +116,12 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         setBranchProperty(*mesh.getNode(vec_branch_nodeID_matIDs[i].first),
                           master_frac, slave_frac, *branch);
 
-        master_frac.branches.emplace_back(branch);
+        master_frac.branches_master.emplace_back(branch);
+
+        BranchProperty* branch2 = new BranchProperty();
+        setBranchProperty(*mesh.getNode(vec_branch_nodeID_matIDs[i].first),
+                          master_frac, slave_frac, *branch2);
+        slave_frac.branches_slave.emplace_back(branch2);
     }
 
     // set junctions
@@ -424,7 +429,8 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         unsigned tmpi = 0;
         for (auto fid : _process_data._vec_ele_connected_fractureIDs[e->getID()])
         {
-            e_fracture_props.push_back(_process_data._vec_fracture_property[fid]);
+            e_fracture_props.push_back(_process_data
+                    ._vec_fracture_property[fid].get());
             e_fracID_to_local.insert({fid, tmpi});
         }
         std::vector<JunctionProperty*> e_junction_props;
@@ -432,7 +438,8 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         tmpi = 0;
         for (auto fid : _process_data._vec_ele_connected_junctionIDs[e->getID()])
         {
-            e_junction_props.push_back(_process_data._vec_junction_property[fid]);
+            e_junction_props.push_back(
+                _process_data._vec_junction_property[fid].get());
             e_juncID_to_local.insert({fid, tmpi});
         }
         std::vector<double> const levelsets(

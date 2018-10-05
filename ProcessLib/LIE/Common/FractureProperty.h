@@ -39,7 +39,8 @@ struct FractureProperty
     Eigen::MatrixXd R;
     /// Initial aperture
     ProcessLib::Parameter<double> const* aperture0 = nullptr;
-    std::vector<std::unique_ptr<BranchProperty>> branches;
+    std::vector<std::unique_ptr<BranchProperty>> branches_master;
+    std::vector<std::unique_ptr<BranchProperty>> branches_slave;
 
     virtual ~FractureProperty() = default;
 };

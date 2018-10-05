@@ -201,7 +201,7 @@ void SmallDeformationLocalAssemblerFracture<
         Eigen::Vector3d const ip_physical_coords(
             computePhysicalCoordinates(_element, N).getCoords());
         std::vector<double> const levelsets(du_global_enrichments(
-            this_frac_local_index, _fracture_props, _junction_props,
+            _fracture_property->fracture_id, _fracture_props, _junction_props,
             _fracID_to_local, ip_physical_coords));
 
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
@@ -303,7 +303,7 @@ void SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
         Eigen::Vector3d const ip_physical_coords(
             computePhysicalCoordinates(_element, N).getCoords());
         std::vector<double> const levelsets(du_global_enrichments(
-            this_frac_local_index, _fracture_props, _junction_props,
+            _fracture_property->fracture_id, _fracture_props, _junction_props,
             _fracID_to_local, ip_physical_coords));
 
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)

@@ -19,6 +19,7 @@
 #include "NumLib/DOF/DOFTableUtil.h"
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
 
+#include "ProcessLib/LIE/Common/BranchProperty.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
 #include "ProcessLib/Parameter/MeshElementParameter.h"
 
