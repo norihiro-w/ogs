@@ -120,17 +120,49 @@ void SmallDeformationLocalAssemblerFracture<
     auto const n_fractures = _fracture_props.size();
     auto const n_junctions = _junction_props.size();
 
-    auto const& R = _fracture_property->R;
+    //--------------------------------------------------------------------------------------
+    // prepare sub vectors, matrices for regular displacement (u) and
+    // displacement jumps (g)
+    //
+    // example with two fractures with one intersection:
+    // b = |b(g1)|
+    //     |b(g2)|
+    //
+    // J = |J(g1,g1) J(g1,g2)|
+    //     |J(g2,g1) J(g2,g2)|
+    //--------------------------------------------------------------------------------------
 
-    // the index of a normal (normal to a fracture plane) component
-    // in a displacement vector
-    int const index_normal = DisplacementDim - 1;
+    using BlockVectorType =
+        typename Eigen::VectorXd::FixedSegmentReturnType<N_DOF_PER_VAR>::Type;
+    using BlockMatrixType =
+        Eigen::Block<Eigen::MatrixXd, N_DOF_PER_VAR, N_DOF_PER_VAR>;
 
-    unsigned const n_integration_points =
-        _integration_method.getNumberOfPoints();
+    std::vector<BlockVectorType> vec_local_b_g;
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    {
+        vec_local_b_g.push_back(
+            local_b.segment<N_DOF_PER_VAR>(N_DOF_PER_VAR * i));
+    }
+    std::vector<BlockMatrixType> vec_local_J_g1g2;
+    std::vector<BlockMatrixType> vec_local_J_g2g1;
+    std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_fractures + n_junctions);
+    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    {
+        auto sub_g1g2 = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
+            0, N_DOF_PER_VAR * i);
+        vec_local_J_g1g2.push_back(sub_g1g2);
 
-    SpatialPosition x_position;
-    x_position.setElementID(_element.getID());
+        auto sub_g2g1 = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
+            N_DOF_PER_VAR * i, 0);
+        vec_local_J_g2g1.push_back(sub_g2g1);
+
+        for (unsigned j = 0; j < n_fractures; j++)
+        {
+            auto sub_gg = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
+                N_DOF_PER_VAR * i, N_DOF_PER_VAR * j);
+            vec_local_J_gg[i].push_back(sub_gg);
+        }
+    }
 
     std::vector<Eigen::VectorXd> vec_nodal_g;
     for (unsigned i = 0; i < n_fractures + n_junctions; i++)
@@ -139,6 +171,21 @@ void SmallDeformationLocalAssemblerFracture<
             N_DOF_PER_VAR * i);
         vec_nodal_g.push_back(sub);
     }
+
+
+    //------------------------------------------------
+    // integration
+    //------------------------------------------------
+    // the index of a normal (normal to a fracture plane) component
+    // in a displacement vector
+    int const index_normal = DisplacementDim - 1;
+    auto const& R = _fracture_property->R;
+
+    unsigned const n_integration_points =
+        _integration_method.getNumberOfPoints();
+
+    SpatialPosition x_position;
+    x_position.setElementID(_element.getID());
 
     std::size_t this_frac_local_index = 0;
     for (; this_frac_local_index<_fracture_props.size(); this_frac_local_index++)
@@ -191,12 +238,30 @@ void SmallDeformationLocalAssemblerFracture<
             w_prev, w, sigma_prev, sigma, C, state);
 
         // r_[u] += H^T*Stress
-        local_b.noalias() -=
-            H.transpose() * R.transpose() * sigma * integration_weight;
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        {
+            vec_local_b_g[i].noalias() -=
+                levelsets[i] * H.transpose() * R.transpose() * sigma * integration_weight;
+        }
 
         // J_[u][u] += H^T*C*H
-        local_J.noalias() +=
-            H.transpose() * R.transpose() * C * R * H * integration_weight;
+        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        {
+            // J_u[u] += B^T * C * (levelset * B)
+            vec_local_J_g1g2[i].noalias() +=
+                H.transpose() * R.transpose() * C * (levelsets[i] * R * H) * integration_weight;
+
+            // J_[u]u += (levelset * B)^T * C * B
+            vec_local_J_g2g1[i].noalias() +=
+                (levelsets[i] * H.transpose() * R.transpose()) * C * R * H * integration_weight;
+
+            for (unsigned j = 0; j < n_fractures + n_junctions; j++)
+            {
+                // J_[u][u] += (levelset * B)^T * C * (levelset * B)
+                vec_local_J_gg[i][j].noalias() +=
+                    (levelsets[i] * H.transpose() * R.transpose()) * C * (levelsets[j] * R * H) * integration_weight;
+            }
+        }
     }
 }
 
