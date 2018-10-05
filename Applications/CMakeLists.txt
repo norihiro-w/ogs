@@ -4,6 +4,7 @@ add_subdirectory(ApplicationsLib)
 add_subdirectory(DataHolderLib)
 add_subdirectory(FileIO)
 
+add_subdirectory(Utils/PostProcessing)
 if(OGS_BUILD_UTILS AND NOT IS_SUBPROJECT)
     add_subdirectory(Utils)
 elseif(OGS_BUILD_GUI)
