@@ -125,13 +125,18 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
     }
 
     // set junctions
-    for (std::size_t i=0; i<vec_junction_nodeID_matIDs.size(); i++)
+    for (std::size_t i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        _vec_junction_nodes.push_back(
+            const_cast<MeshLib::Node*>(_mesh.getNode(vec_junction_nodeID_matIDs[i].first)));
+    }
+    for (std::size_t i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
     {
         JunctionProperty* junction = new JunctionProperty();
         std::vector<int> fracIDs;
         for (auto matid : vec_junction_nodeID_matIDs[i].second)
             fracIDs.push_back(_process_data._map_materialID_to_fractureID[matid]);
-        setJunctionProperty(i, *mesh.getNode(junction->node_id), fracIDs,
+        setJunctionProperty(i, *mesh.getNode(vec_junction_nodeID_matIDs[i].first), fracIDs,
                             *junction);
 
         _process_data._vec_junction_property.emplace_back(junction);
@@ -147,6 +152,18 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         {
             _process_data._vec_ele_connected_junctionIDs[e->getID()].push_back(
                 i);
+        }
+    }
+
+    // create a table of junction node and connected elements
+    _vec_junction_fracture_matrix_elements.resize(
+        vec_junction_nodeID_matIDs.size());
+    for (unsigned i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        auto node = mesh.getNode(vec_junction_nodeID_matIDs[i].first);
+        for (auto e : node->getElements())
+        {
+            _vec_junction_fracture_matrix_elements[i].push_back(e);
         }
     }
 
@@ -181,6 +198,7 @@ void SmallDeformationProcess<DisplacementDim>::constructDofTable()
             std::make_unique<MeshLib::MeshSubset const>(
                 _mesh, _vec_fracture_nodes[i]));
     }
+    // enrichment for junctions
     _mesh_subset_junction_nodes =
         std::make_unique<MeshLib::MeshSubset>(_mesh, _vec_junction_nodes);
 
@@ -399,25 +417,6 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         _process_data._mesh_prop_strain_yz = mesh_prop_epsilon_yz;
     }
 
-    // for (auto const& fracture_prop : _process_data._vec_fracture_property)
-    // {
-    //     auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
-    //         const_cast<MeshLib::Mesh&>(mesh),
-    //         "levelset" + std::to_string(fracture_prop->fracture_id + 1),
-    //         MeshLib::MeshItemType::Cell, 1);
-    //     mesh_prop_levelset->resize(mesh.getNumberOfElements());
-    //     for (MeshLib::Element const* e : _mesh.getElements())
-    //     {
-    //         if (e->getDimension() < DisplacementDim)
-    //         {
-    //             continue;
-    //         }
-
-    //         double const levelsets = levelset_fracture(
-    //             *fracture_prop, Eigen::Vector3d(e->getCenterOfGravity().getCoords()));
-    //         (*mesh_prop_levelset)[e->getID()] = levelsets;
-    //     }
-    // }
     for (MeshLib::Element const* e : _mesh.getElements())
     {
         if (e->getDimension() < DisplacementDim)
@@ -431,7 +430,7 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         {
             e_fracture_props.push_back(_process_data
                     ._vec_fracture_property[fid].get());
-            e_fracID_to_local.insert({fid, tmpi});
+            e_fracID_to_local.insert({fid, tmpi++});
         }
         std::vector<JunctionProperty*> e_junction_props;
         std::unordered_map<int,int> e_juncID_to_local;
@@ -440,7 +439,7 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
         {
             e_junction_props.push_back(
                 _process_data._vec_junction_property[fid].get());
-            e_juncID_to_local.insert({fid, tmpi});
+            e_juncID_to_local.insert({fid, tmpi++});
         }
         std::vector<double> const levelsets(
             u_global_enrichments(e_fracture_props, e_junction_props,

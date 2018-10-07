@@ -119,6 +119,7 @@ void SmallDeformationLocalAssemblerFracture<
     auto const N_DOF_PER_VAR = ShapeFunction::NPOINTS * DisplacementDim;
     auto const n_fractures = _fracture_props.size();
     auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
     //--------------------------------------------------------------------------------------
     // prepare sub vectors, matrices for regular displacement (u) and
@@ -138,15 +139,15 @@ void SmallDeformationLocalAssemblerFracture<
         Eigen::Block<Eigen::MatrixXd, N_DOF_PER_VAR, N_DOF_PER_VAR>;
 
     std::vector<BlockVectorType> vec_local_b_g;
-    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    for (unsigned i = 0; i < n_enrich_var; i++)
     {
         vec_local_b_g.push_back(
             local_b.segment<N_DOF_PER_VAR>(N_DOF_PER_VAR * i));
     }
-    std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_fractures + n_junctions);
-    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    std::vector<std::vector<BlockMatrixType>> vec_local_J_gg(n_enrich_var);
+    for (unsigned i = 0; i < n_enrich_var; i++)
     {
-        for (unsigned j = 0; j < n_fractures + n_junctions; j++)
+        for (unsigned j = 0; j < n_enrich_var; j++)
         {
             auto sub_gg = local_J.block<N_DOF_PER_VAR, N_DOF_PER_VAR>(
                 N_DOF_PER_VAR * i, N_DOF_PER_VAR * j);
@@ -155,7 +156,7 @@ void SmallDeformationLocalAssemblerFracture<
     }
 
     std::vector<Eigen::VectorXd> vec_nodal_g;
-    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    for (unsigned i = 0; i < n_enrich_var; i++)
     {
         auto sub = const_cast<Eigen::VectorXd&>(local_u).segment<N_DOF_PER_VAR>(
             N_DOF_PER_VAR * i);
@@ -207,7 +208,7 @@ void SmallDeformationLocalAssemblerFracture<
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
         Eigen::VectorXd nodal_gap(N_DOF_PER_VAR);
         nodal_gap.setZero();
-        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        for (unsigned i = 0; i < n_enrich_var; i++)
         {
             nodal_gap += levelsets[i] * vec_nodal_g[i];
         }
@@ -228,16 +229,16 @@ void SmallDeformationLocalAssemblerFracture<
             w_prev, w, sigma_prev, sigma, C, state);
 
         // r_[u] += H^T*Stress
-        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        for (unsigned i = 0; i < n_enrich_var; i++)
         {
             vec_local_b_g[i].noalias() -=
                 levelsets[i] * H.transpose() * R.transpose() * sigma * integration_weight;
         }
 
         // J_[u][u] += H^T*C*H
-        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        for (unsigned i = 0; i < n_enrich_var; i++)
         {
-            for (unsigned j = 0; j < n_fractures + n_junctions; j++)
+            for (unsigned j = 0; j < n_enrich_var; j++)
             {
                 // J_[u][u] += (levelset * B)^T * C * (levelset * B)
                 vec_local_J_gg[i][j].noalias() +=
@@ -257,6 +258,7 @@ void SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
     auto const N_DOF_PER_VAR = ShapeFunction::NPOINTS * DisplacementDim;
     auto const n_fractures = _fracture_props.size();
     auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
     auto const& R = _fracture_property->R;
 
@@ -271,7 +273,7 @@ void SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
     x_position.setElementID(_element.getID());
 
     std::vector<Eigen::VectorXd> vec_nodal_g;
-    for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+    for (unsigned i = 0; i < n_enrich_var; i++)
     {
         auto sub = const_cast<Eigen::VectorXd&>(local_u).segment<N_DOF_PER_VAR>(
             N_DOF_PER_VAR * i);
@@ -309,7 +311,7 @@ void SmallDeformationLocalAssemblerFracture<ShapeFunction, IntegrationMethod,
         // du = du^hat + sum_i(enrich^br_i(x) * [u]_i) + sum_i(enrich^junc_i(x) * [u]_i)
         Eigen::VectorXd nodal_gap(N_DOF_PER_VAR);
         nodal_gap.setZero();
-        for (unsigned i = 0; i < n_fractures + n_junctions; i++)
+        for (unsigned i = 0; i < n_enrich_var; i++)
         {
             nodal_gap += levelsets[i] * vec_nodal_g[i];
         }

@@ -75,7 +75,7 @@ std::vector<double> u_global_enrichments(
 		auto fid1 = fracID_to_local.at(junction->fracture_IDs[0]);
 		auto fid2 = fracID_to_local.at(junction->fracture_IDs[1]);
 		double enrich = levelsets[fid1]*levelsets[fid2];
-		enrichments[i + frac_props.size()] *= enrich;
+		enrichments[i + frac_props.size()] = enrich;
 	}
 
 	return enrichments;

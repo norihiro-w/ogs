@@ -159,7 +159,7 @@ void findFracutreIntersections(
         } else {
             std::vector<int> matIDs(2);
             matIDs[0] = std::min(vec_matID_counts.begin()->first, vec_matID_counts.rbegin()->first);
-            matIDs[0] = std::max(vec_matID_counts.begin()->first, vec_matID_counts.rbegin()->first);
+            matIDs[1] = std::max(vec_matID_counts.begin()->first, vec_matID_counts.rbegin()->first);
             vec_junction_nodeID_matIDs.push_back(std::make_pair(nodeID,matIDs));
         }
     }

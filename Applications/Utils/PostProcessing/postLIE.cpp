@@ -50,7 +50,8 @@ void postVTU(std::string const& int_vtu_filename,
         vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
 
     ProcessLib::LIE::PostProcessTool post(*mesh, vec_fracture_nodes,
-                                          vec_fracture_matrix_elements);
+                                          vec_fracture_matrix_elements,
+                                          vec_junction_nodeID_matIDs);
 
     // create a new VTU file
     INFO("create %s", out_vtu_filename.c_str());
