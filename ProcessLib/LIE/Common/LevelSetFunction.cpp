@@ -126,7 +126,7 @@ std::vector<double> du_global_enrichments(
 		auto fid = fracID_to_local.at(another_frac_id);
 		double enrich = levelsets[fid];
 //        double enrich = Heaviside(levelsets[fid]);
-        enrichments[i + frac_props.size()] *= enrich;
+        enrichments[i + frac_props.size()] = enrich;
 	}
 
 
