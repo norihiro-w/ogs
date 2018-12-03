@@ -89,7 +89,7 @@ if(CMAKE_CROSSCOMPILING)
 endif()
 
 if(GEOTIFF_FOUND)
-    target_link_libraries(DataExplorer ${GEOTIFF_LIBRARIES} )
+    target_link_libraries(DataExplorer ${GEOTIFF_LIBRARIES} jbig )
 endif()
 
 if(MSVC)

@@ -34,7 +34,8 @@ set(CMAKE_LIBRARY_SEARCH_PATH "" CACHE PATH
 set(OGS_CPU_ARCHITECTURE "native" CACHE STRING "Processor architecture, \
     defaults to native (*nix) / blend (MSVC).")
 option(OGS_ENABLE_AVX2 "Enable the use of AVX2 instructions" OFF)
-option(OGS_BUILD_TESTS "Should the test executables be built?" ON)
+option(OGS_BUILD_TESTS "Should the test executables be built?" OFF)
+set(OGS_BUILD_TESTS OFF CACHE BOOL "Should the test executables be built?" FORCE)
 option(OGS_USE_PCH "Should pre-compiled headers be used?" ON)
 if(DEFINED CMAKE_CXX_CLANG_TIDY)
     set(OGS_USE_PCH OFF CACHE INTERNAL "")
@@ -89,7 +90,7 @@ set(ProcessesList
     GroundwaterFlow
     HT
     HeatConduction
-    HeatTransportBHE
+#    HeatTransportBHE
     HydroMechanics
     LiquidFlow
     LIE

@@ -55,7 +55,8 @@ add_custom_target(
     USES_TERMINAL
 )
 if(OGS_BUILD_UTILS)
-    add_dependencies(ctest partmesh MapGeometryToMeshSurface)
+    add_dependencies(ctest MapGeometryToMeshSurface)
+#    add_dependencies(ctest partmesh MapGeometryToMeshSurface)
 endif()
 
 add_custom_target(
@@ -70,7 +71,8 @@ add_custom_target(
     USES_TERMINAL
 )
 if(OGS_BUILD_UTILS)
-    add_dependencies(ctest-serial partmesh MapGeometryToMeshSurface)
+    add_dependencies(ctest-serial MapGeometryToMeshSurface)
+#    add_dependencies(ctest-serial partmesh MapGeometryToMeshSurface)
 endif()
 
 add_custom_target(ctest-large-cleanup ${CMAKE_COMMAND} -E remove -f Tests/ctest-large.log)
@@ -84,7 +86,8 @@ add_custom_target(
     USES_TERMINAL
 )
 if(OGS_BUILD_UTILS)
-    add_dependencies(ctest-large partmesh MapGeometryToMeshSurface)
+    add_dependencies(ctest-large MapGeometryToMeshSurface)
+#    add_dependencies(ctest-large partmesh MapGeometryToMeshSurface)
 endif()
 
 add_custom_target(
@@ -97,7 +100,8 @@ add_custom_target(
     USES_TERMINAL
 )
 if(OGS_BUILD_UTILS)
-    add_dependencies(ctest-large-serial partmesh MapGeometryToMeshSurface)
+    add_dependencies(ctest-large-serial MapGeometryToMeshSurface)
+#    add_dependencies(ctest-large-serial partmesh MapGeometryToMeshSurface)
 endif()
 set_directory_properties(PROPERTIES
     ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_BINARY_DIR}/Tests/Data
