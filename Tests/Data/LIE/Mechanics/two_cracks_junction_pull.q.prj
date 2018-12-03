@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <OpenGeoSysProject>
-    <mesh>two_cracks_junction.q.vtu</mesh>
+    <mesh>two_cracks_junction2.q.vtu</mesh>
     <geometry>single_joint.gml</geometry>
     <processes>
         <process>
@@ -23,7 +23,10 @@
                 <type>LinearElasticIsotropic</type>
                 <normal_stiffness>Kn</normal_stiffness>
                 <shear_stiffness>Ks</shear_stiffness>
+                <penalty_aperture_cutoff>1e-8</penalty_aperture_cutoff>
+<!--
                 <penalty_aperture_cutoff>1e-5</penalty_aperture_cutoff>
+-->
                 <tension_cutoff>1</tension_cutoff>
             </fracture_model>
             <fracture_properties>
@@ -134,7 +137,7 @@
         <process_variable>
             <name>displacement</name>
             <components>2</components>
-            <order>1</order>
+            <order>2</order>
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
                 <boundary_condition>
@@ -163,7 +166,7 @@
         <process_variable>
             <name>displacement_jump1</name>
             <components>2</components>
-            <order>1</order>
+            <order>2</order>
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
             </boundary_conditions>
@@ -171,7 +174,7 @@
         <process_variable>
             <name>displacement_jump2</name>
             <components>2</components>
-            <order>1</order>
+            <order>2</order>
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
             </boundary_conditions>
@@ -179,7 +182,7 @@
         <process_variable>
             <name>displacement_jump3</name>
             <components>2</components>
-            <order>1</order>
+            <order>2</order>
             <initial_condition>displacement0</initial_condition>
             <boundary_conditions>
             </boundary_conditions>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <OpenGeoSysProject>
-    <mesh>two_cracks_junction.vtu</mesh>
+    <mesh>two_cracks_junction2.vtu</mesh>
     <geometry>single_joint.gml</geometry>
     <processes>
         <process>
