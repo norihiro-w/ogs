@@ -1,0 +1,94 @@
+#POINTS
+0 0 0 0 
+1 0 0.1 0 
+2 0.05 0.1 0 
+3 0.05 0 0 
+4 0.0 0.01 0 
+5 0.05 0.09 0 
+6 0.01875 0.04 0 
+7 0.0 0.055 0 
+8 0.05 0.015 0 
+9 0.0 0.075  
+10 0.0361 0.06778  
+#POLYLINE
+ $NAME
+  PLY_0
+ $POINTS
+  0
+  3
+  8
+  6
+  4
+  0
+#POLYLINE
+ $NAME
+  PLY_2
+ $POINTS
+  4
+  6
+  7
+  4
+#POLYLINE
+ $NAME
+  PLY_3
+ $POINTS
+  5
+  10
+  6
+  8
+  5
+#POLYLINE
+ $NAME
+  PLY_4
+ $POINTS
+  1
+  2
+  5
+  10
+  9
+  1
+#POLYLINE
+ $NAME
+  PLY_5
+ $POINTS
+  10
+  6
+  7
+  9
+  10
+#SURFACE
+ $NAME
+  SURF_0
+ $POLYLINES
+  PLY_0
+ $TYPE
+  0
+#SURFACE
+ $NAME
+  SURF_2
+ $POLYLINES
+  PLY_2
+ $TYPE
+  0
+#SURFACE
+ $NAME
+  SURF_3
+ $POLYLINES
+  PLY_3
+ $TYPE
+  0
+#SURFACE
+ $NAME
+  SURF_4
+ $POLYLINES
+  PLY_4
+ $TYPE
+  0
+#SURFACE
+ $NAME
+  SURF_4
+ $POLYLINES
+  PLY_5
+ $TYPE
+  0
+#STOP
