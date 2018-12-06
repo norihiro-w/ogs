@@ -261,6 +261,84 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
             // by location order is needed for output
             NumLib::ComponentOrder::BY_LOCATION);
 
+    _secondary_variables.addSecondaryVariable(
+        "sigma_xx",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtSigmaXX));
+
+    _secondary_variables.addSecondaryVariable(
+        "sigma_yy",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtSigmaYY));
+
+    _secondary_variables.addSecondaryVariable(
+        "sigma_zz",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtSigmaZZ));
+
+    _secondary_variables.addSecondaryVariable(
+        "sigma_xy",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtSigmaXY));
+
+    if (DisplacementDim == 3)
+    {
+        _secondary_variables.addSecondaryVariable(
+            "sigma_xz",
+            makeExtrapolator(
+                1, getExtrapolator(), _local_assemblers,
+                &SmallDeformationLocalAssemblerInterface::getIntPtSigmaXZ));
+
+        _secondary_variables.addSecondaryVariable(
+            "sigma_yz",
+            makeExtrapolator(
+                1, getExtrapolator(), _local_assemblers,
+                &SmallDeformationLocalAssemblerInterface::getIntPtSigmaYZ));
+    }
+
+    _secondary_variables.addSecondaryVariable(
+        "epsilon_xx",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonXX));
+
+    _secondary_variables.addSecondaryVariable(
+        "epsilon_yy",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonYY));
+
+    _secondary_variables.addSecondaryVariable(
+        "epsilon_zz",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonZZ));
+
+    _secondary_variables.addSecondaryVariable(
+        "epsilon_xy",
+        makeExtrapolator(
+            1, getExtrapolator(), _local_assemblers,
+            &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonXY));
+
+    if (DisplacementDim == 3)
+    {
+        _secondary_variables.addSecondaryVariable(
+            "epsilon_xz",
+            makeExtrapolator(
+                1, getExtrapolator(), _local_assemblers,
+                &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonXZ));
+
+        _secondary_variables.addSecondaryVariable(
+            "epsilon_yz",
+            makeExtrapolator(
+                1, getExtrapolator(), _local_assemblers,
+                &SmallDeformationLocalAssemblerInterface::getIntPtEpsilonYZ));
+    }
+
     auto mesh_prop_sigma_xx = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "stress_xx",
         MeshLib::MeshItemType::Cell, 1);
