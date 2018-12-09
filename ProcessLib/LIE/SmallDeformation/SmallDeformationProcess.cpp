@@ -104,10 +104,10 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
         auto slave_matId = vec_branch_nodeID_matIDs[i].second[1];
         auto& master_frac =
             _process_data._vec_fracture_property
-                 [_process_data._map_materialID_to_fractureID[master_matId]];
+                [_process_data._map_materialID_to_fractureID[master_matId]];
         auto& slave_frac =
             _process_data._vec_fracture_property
-                 [_process_data._map_materialID_to_fractureID[slave_matId]];
+                [_process_data._map_materialID_to_fractureID[slave_matId]];
 
         master_frac.branches_master.push_back(createBranchProperty(
             *mesh.getNode(vec_branch_nodeID_matIDs[i].first), master_frac,
