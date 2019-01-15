@@ -242,11 +242,13 @@ void SmallDeformationProcess<DisplacementDim>::initializeConcreteProcess(
     MeshLib::Mesh const& mesh,
     unsigned const integration_order)
 {
+    const int process_id = 0;
+    ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
     ProcessLib::LIE::SmallDeformation::createLocalAssemblers<
         DisplacementDim, SmallDeformationLocalAssemblerMatrix,
         SmallDeformationLocalAssemblerMatrixNearFracture,
         SmallDeformationLocalAssemblerFracture>(
-        mesh.getElements(), dof_table, _local_assemblers,
+        mesh.getElements(), dof_table, pv.getShapeFunctionOrder(), _local_assemblers,
         mesh.isAxiallySymmetric(), integration_order, _process_data);
 
     // TODO move the two data members somewhere else.
