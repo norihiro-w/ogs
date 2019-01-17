@@ -23,10 +23,10 @@
 namespace ProcessLib
 {
 
-/// A parameter class evaluating a functon defined by 
-/// a user-provided maethmatical expression. 
+/// A parameter class evaluating a functon defined by
+/// a user-provided maethmatical expression.
 ///
-/// Currently, x, y, and z are supported as variables 
+/// Currently, x, y, and z are supported as variables
 /// of the function.
 template <typename T>
 struct FunctionParameter final : public Parameter<T>
@@ -42,7 +42,7 @@ struct FunctionParameter final : public Parameter<T>
      * @param name_       the parameter's name
      * @param mesh_       a mesh object
      * @param vec_expression_str_  a vector of mathematical expressions
-     * The vector size specifies the number of components of the parameter. 
+     * The vector size specifies the number of components of the parameter.
      */
     FunctionParameter(std::string const& name_,
                          MeshLib::Mesh const& mesh_,
