@@ -234,21 +234,21 @@ public:
         auto local_rhs = MathLib::createZeroedVector<RhsVector>(
             local_rhs_data, local_matrix_size);
 
-        // set externaly given variables
-        Eigen::VectorXd nodal_T0(_element.getNumberOfNodes());
-        Eigen::VectorXd nodal_T1(_element.getNumberOfNodes());
-        Eigen::VectorXd nodal_p0(_element.getNumberOfNodes());
-        Eigen::VectorXd nodal_p1(_element.getNumberOfNodes());
-        for (unsigned i=0; i<_element.getNumberOfNodes(); i++)
-        {
-            SpatialPosition x_position;
-            x_position.setElementID(_element.getID());
-            x_position.setNodeID(_element.getNode(i)->getID());
-            nodal_T0[i] = _process_data.T0(t, x_position)[0];
-            nodal_T1[i] = _process_data.T1(t, x_position)[0];
-            nodal_p0[i] = _process_data.p0(t, x_position)[0];
-            nodal_p1[i] = _process_data.p1(t, x_position)[0];
-        }
+        // // set externaly given variables
+        // Eigen::VectorXd nodal_T0(_element.getNumberOfNodes());
+        // Eigen::VectorXd nodal_T1(_element.getNumberOfNodes());
+        // Eigen::VectorXd nodal_p0(_element.getNumberOfNodes());
+        // Eigen::VectorXd nodal_p1(_element.getNumberOfNodes());
+        // for (unsigned i=0; i<_element.getNumberOfNodes(); i++)
+        // {
+        //     SpatialPosition x_position;
+        //     x_position.setElementID(_element.getID());
+        //     x_position.setNodeID(_element.getNode(i)->getID());
+        //     nodal_T0[i] = _process_data.T0(t, x_position)[0];
+        //     nodal_T1[i] = _process_data.T1(t, x_position)[0];
+        //     nodal_p0[i] = _process_data.p0(t, x_position)[0];
+        //     nodal_p1[i] = _process_data.p1(t, x_position)[0];
+        // }
 
         double const& dt = _process_data.dt;
 
@@ -292,10 +292,14 @@ public:
 
             auto& state = _ip_data[ip].material_state_variables;
 
-            double const p0_ip = N.dot(nodal_p0);
-            double const p1_ip = N.dot(nodal_p1);
-            double const T0_ip = N.dot(nodal_T0);
-            double const T1_ip = N.dot(nodal_T1);
+            auto const p0_ip = _process_data.p0(t, x_position)[0];
+            auto const p1_ip = _process_data.p1(t, x_position)[0];
+            auto const T0_ip = _process_data.T0(t, x_position)[0];
+            auto const T1_ip = _process_data.T1(t, x_position)[0];
+            // double const p0_ip = N.dot(nodal_p0);
+            // double const p1_ip = N.dot(nodal_p1);
+            // double const T0_ip = N.dot(nodal_T0);
+            // double const T1_ip = N.dot(nodal_T1);
 
             auto const alpha =
                 _process_data.solid_linear_thermal_expansion_coefficient(
