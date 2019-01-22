@@ -409,6 +409,8 @@ double UncoupledProcessesTimeLoop::computeTimeStepping(
     {
         const auto& ppd = *_per_process_data[i];
         auto& timestepper = ppd.timestepper;
+        if (t != timestepper->begin())
+            timestepper->finalizeCurrentTimeStep();
         timestepper->resetCurrentTimeStep(dt);
 
         if (ppd.skip_time_stepping)
