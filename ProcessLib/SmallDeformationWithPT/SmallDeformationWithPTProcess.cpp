@@ -274,6 +274,29 @@ void SmallDeformationWithPTProcess<DisplacementDim>::preTimestepConcreteProcess(
     _process_data.dt = dt;
     _process_data.t = t;
 
+    // update mesh properties from a specified file
+    if (!_process_data.vec_import_properties.empty())
+    {
+        for (auto& p : _process_data.vec_import_properties)
+        {
+            auto& property = p.first;
+            auto const& file_path = p.second;
+            DBUG("-> import mesh property %s from a file", property->getPropertyName().c_str());
+
+            std::ifstream ifs(file_path);
+            if (ifs.fail())
+                OGS_FATAL("Failed to open %s", file_path.c_str());
+
+            for (std::size_t i=0; i<property->size(); i++)
+            {
+                //TODO skip comments
+                if (!ifs.good())
+                    OGS_FATAL("Error while reading %s", file_path.c_str());
+                ifs >> (*property)[i];
+            }
+        }
+    }
+
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
     GlobalExecutor::executeSelectedMemberOnDereferenced(
@@ -295,6 +318,62 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
         &SmallDeformationWithPTLocalAssemblerInterface::postTimestep,
         _local_assemblers, pv.getActiveElementIDs(),
         *_local_to_global_index_map, x);
+
+    // create cell values of stress and strain
+    auto nodeValuesToElementValues = [this](MeshLib::Mesh& mesh,
+                                            std::string const& nodal_prop_name,
+                                            std::string const& elemental_prop_name) {
+        auto const* prop_nodal =
+            mesh.getProperties().template getPropertyVector<double>(
+                nodal_prop_name);
+        auto const n_comp = DisplacementDim == 2 ? 4 : 6;
+        if (prop_nodal)
+            OGS_FATAL("Mesh property <%s> is not found",
+                      nodal_prop_name.c_str());
+        auto* prop_elemental = MeshLib::getOrCreateMeshProperty<double>(
+            mesh, elemental_prop_name, MeshLib::MeshItemType::Cell, n_comp);
+        if (prop_elemental->size() == 0)
+        {
+            prop_elemental->resize(mesh.getNumberOfElements() * n_comp);
+        }
+        for (auto const* e : mesh.getElements())
+        {
+            Eigen::VectorXd values = Eigen::VectorXd::Zero(n_comp);
+            for (unsigned j=0; j<e->getNumberOfNodes(); j++)
+            {
+                auto node_id = e->getNode(j)->getID();
+                for (unsigned k = 0; k < n_comp; k++)
+                    values[k] += (*prop_nodal)[node_id * n_comp + k];
+            }
+            values /= static_cast<double>(e->getNumberOfNodes());
+            for (unsigned k = 0; k < n_comp; k++)
+                (*prop_elemental)[e->getID() * n_comp + k] = values[k];
+        }
+    };
+    auto& mesh = const_cast<MeshLib::Mesh&>(this->getMesh());
+    nodeValuesToElementValues(mesh, "stress", "ele_stress");
+    nodeValuesToElementValues(mesh, "strain", "ele_strain");
+
+    // export mesh properties to a specified file
+    if (!_process_data.vec_export_properties.empty())
+    {
+        for (auto& p : _process_data.vec_export_properties)
+        {
+            auto& property = p.first;
+            auto const& file_path = p.second;
+            DBUG("-> export mesh property %s to a file", property->getPropertyName().c_str());
+
+            std::ofstream ofs(file_path);
+            if (ofs.fail())
+                OGS_FATAL("Failed to open %s", file_path.c_str());
+
+            for (std::size_t i=0; i<property->size(); i++)
+                for (std::size_t k=0; k<property->getNumberOfComponents(); k++)
+                    ofs << (*property)[i*property->getNumberOfComponents() + k] << "\n";
+
+            ofs << std::flush;
+        }
+    }
 }
 
 template class SmallDeformationWithPTProcess<2>;

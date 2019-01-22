@@ -46,7 +46,11 @@ struct SmallDeformationWithPTProcessData
         Eigen::Matrix<double, DisplacementDim, 1> const& specific_body_force_,
         Parameter<double> const& biot_coefficient_,
         Parameter<double> const& fluid_density_,
-        Parameter<double> const& porosity_)
+        Parameter<double> const& porosity_,
+        std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
+            const& vec_import_properties_,
+        std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
+            const& vec_export_properties_)
         : material_ids(material_ids_),
           T0(T0_), T1(T1_), p0(p0_), p1(p1_),
           solid_materials{std::move(solid_materials_)},
@@ -56,7 +60,9 @@ struct SmallDeformationWithPTProcessData
           specific_body_force(specific_body_force_),
           biot_coefficient(biot_coefficient_),
           fluid_density(fluid_density_),
-          porosity(porosity_)
+          porosity(porosity_),
+          vec_import_properties(vec_import_properties_),
+          vec_export_properties(vec_export_properties_)
     {
     }
 
@@ -90,6 +96,11 @@ struct SmallDeformationWithPTProcessData
     Parameter<double> const& biot_coefficient;
     Parameter<double> const& fluid_density;
     Parameter<double> const& porosity;
+
+    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>> const
+        vec_import_properties;
+    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>> const
+        vec_export_properties;
 
     double dt = 0;
     double t = 0;
