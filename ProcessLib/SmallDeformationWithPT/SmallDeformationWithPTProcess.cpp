@@ -141,6 +141,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
             getExtrapolator(), _local_assemblers,
             &SmallDeformationWithPTLocalAssemblerInterface::getIntPtEpsilon));
 
+#if 0
     auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "pressure_prev",
         MeshLib::MeshItemType::Node, 1);
@@ -170,7 +171,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
         (*mesh_prop_temperature_prev)[i] = _process_data.T0(0, x_pos)[0];
         (*mesh_prop_temperature)[i] = _process_data.T1(0, x_pos)[0];
     }
-
+#endif
     // Set initial conditions for integration point data.
     for (auto const& ip_writer : _integration_point_writer)
     {
@@ -275,7 +276,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::preTimestepConcreteProcess(
     _process_data.t = t;
 
     // update mesh properties from a specified file
-    if (!_process_data.vec_import_properties.empty())
+    if (t>0.0 && !_process_data.vec_import_properties.empty())
     {
         for (auto& p : _process_data.vec_import_properties)
         {
@@ -319,6 +320,45 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(),
         *_local_to_global_index_map, x);
 
+    const unsigned n_comp = DisplacementDim==2?4:6;
+
+    auto* prop_element_stress =
+        mesh.getProperties().getPropertyVector<double>("stress");
+    for (std::size_t i=0; i<prop_element_stress->size(); i++)
+        (*prop_element_stress)[i] = 0.0;
+    for (std::size_t i=0; i<_local_assemblers.size(); i++)
+    {
+        auto const& local_asm = *_local_assemblers[i];
+        auto const* e = local_asm.getElement();
+        auto ip_stress = local_asm.getSigma();
+        auto const nip = local_asm.getIntegrationMethod().getNumberOfIntegrationPoints();
+        for (unsigned ip=0; ip<nip; k++)
+            for (unsigned k=0; k<n_comp; k++)
+                (*prop_element_stress)[i] += ip_stress[ip*n_comp + k];
+
+        for (unsigned k=0; k<n_comp; k++)
+            (*prop_element_stress)[i] /= static_cast<double>(nip);
+    }
+
+    auto* prop_element_strain =
+        mesh.getProperties().getPropertyVector<double>("strain");
+    for (std::size_t i=0; i<prop_element_strain->size(); i++)
+        (*prop_element_strain)[i] = 0.0;
+    for (std::size_t i=0; i<_local_assemblers.size(); i++)
+    {
+        auto const& local_asm = *_local_assemblers[i];
+        auto const* e = local_asm.getElement();
+        auto ip_strain = local_asm.getEpsilon();
+        auto const nip = local_asm.getIntegrationMethod().getNumberOfIntegrationPoints();
+        for (unsigned ip=0; ip<nip; k++)
+            for (unsigned k=0; k<n_comp; k++)
+                (*prop_element_strain)[i] += ip_strain[ip*n_comp + k];
+
+        for (unsigned k=0; k<n_comp; k++)
+            (*prop_element_strain)[i] /= static_cast<double>(nip);
+    }
+
+#if 0
     // create cell values of stress and strain
     auto nodeValuesToElementValues = [this](MeshLib::Mesh& mesh,
                                             std::string const& nodal_prop_name,
@@ -327,7 +367,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
             mesh.getProperties().template getPropertyVector<double>(
                 nodal_prop_name);
         auto const n_comp = DisplacementDim == 2 ? 4 : 6;
-        if (prop_nodal)
+        if (!prop_nodal)
             OGS_FATAL("Mesh property <%s> is not found",
                       nodal_prop_name.c_str());
         auto* prop_elemental = MeshLib::getOrCreateMeshProperty<double>(
@@ -351,8 +391,9 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
         }
     };
     auto& mesh = const_cast<MeshLib::Mesh&>(this->getMesh());
-    nodeValuesToElementValues(mesh, "stress", "ele_stress");
-    nodeValuesToElementValues(mesh, "strain", "ele_strain");
+    nodeValuesToElementValues(mesh, "sigma", "stress");
+    nodeValuesToElementValues(mesh, "epsilon", "strain");
+#endif
 
     // export mesh properties to a specified file
     if (!_process_data.vec_export_properties.empty())
@@ -367,7 +408,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
             if (ofs.fail())
                 OGS_FATAL("Failed to open %s", file_path.c_str());
 
-            for (std::size_t i=0; i<property->size(); i++)
+            for (std::size_t i=0; i<property->getNumberOfTuples(); i++)
                 for (std::size_t k=0; k<property->getNumberOfComponents(); k++)
                     ofs << (*property)[i*property->getNumberOfComponents() + k] << "\n";
 

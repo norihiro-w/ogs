@@ -11,8 +11,8 @@
 
 #include <cassert>
 
-#include "MaterialLib/SolidModels/MechanicsBase.h"
 #include "MaterialLib/SolidModels/CreateConstitutiveRelation.h"
+#include "MaterialLib/SolidModels/MechanicsBase.h"
 #include "ProcessLib/Output/CreateSecondaryVariables.h"
 #include "ProcessLib/Utils/ProcessUtils.h"
 
@@ -37,7 +37,8 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
     DBUG("Create SmallDeformationWithPTProcess.");
 
     //  auto const staggered_scheme =
-    //     //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__coupling_scheme}
+    //     //!
+    //     \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__coupling_scheme}
     //     config.getConfigParameterOptional<std::string>("coupling_scheme");
     // const bool use_monolithic_scheme =
     //     !(staggered_scheme && (*staggered_scheme == "staggered"));
@@ -52,7 +53,7 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
     auto per_process_variables = findProcessVariables(
         variables, pv_config,
         {//! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__process_variables__displacement}
-            "displacement"});
+         "displacement"});
     auto* variable_u = &per_process_variables[0].get();
     process_variables.push_back(std::move(per_process_variables));
 
@@ -80,39 +81,33 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__pressure_prev}
         "pressure_prev", parameters, 1);
-    DBUG("Use '%s' as pressure_prev parameter.",
-         p0.name.c_str());
+    DBUG("Use '%s' as pressure_prev parameter.", p0.name.c_str());
 
     auto& p1 = findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__pressure}
         "pressure", parameters, 1);
-    DBUG("Use '%s' as pressure parameter.",
-         p1.name.c_str());
+    DBUG("Use '%s' as pressure parameter.", p1.name.c_str());
 
     // temperature
     auto& T0 = findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__temperature_prev}
         "temperature_prev", parameters, 1);
-    DBUG("Use '%s' as temperature_prev parameter.",
-         T0.name.c_str());
+    DBUG("Use '%s' as temperature_prev parameter.", T0.name.c_str());
 
     auto& T1 = findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__temperature}
         "temperature", parameters, 1);
-    DBUG("Use '%s' as temperature parameter.",
-         T1.name.c_str());
-
+    DBUG("Use '%s' as temperature parameter.", T1.name.c_str());
 
     // solid density
     auto& solid_density = findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__solid_density}
         "solid_density", parameters, 1);
-    DBUG("Use '%s' as solid density parameter.",
-         solid_density.name.c_str());
+    DBUG("Use '%s' as solid density parameter.", solid_density.name.c_str());
 
     // Linear thermal expansion coefficient
     auto& solid_linear_thermal_expansion_coefficient = findParameter<double>(
@@ -152,94 +147,107 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__fluid_density}
         "fluid_density", parameters, 1);
-    DBUG("Use '%s' as fluid density parameter.",
-         fluid_density.name.c_str());
+    DBUG("Use '%s' as fluid density parameter.", fluid_density.name.c_str());
 
     // porosity
     auto& porosity = findParameter<double>(
         config,
         //! \ogs_file_param_special{prj__processes__process__SMALL_DEFORMATION_WITH_PT__porosity}
         "porosity", parameters, 1);
-    DBUG("Use '%s' as porosity parameter.",
-         porosity.name.c_str());
-
+    DBUG("Use '%s' as porosity parameter.", porosity.name.c_str());
 
     // external update
     //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update}
     auto const config_import_mesh_properties =
         config.getConfigSubtreeOptional("import_mesh_properties");
-    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>> vec_import_properties;
+    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
+        vec_import_properties;
     if (config_import_mesh_properties)
     {
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update__file_name}
-        auto const parameter_name =
-            config_import_mesh_properties->getConfigParameter<std::string>(
-                "parameter");
-        DBUG("Importing property %s", parameter_name.c_str());
-        auto const parameter_type =
-            config_import_mesh_properties->getConfigParameter<std::string>(
-                "type");
-
-        MeshLib::PropertyVector<double>* property = nullptr;
-        if (parameter_type == "MeshNode")
+        for (auto& config_property :
+             config_import_mesh_properties->getConfigSubtreeList("property"))
         {
-            property = MeshLib::getOrCreateMeshProperty<double>(
-                const_cast<MeshLib::Mesh&>(mesh), parameter_name,
-                MeshLib::MeshItemType::Node, 1);
-            property->resize(mesh.getNumberOfNodes());
-        }
-        else if (parameter_type == "MeshElement")
-        {
-            property = MeshLib::getOrCreateMeshProperty<double>(
-                const_cast<MeshLib::Mesh&>(mesh), parameter_name,
-                MeshLib::MeshItemType::Cell, 1);
-            property->resize(mesh.getNumberOfElements());
-        }
+            auto const property_name =
+                config_property.getConfigParameter<std::string>("name");
+            DBUG("Importing property %s", property_name.c_str());
+            auto const property_type =
+                config_property.getConfigParameter<std::string>("type");
 
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update__file}
-        auto const file_name =
-            config_import_mesh_properties->getConfigParameter<std::string>(
-                "file");
-        DBUG("Using file_name %s", file_name.c_str());
-        auto const file_path = BaseLib::joinPaths(BaseLib::getProjectDirectory(), file_name);
+            MeshLib::PropertyVector<double>* property = nullptr;
+            if (property_type == "MeshNode")
+            {
+                property = MeshLib::getOrCreateMeshProperty<double>(
+                    const_cast<MeshLib::Mesh&>(mesh), property_name,
+                    MeshLib::MeshItemType::Node, 1);
+                property->resize(mesh.getNumberOfNodes());
+            }
+            else if (property_type == "MeshElement")
+            {
+                property = MeshLib::getOrCreateMeshProperty<double>(
+                    const_cast<MeshLib::Mesh&>(mesh), property_name,
+                    MeshLib::MeshItemType::Cell, 1);
+                property->resize(mesh.getNumberOfElements());
+            }
 
-        vec_import_properties.emplace_back(std::make_pair(property, file_path));
+            //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update__file}
+            auto const file_name =
+                config_property.getConfigParameter<std::string>("file");
+            DBUG("Using file_name %s", file_name.c_str());
+            auto const file_path =
+                BaseLib::joinPaths(BaseLib::getProjectDirectory(), file_name);
+
+            vec_import_properties.emplace_back(
+                std::make_pair(property, file_path));
+        }
     }
 
     // export
     //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update}
-    auto const config_export = config.getConfigSubtreeOptional("export_mesh_properties");
-    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>> vec_export_properties;
+    auto const config_export =
+        config.getConfigSubtreeOptional("export_mesh_properties");
+    std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
+        vec_export_properties;
     if (config_export)
     {
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update__file_name}
-        auto const parameter_name = config_export->getConfigParameter<std::string>("parameter");
-        DBUG("Exporting property %s", parameter_name.c_str());
+        for (auto& config_property :
+             config_export->getConfigSubtreeList("property"))
+        {
+            auto const property_name =
+                config_property.getConfigParameter<std::string>("name");
+            DBUG("Exporting property %s", property_name.c_str());
 
-        auto const* property =
-            mesh.getProperties().getPropertyVector<double>(parameter_name);
-        if (!property)
-            OGS_FATAL("Mesh property %s not found", parameter_name);
-        //! \ogs_file_param{prj__processes__process__SMALL_DEFORMATION_WITH_PT__external_update__file}
-        auto const file_name =
-            config_export->getConfigParameter<std::string>("file");
-        DBUG("Using file_name %s", file_name.c_str());
-        auto const file_path = BaseLib::joinPaths(BaseLib::getProjectDirectory(), file_name);
+            auto const* property =
+                mesh.getProperties().getPropertyVector<double>(property_name);
+            if (!property)
+                OGS_FATAL("Mesh property %s not found", property_name.c_str());
 
-        vec_export_properties.emplace_back(std::make_pair(const_cast<MeshLib::PropertyVector<double>*>(property), file_path));
+            auto const file_name =
+                config_property.getConfigParameter<std::string>("file");
+            DBUG("Using file_name %s", file_name.c_str());
+            auto const file_path =
+                BaseLib::joinPaths(BaseLib::getProjectDirectory(), file_name);
+
+            vec_export_properties.emplace_back(std::make_pair(
+                const_cast<MeshLib::PropertyVector<double>*>(property),
+                file_path));
+        }
     }
-
 
     SmallDeformationWithPTProcessData<DisplacementDim> process_data{
         materialIDs(mesh),
-        T0, T1, p0, p1,
+        T0,
+        T1,
+        p0,
+        p1,
         std::move(solid_constitutive_relations),
-        solid_density, solid_linear_thermal_expansion_coefficient,
+        solid_density,
+        solid_linear_thermal_expansion_coefficient,
         specific_body_force,
-        biot_coefficient, fluid_density, porosity,
+        biot_coefficient,
+        fluid_density,
+        porosity,
         vec_import_properties,
-        vec_export_properties
-        };
+        vec_export_properties};
 
     SecondaryVariableCollection secondary_variables;
 
