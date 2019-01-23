@@ -9,9 +9,9 @@
 #include "ExternalTimeStepping.h"
 
 #include <algorithm>
-#include <numeric>
-#include <limits>
 #include <cassert>
+#include <limits>
+#include <numeric>
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -32,7 +32,7 @@ bool ExternalTimeStepping::next(const double /*solution_error*/)
 {
     // check if last time step
     if (std::abs(_ts_current.current() - _t_end) <
-            std::numeric_limits<double>::epsilon())
+        std::numeric_limits<double>::epsilon())
         return false;
 
     // confirm current time and move to the next if accepted
@@ -45,6 +45,7 @@ bool ExternalTimeStepping::next(const double /*solution_error*/)
     // prepare the next time step info
     std::size_t time_step_index;
     double time_step_size;
+    DBUG("Reading %s", _timestep_file_path.c_str());
     while (true)
     {
         std::ifstream ifs(_timestep_file_path);
@@ -53,10 +54,10 @@ bool ExternalTimeStepping::next(const double /*solution_error*/)
 
         ifs >> time_step_index >> time_step_size;
 
-        if (time_step_index == _ts_prev.steps())
+        if (time_step_index-1 == _ts_prev.steps())
             break;
 
-        Sleep(100); //ms
+        Sleep(100);  // ms
     }
 
     if (std::abs(time_step_size) < std::numeric_limits<double>::epsilon())
@@ -75,7 +76,9 @@ void ExternalTimeStepping::finalizeCurrentTimeStep()
     if (!ofs.good())
         OGS_FATAL("Failed to open %s", _timestep_file_path.c_str());
 
-    ofs << _ts_current.steps() << "\n" << _ts_current.dt() << "\n" << 1 << std::endl;
+    ofs << _ts_current.steps() << "\n"
+        << _ts_current.dt() << "\n"
+        << 1 << std::endl;
 }
 
-}  // NumLib
+}  // namespace NumLib
