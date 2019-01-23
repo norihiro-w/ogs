@@ -320,7 +320,8 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(),
         *_local_to_global_index_map, x);
 
-    const unsigned n_comp = DisplacementDim==2?4:6;
+    auto& mesh = const_cast<MeshLib::Mesh&>(this->getMesh());
+    const unsigned n_comp = DisplacementDim == 2 ? 4 : 6;
 
     auto* prop_element_stress =
         mesh.getProperties().getPropertyVector<double>("stress");
@@ -329,15 +330,15 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     for (std::size_t i=0; i<_local_assemblers.size(); i++)
     {
         auto const& local_asm = *_local_assemblers[i];
-        auto const* e = local_asm.getElement();
+        auto const& e = local_asm.getMeshElement();
         auto ip_stress = local_asm.getSigma();
-        auto const nip = local_asm.getIntegrationMethod().getNumberOfIntegrationPoints();
-        for (unsigned ip=0; ip<nip; k++)
+        auto const nip = local_asm.getNumberOfIntegrationPoints();
+        for (unsigned ip=0; ip<nip; ip++)
             for (unsigned k=0; k<n_comp; k++)
-                (*prop_element_stress)[i] += ip_stress[ip*n_comp + k];
+                (*prop_element_stress)[i*n_comp + k] += ip_stress[ip*n_comp + k];
 
         for (unsigned k=0; k<n_comp; k++)
-            (*prop_element_stress)[i] /= static_cast<double>(nip);
+            (*prop_element_stress)[i*n_comp + k] /= static_cast<double>(nip);
     }
 
     auto* prop_element_strain =
@@ -347,15 +348,15 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     for (std::size_t i=0; i<_local_assemblers.size(); i++)
     {
         auto const& local_asm = *_local_assemblers[i];
-        auto const* e = local_asm.getElement();
+        auto const& e = local_asm.getMeshElement();
         auto ip_strain = local_asm.getEpsilon();
-        auto const nip = local_asm.getIntegrationMethod().getNumberOfIntegrationPoints();
-        for (unsigned ip=0; ip<nip; k++)
+        auto const nip = local_asm.getNumberOfIntegrationPoints();
+        for (unsigned ip=0; ip<nip; ip++)
             for (unsigned k=0; k<n_comp; k++)
-                (*prop_element_strain)[i] += ip_strain[ip*n_comp + k];
+                (*prop_element_strain)[i*n_comp + k] += ip_strain[ip*n_comp + k];
 
         for (unsigned k=0; k<n_comp; k++)
-            (*prop_element_strain)[i] /= static_cast<double>(nip);
+            (*prop_element_strain)[i*n_comp + k] /= static_cast<double>(nip);
     }
 
 #if 0

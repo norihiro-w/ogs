@@ -44,6 +44,10 @@ struct SmallDeformationWithPTLocalAssemblerInterface
         NumLib::LocalToGlobalIndexMap const& /*dof_table*/,
         std::vector<double>& cache) const = 0;
 
+    virtual MeshLib::Element const& getMeshElement() const = 0;
+
+    virtual unsigned getNumberOfIntegrationPoints() const = 0;
+
 };
 
 }  // namespace SmallDeformationWithPT

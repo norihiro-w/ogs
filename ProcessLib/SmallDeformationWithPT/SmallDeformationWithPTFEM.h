@@ -392,6 +392,13 @@ public:
         return Eigen::Map<const Eigen::RowVectorXd>(N.data(), N.size());
     }
 
+    MeshLib::Element const& getMeshElement() const override {return _element; }
+
+    unsigned getNumberOfIntegrationPoints() const override
+    {
+        return _integration_method.getNumberOfPoints();
+    }
+
 private:
     std::size_t setSigma(double const* values)
     {
