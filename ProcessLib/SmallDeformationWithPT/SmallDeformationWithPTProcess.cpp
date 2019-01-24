@@ -324,13 +324,13 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     const unsigned n_comp = DisplacementDim == 2 ? 4 : 6;
 
     auto* prop_element_stress =
-        mesh.getProperties().getPropertyVector<double>("stress");
+        mesh.getProperties().getPropertyVector<double>("ele_stress");
     for (std::size_t i=0; i<prop_element_stress->size(); i++)
         (*prop_element_stress)[i] = 0.0;
     for (std::size_t i=0; i<_local_assemblers.size(); i++)
     {
         auto const& local_asm = *_local_assemblers[i];
-        auto const& e = local_asm.getMeshElement();
+        //auto const& e = local_asm.getMeshElement();
         auto ip_stress = local_asm.getSigma();
         auto const nip = local_asm.getNumberOfIntegrationPoints();
         for (unsigned ip=0; ip<nip; ip++)
@@ -342,13 +342,13 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     }
 
     auto* prop_element_strain =
-        mesh.getProperties().getPropertyVector<double>("strain");
+        mesh.getProperties().getPropertyVector<double>("ele_strain");
     for (std::size_t i=0; i<prop_element_strain->size(); i++)
         (*prop_element_strain)[i] = 0.0;
     for (std::size_t i=0; i<_local_assemblers.size(); i++)
     {
         auto const& local_asm = *_local_assemblers[i];
-        auto const& e = local_asm.getMeshElement();
+        //auto const& e = local_asm.getMeshElement();
         auto ip_strain = local_asm.getEpsilon();
         auto const nip = local_asm.getNumberOfIntegrationPoints();
         for (unsigned ip=0; ip<nip; ip++)
@@ -410,7 +410,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
                 OGS_FATAL("Failed to open %s", file_path.c_str());
 
             for (std::size_t i=0; i<property->getNumberOfTuples(); i++)
-                for (std::size_t k=0; k<property->getNumberOfComponents(); k++)
+                for (int k=0; k<property->getNumberOfComponents(); k++)
                     ofs << (*property)[i*property->getNumberOfComponents() + k] << "\n";
 
             ofs << std::flush;
