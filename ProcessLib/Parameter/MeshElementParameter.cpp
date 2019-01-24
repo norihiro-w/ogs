@@ -29,12 +29,12 @@ std::unique_ptr<ParameterBase> createMeshElementParameter(
     auto const create =
         //! \ogs_file_param{prj__parameters__parameter__MeshElement__create}
         config.getConfigParameterOptional<std::string>("create");
+    auto opt_n_comp =
+        //! \ogs_file_param{prj__parameters__parameter__MeshElement__components}
+        config.getConfigParameterOptional<unsigned>("components");
     if (!hasProperty && create && create.get() == "true")
     {
         DBUG("Property %s does not exit. create", field_name.c_str());
-        auto opt_n_comp =
-            //! \ogs_file_param{prj__parameters__parameter__MeshElement__components}
-            config.getConfigParameterOptional<unsigned>("components");
         unsigned const n_comp = opt_n_comp ? opt_n_comp.get() : 1;
 
         auto new_property = const_cast<MeshLib::Mesh&>(mesh)
