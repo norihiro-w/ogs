@@ -164,7 +164,7 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         vec_import_properties;
     if (config_import_mesh_properties)
     {
-        for (auto& config_property :
+        for (auto config_property :
              config_import_mesh_properties->getConfigSubtreeList("property"))
         {
             auto const property_name =
@@ -209,7 +209,7 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         vec_export_properties;
     if (config_export)
     {
-        for (auto& config_property :
+        for (auto config_property :
              config_export->getConfigSubtreeList("property"))
         {
             auto const property_name =
