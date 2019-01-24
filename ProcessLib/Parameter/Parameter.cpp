@@ -17,6 +17,7 @@
 #include "GroupBasedParameter.h"
 #include "MeshElementParameter.h"
 #include "MeshNodeParameter.h"
+#include "ShapeFunctionParameter.h"
 
 namespace ProcessLib
 {
@@ -68,6 +69,12 @@ std::unique_ptr<ParameterBase> createParameter(
     {
         INFO("MeshNodeParameter: %s", name.c_str());
         auto param = createMeshNodeParameter(name, config, *meshes.front());
+        return param;
+    }
+    if (type == "ShapeFunction")
+    {
+        INFO("ShapeFunctionParameter: %s", name.c_str());
+        auto param = createShapeFunctionParameter(name, config, *meshes.front());
         return param;
     }
 
