@@ -100,6 +100,8 @@ public:
     /// whether the step is accepted or not.
     virtual void setAcceptedOrNot(const bool /*accepted*/){};
 
+    virtual void finalizeCurrentTimeStep() {};
+
     /// return a history of time step sizes
     const std::vector<double>& getTimeStepSizeHistory() const
     {
