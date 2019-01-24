@@ -233,6 +233,13 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         }
     }
 
+    auto const config_reset_strain =
+        config.getConfigParameterOptional<std::string>("reset_strain");
+    bool const reset_strain =
+        config_reset_strain ? config_reset_strain.get() == "true" : false;
+    if (config_reset_strain)
+        DBUG("Using reset_strain=%s", config_reset_strain.get().c_str());
+
     SmallDeformationWithPTProcessData<DisplacementDim> process_data{
         materialIDs(mesh),
         T0,
@@ -247,7 +254,8 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         fluid_density,
         porosity,
         vec_import_properties,
-        vec_export_properties};
+        vec_export_properties,
+        reset_strain};
 
     SecondaryVariableCollection secondary_variables;
 

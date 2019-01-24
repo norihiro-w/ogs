@@ -203,23 +203,40 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
                 mesh_property.getNumberOfComponents());
         }
 
-        // Now we have a properly named vtk's field data array and the
-        // corresponding meta data.
-        std::size_t position = 0;
-        for (auto& local_asm : _local_assemblers)
+        if (_process_data.reset_strain && (name=="epsilon_ip" ||name=="epsilon_m_ip"))
         {
-            std::size_t const integration_points_read =
-                local_asm->setIPDataInitialConditions(
-                    name, &mesh_property[position],
-                    ip_meta_data.integration_order);
-            if (integration_points_read == 0)
-            {
-                OGS_FATAL(
-                    "No integration points read in the integration point "
-                    "initial conditions set function.");
-            }
-            position += integration_points_read * ip_meta_data.n_components;
+            for (std::size_t i=0; i<mesh_property.size(); i++)
+                const_cast<MeshLib::PropertyVector<double>&>(mesh_property)[i] = 0.0;
         }
+        else
+        {
+            // Now we have a properly named vtk's field data array and the
+            // corresponding meta data.
+            std::size_t position = 0;
+            for (auto& local_asm : _local_assemblers)
+            {
+                std::size_t const integration_points_read =
+                    local_asm->setIPDataInitialConditions(
+                        name, &mesh_property[position],
+                        ip_meta_data.integration_order);
+                if (integration_points_read == 0)
+                {
+                    OGS_FATAL(
+                        "No integration points read in the integration point "
+                        "initial conditions set function.");
+                }
+                position += integration_points_read * ip_meta_data.n_components;
+            }
+        }
+    }
+
+    if (_process_data.reset_strain &&
+        mesh.getProperties().existsPropertyVector<double>("ele_strain"))
+    {
+        auto* prop_element_strain =
+            mesh.getProperties().getPropertyVector<double>("ele_strain");
+        for (std::size_t i = 0; i < prop_element_strain->size(); i++)
+            const_cast<MeshLib::PropertyVector<double>&>(*prop_element_strain)[i] = 0.0;
     }
 }
 

@@ -50,7 +50,8 @@ struct SmallDeformationWithPTProcessData
         std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
             const& vec_import_properties_,
         std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
-            const& vec_export_properties_)
+            const& vec_export_properties_,
+        bool const reset_strain_)
         : material_ids(material_ids_),
           T0(T0_), T1(T1_), p0(p0_), p1(p1_),
           solid_materials{std::move(solid_materials_)},
@@ -62,7 +63,8 @@ struct SmallDeformationWithPTProcessData
           fluid_density(fluid_density_),
           porosity(porosity_),
           vec_import_properties(vec_import_properties_),
-          vec_export_properties(vec_export_properties_)
+          vec_export_properties(vec_export_properties_),
+          reset_strain(reset_strain_)
     {
     }
 
@@ -101,6 +103,8 @@ struct SmallDeformationWithPTProcessData
         vec_import_properties;
     std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>> const
         vec_export_properties;
+
+    bool const reset_strain;
 
     double dt = 0;
     double t = 0;
