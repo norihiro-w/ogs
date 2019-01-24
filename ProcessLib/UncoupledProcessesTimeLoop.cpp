@@ -322,6 +322,14 @@ double UncoupledProcessesTimeLoop::computeTimeStepping(
     const double prev_dt, double& t, std::size_t& accepted_steps,
     std::size_t& rejected_steps)
 {
+    for (std::size_t i = 0; i < _per_process_data.size(); i++)
+    {
+        auto& ppd = *_per_process_data[i];
+        const auto& timestepper = ppd.timestepper;
+        if (t != timestepper->begin())
+            timestepper->finalizeCurrentTimeStep();
+    }
+
     bool all_process_steps_accepted = true;
     // Get minimum time step size among step sizes of all processes.
     double dt = std::numeric_limits<double>::max();
@@ -409,6 +417,8 @@ double UncoupledProcessesTimeLoop::computeTimeStepping(
     {
         const auto& ppd = *_per_process_data[i];
         auto& timestepper = ppd.timestepper;
+//        if (t != timestepper->begin())
+//            timestepper->finalizeCurrentTimeStep();
         timestepper->resetCurrentTimeStep(dt);
 
         if (ppd.skip_time_stepping)
@@ -564,6 +574,7 @@ bool UncoupledProcessesTimeLoop::loop()
         INFO("[time] Time step #%u took %g s.", timesteps,
              time_timestep.elapsed());
 
+#if 0
         dt = computeTimeStepping(prev_dt, t, accepted_steps, rejected_steps);
 
         if (!_last_step_rejected)
@@ -572,6 +583,16 @@ bool UncoupledProcessesTimeLoop::loop()
             outputSolutions(output_initial_condition, is_staggered_coupling,
                             timesteps, t, *_output, &Output::doOutput);
         }
+#else
+        if (!_last_step_rejected)
+        {
+            const bool output_initial_condition = false;
+            outputSolutions(output_initial_condition, is_staggered_coupling,
+                            timesteps, t, *_output, &Output::doOutput);
+        }
+
+        dt = computeTimeStepping(prev_dt, t, accepted_steps, rejected_steps);
+#endif
 
         if (t + dt > _end_time ||
             t + std::numeric_limits<double>::epsilon() > _end_time)
