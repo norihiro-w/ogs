@@ -33,6 +33,11 @@ std::unique_ptr<TimeStepAlgorithm> createExternalTimeStepping(
     auto const filename = config.getConfigParameter<std::string>("file");
     auto const filepath = BaseLib::joinPaths(BaseLib::getProjectDirectory(), filename);
 
-    return std::make_unique<ExternalTimeStepping>(t_initial, t_end, filepath);
+    auto opt_sleep = config.getConfigParameterOptional<unsigned>("sleep");
+    unsigned const sleep = opt_sleep ? opt_sleep.get() : 100;
+    if (sleep == 0)
+        OGS_FATAL("Parameter <sleep> should be non-zero.");
+
+    return std::make_unique<ExternalTimeStepping>(t_initial, t_end, filepath, sleep);
 }
 }  // end of namespace NumLib

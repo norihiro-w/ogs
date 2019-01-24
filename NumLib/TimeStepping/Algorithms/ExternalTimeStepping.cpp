@@ -23,8 +23,11 @@
 namespace NumLib
 {
 ExternalTimeStepping::ExternalTimeStepping(
-    double t0, double tn, std::string const& timestep_file_path)
-    : TimeStepAlgorithm(t0, tn), _timestep_file_path(timestep_file_path)
+    double t0, double tn, std::string const& timestep_file_path,
+    unsigned sleep_duration_ms)
+    : TimeStepAlgorithm(t0, tn),
+      _timestep_file_path(timestep_file_path),
+      _sleep_duration_ms(sleep_duration_ms)
 {
 }
 
@@ -57,7 +60,7 @@ bool ExternalTimeStepping::next(const double /*solution_error*/)
         if (time_step_index-1 == _ts_prev.steps())
             break;
 
-        Sleep(100);  // ms
+        Sleep(_sleep_duration_ms);  // ms
     }
 
     if (std::abs(time_step_size) < std::numeric_limits<double>::epsilon())
