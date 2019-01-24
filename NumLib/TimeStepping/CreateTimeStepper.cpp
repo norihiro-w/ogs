@@ -18,7 +18,7 @@
 #include "BaseLib/Error.h"
 
 #include "NumLib/TimeStepping/Algorithms/CreateEvolutionaryPIDcontroller.h"
-#include "NumLib/TimeStepping/Algorithms/CreateExternalTimeStepping.h"
+#include "NumLib/TimeStepping/Algorithms/CreateExternalTimeSteppingController.h"
 #include "NumLib/TimeStepping/Algorithms/CreateFixedTimeStepping.h"
 #include "NumLib/TimeStepping/Algorithms/FixedTimeStepping.h"
 
@@ -47,9 +47,9 @@ std::unique_ptr<TimeStepAlgorithm> createTimeStepper(
     {
         timestepper = NumLib::createEvolutionaryPIDcontroller(config);
     }
-    else if (type == "ExternalTimeStepping")
+    else if (type == "ExternalController")
     {
-        timestepper = NumLib::createExternalTimeStepping(config);
+        timestepper = NumLib::createExternalTimeSteppingController(config);
     }
     else
     {

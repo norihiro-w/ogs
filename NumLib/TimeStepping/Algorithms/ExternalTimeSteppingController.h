@@ -16,10 +16,10 @@
 namespace NumLib
 {
 
-class ExternalTimeStepping final : public TimeStepAlgorithm
+class ExternalTimeSteppingController final : public TimeStepAlgorithm
 {
 public:
-    ExternalTimeStepping(
+    ExternalTimeSteppingController(
         double t0, double tn, std::string const& timestep_file_path,
         unsigned sleep_duration_ms);
 

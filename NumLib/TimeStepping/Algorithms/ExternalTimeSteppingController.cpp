@@ -6,7 +6,7 @@
  *              http://www.opengeosys.org/project/license
  */
 
-#include "ExternalTimeStepping.h"
+#include "ExternalTimeSteppingController.h"
 
 #include <algorithm>
 #include <cassert>
@@ -22,7 +22,7 @@
 
 namespace NumLib
 {
-ExternalTimeStepping::ExternalTimeStepping(
+ExternalTimeSteppingController::ExternalTimeSteppingController(
     double t0, double tn, std::string const& timestep_file_path,
     unsigned sleep_duration_ms)
     : TimeStepAlgorithm(t0, tn),
@@ -31,7 +31,7 @@ ExternalTimeStepping::ExternalTimeStepping(
 {
 }
 
-bool ExternalTimeStepping::next(const double /*solution_error*/)
+bool ExternalTimeSteppingController::next(const double /*solution_error*/)
 {
     // check if last time step
     if (std::abs(_ts_current.current() - _t_end) <
@@ -73,7 +73,7 @@ bool ExternalTimeStepping::next(const double /*solution_error*/)
     return true;
 }
 
-void ExternalTimeStepping::finalizeCurrentTimeStep()
+void ExternalTimeSteppingController::finalizeCurrentTimeStep()
 {
     std::ofstream ofs(_timestep_file_path);
     if (!ofs.good())

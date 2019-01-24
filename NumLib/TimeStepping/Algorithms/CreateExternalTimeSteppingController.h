@@ -19,6 +19,6 @@ namespace NumLib
 {
 class TimeStepAlgorithm;
 
-std::unique_ptr<TimeStepAlgorithm> createExternalTimeStepping(
+std::unique_ptr<TimeStepAlgorithm> createExternalTimeSteppingController(
     BaseLib::ConfigTree const& config);
 }  // end of namespace NumLib
