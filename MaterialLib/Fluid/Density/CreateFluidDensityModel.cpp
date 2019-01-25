@@ -156,6 +156,7 @@ std::unique_ptr<FluidProperty> createFluidDensityModel(
     }
     if (type == "WaterDensityIAPWSIF97Region1")
     {
+        config.checkConfigParameter("type", "WaterDensityIAPWSIF97Region1");
         return std::make_unique<WaterDensityIAPWSIF97Region1>();
     }
 
