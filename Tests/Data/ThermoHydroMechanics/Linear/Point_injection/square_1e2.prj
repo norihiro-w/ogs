@@ -44,9 +44,17 @@
             <process ref="THERMO_HYDRO_MECHANICS">
                 <nonlinear_solver>basic_newton</nonlinear_solver>
                 <convergence_criterion>
-                    <type>PerComponentDeltaX</type>
+                    <type>PerComponentResidual</type>
+                    <norm_type>NORM2</norm_type>
+                    <abstols>1e-6 1e-6 1e-6 1e-6</abstols>
+<!--
+                    <type>DeltaX</type>
+                    <norm_type>NORM2</norm_type>
+                    <abstol>1e-8</abstol>
+                    <type>PerComponentResidual</type>
                     <norm_type>NORM2</norm_type>
                     <abstols>1e-5 1e-5 1e-5 1e-5</abstols>
+-->
                 </convergence_criterion>
                 <time_discretization><type>BackwardEuler</type></time_discretization>
                 <time_stepping>
