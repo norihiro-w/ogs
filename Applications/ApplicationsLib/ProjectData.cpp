@@ -105,6 +105,9 @@
 #ifdef OGS_BUILD_PROCESS_THERMOMECHANICS
 #include "ProcessLib/ThermoMechanics/CreateThermoMechanicsProcess.h"
 #endif
+#ifdef OGS_BUILD_PROCESS_THM
+#include "ProcessLib/THM/CreateTHMProcess.h"
+#endif
 #ifdef OGS_BUILD_PROCESS_TWOPHASEFLOWWITHPP
 #include "ProcessLib/TwoPhaseFlowWithPP/CreateTwoPhaseFlowWithPPProcess.h"
 #endif
@@ -742,6 +745,34 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                             _process_variables, _parameters, integration_order,
                             process_config);
                     break;
+            }
+        }
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_THM
+            if (type == "THM")
+        {
+            //! \ogs_file_param{prj__processes__process__THM__dimension}
+            switch (process_config.getConfigParameter<int>("dimension"))
+            {
+                case 2:
+                    process =
+                        ProcessLib::THM::createTHMProcess<
+                            2>(*_mesh_vec[0], std::move(jacobian_assembler),
+                               _process_variables, _parameters,
+                               integration_order, process_config);
+                    break;
+                case 3:
+                    process =
+                        ProcessLib::THM::createTHMProcess<
+                            3>(*_mesh_vec[0], std::move(jacobian_assembler),
+                               _process_variables, _parameters,
+                               integration_order, process_config);
+                    break;
+                default:
+                    OGS_FATAL(
+                        "THM process does not support given "
+                        "dimension");
             }
         }
         else
