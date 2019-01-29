@@ -689,7 +689,7 @@ void THMLocalAssembler<ShapeFunctionDisplacement,
                                         ShapeFunctionPressure,
                                         IntegrationMethod, DisplacementDim>::
     computeSecondaryVariableConcrete(double const /*t*/,
-                                     std::vector<double> const& local_x)
+                                     std::vector<double> const& /*local_x*/)
 {
     //auto p = Eigen::Map<typename ShapeMatricesTypePressure::template VectorType<
     //    pressure_size> const>(local_x.data() + pressure_index, pressure_size);

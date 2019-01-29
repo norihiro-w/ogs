@@ -133,7 +133,7 @@ bool THMProcess<DisplacementDim>::isLinear() const
 template <int DisplacementDim>
 MathLib::MatrixSpecifications
 THMProcess<DisplacementDim>::getMatrixSpecifications(
-    const int process_id) const
+    const int /*process_id*/) const
 {
     auto const& l = *_local_to_global_index_map;
     return {l.dofSizeWithoutGhosts(), l.dofSizeWithoutGhosts(),
@@ -331,18 +331,12 @@ void THMProcess<DisplacementDim>::
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
         _local_assemblers, dof_tables, t, x, xdot, dxdot_dx, dx_dx, M, K, b,
         Jac, _coupled_solutions);
-
-    auto copyRhs = [&](int const variable_id, auto& output_vector) {
-        transformVariableFromGlobalVector(b, variable_id, dof_tables[0],
-                                            output_vector,
-                                            std::negate<double>());
-    };
 }
 
 template <int DisplacementDim>
 void THMProcess<DisplacementDim>::preTimestepConcreteProcess(
     GlobalVector const& x, double const t, double const dt,
-    const int process_id)
+    const int /*process_id*/)
 {
     DBUG("PreTimestep THMProcess.");
 
@@ -402,7 +396,7 @@ std::tuple<NumLib::LocalToGlobalIndexMap*, bool> THMProcess<
 template <int DisplacementDim>
 NumLib::LocalToGlobalIndexMap const&
 THMProcess<DisplacementDim>::getDOFTable(
-    const int process_id) const
+    const int /*process_id*/) const
 {
     return *_local_to_global_index_map;
 }
