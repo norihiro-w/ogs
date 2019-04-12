@@ -56,7 +56,7 @@ public:
 
     void setCoordinates(MathLib::TemplatePoint<double, 3> const& coordinates)
     {
-        clear();
+        //clear();
         _coordinates = coordinates;
     }
 
