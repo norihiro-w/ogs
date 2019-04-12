@@ -328,7 +328,11 @@ public:
             //------------------------------------------------------
             // stress, C calculation
             //------------------------------------------------------
-            eff_sigma_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
+            if (sigma_prev.isZero(0)) { //TODO check 1st time step
+                eff_sigma_prev.noalias() = sigma_prev;
+            } else {
+                eff_sigma_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
+            }
             auto&& solution = _ip_data[ip].solid_material.integrateStress(
                 t, x_position, dt, eps_m_prev, eps_m, eff_sigma_prev, *state, T1_ip);
 
