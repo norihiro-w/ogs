@@ -47,6 +47,7 @@ if(COMPILER_IS_GCC OR COMPILER_IS_CLANG OR COMPILER_IS_INTEL)
     add_compile_options(
         -Wall
         -Wextra
+        -fdiagnostics-color=always
     )
 
     # Profiling
