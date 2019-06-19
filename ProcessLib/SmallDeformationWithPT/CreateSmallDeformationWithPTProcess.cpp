@@ -240,6 +240,13 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
     if (config_reset_strain)
         DBUG("Using reset_strain=%s", config_reset_strain.get().c_str());
 
+    auto const config_nonequilibrium_stress =
+        config.getConfigParameterOptional<std::string>("nonequilibrium_stress");
+    bool const nonequilibrium_stress =
+        config_nonequilibrium_stress ? config_nonequilibrium_stress.get() == "true" : false;
+    if (config_nonequilibrium_stress)
+        DBUG("Using nonequilibrium_stress=%s", config_nonequilibrium_stress.get().c_str());
+
     SmallDeformationWithPTProcessData<DisplacementDim> process_data{
         materialIDs(mesh),
         T0,
@@ -255,7 +262,8 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         porosity,
         vec_import_properties,
         vec_export_properties,
-        reset_strain};
+        reset_strain,
+        nonequilibrium_stress};
 
     SecondaryVariableCollection secondary_variables;
 

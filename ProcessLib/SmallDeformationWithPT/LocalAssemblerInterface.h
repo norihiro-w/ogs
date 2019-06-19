@@ -48,6 +48,9 @@ struct SmallDeformationWithPTLocalAssemblerInterface
 
     virtual unsigned getNumberOfIntegrationPoints() const = 0;
 
+    virtual void assembleResidual(
+        double const t,
+        std::vector<double>& local_rhs_data) const = 0;
 };
 
 }  // namespace SmallDeformationWithPT

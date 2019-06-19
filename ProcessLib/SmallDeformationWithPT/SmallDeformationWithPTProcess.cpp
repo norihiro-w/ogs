@@ -12,8 +12,10 @@
 #include <cassert>
 
 #include "BaseLib/Functional.h"
+#include "MathLib/LinAlg/LinAlg.h"
 #include "ProcessLib/SmallDeformation/CreateLocalAssemblers.h"
 
+#include "SDPTGlobalAssembler.h"
 #include "SmallDeformationWithPTFEM.h"
 
 namespace ProcessLib
@@ -238,6 +240,17 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
         for (std::size_t i = 0; i < prop_element_strain->size(); i++)
             const_cast<MeshLib::PropertyVector<double>&>(*prop_element_strain)[i] = 0.0;
     }
+
+    // if (_process_data.nonequilibrium_stress)
+    // {
+    //     auto const process_id = 0; //TODO
+    //     _process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector();
+    //     //_process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(ode_sys.getMatrixSpecifications(process_id));
+
+    //     GlobalExecutor::executeSelectedMemberDereferenced(
+    //         _global_assembler, &SmallDeformationWithPTLocalAssemblerInterface::assembleResidual,
+    //         _local_assemblers, pv.getActiveElementIDs(), _process_data.r_neq);
+    // }
 }
 
 template <int DisplacementDim>
@@ -275,11 +288,33 @@ void SmallDeformationWithPTProcess<DisplacementDim>::
      const int process_id = 0;
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
+    if (_process_data.nonequilibrium_stress && _process_data.r_neq==nullptr)
+    {
+        _process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(b);
+        MathLib::LinAlg::copy(b, _process_data.r_neq);
+        _process_data.r_neq->setZero();
+
+        //_process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(ode_sys.getMatrixSpecifications(process_id));
+
+        SmallDeformationWithPTGlobalAssembler ga;
+        GlobalExecutor::executeSelectedMemberDereferenced(
+            ga, &SmallDeformationWithPTGlobalAssembler::assembleResidual,
+            _local_assemblers, pv.getActiveElementIDs(), dof_table[0], t, *_process_data.r_neq);
+    }
+
+
     // Call global assembler for each local assembly item.
     GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
         xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
+
+    //
+    if (_process_data.nonequilibrium_stress)
+    {
+        //b -= *_process_data.r_neq;
+        MathLib::LinAlg::axpy(b, -1., *_process_data.r_neq);
+    }
 }
 
 template <int DisplacementDim>

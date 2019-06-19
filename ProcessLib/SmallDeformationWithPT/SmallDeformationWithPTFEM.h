@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -328,7 +329,7 @@ public:
             //------------------------------------------------------
             // stress, C calculation
             //------------------------------------------------------
-            if (sigma_prev.isZero(0)) { //TODO check 1st time step
+            if (sigma_prev.isZero(0)) {
                 eff_sigma_prev.noalias() = sigma_prev;
             } else {
                 eff_sigma_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
@@ -342,6 +343,15 @@ public:
             MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
             std::tie(eff_sigma, state, C) = std::move(*solution);
             sigma.noalias() = eff_sigma - biot * Invariants::identity2 * p1_ip;
+
+            if (_element.getID()==15142 && ip==0)
+            {
+                std::cout << "eps=" << eps.transpose() << std::endl;
+                std::cout << "eps_m=" << eps_m.transpose() << std::endl;
+                std::cout << "eff_sigma_prev=" << eff_sigma_prev.transpose() << std::endl;
+                std::cout << "eff_sigma=" << eff_sigma.transpose() << std::endl;
+                std::cout << "sigma=" << sigma.transpose() << std::endl;
+            }
 
             //------------------------------------------------------
             // residual, jacobian calculation
@@ -402,6 +412,66 @@ public:
     {
         return _integration_method.getNumberOfPoints();
     }
+
+    void assembleResidual(double const t, std::vector<double>& local_rhs_data) const override
+    {
+        auto const local_matrix_size = displacement_size;
+        auto local_rhs = MathLib::createZeroedVector<RhsVector>(
+            local_rhs_data, local_matrix_size);
+
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        SpatialPosition x_position;
+        x_position.setElementID(_element.getID());
+
+        for (unsigned ip = 0; ip < n_integration_points; ip++)
+        {
+            x_position.setIntegrationPoint(ip);
+            auto const& w = _ip_data[ip].integration_weight;
+            auto const& N = _ip_data[ip].N;
+            auto const& dNdx = _ip_data[ip].dNdx;
+
+            auto const x_coord =
+                interpolateXCoordinate<ShapeFunction, ShapeMatricesType>(
+                    _element, N);
+            auto const& B = LinearBMatrix::computeBMatrix<
+                DisplacementDim, ShapeFunction::NPOINTS,
+                typename BMatricesType::BMatrixType>(dNdx, N, x_coord,
+                                                     _is_axially_symmetric);
+
+            auto& sigma = _ip_data[ip].sigma;
+
+            // auto& state = _ip_data[ip].material_state_variables;
+
+            // auto const biot = _process_data.biot_coefficient(t, x_position)[0];
+            auto const rho_s = _process_data.solid_density(t, x_position)[0];
+            auto const rho_f = _process_data.fluid_density(t, x_position)[0];
+            auto const porosity = _process_data.porosity(t, x_position)[0];
+            auto const rho_bulk = rho_s * (1. - porosity) + porosity * rho_f;
+            auto const& b = _process_data.specific_body_force;
+
+
+            //------------------------------------------------------
+            // residual
+            //------------------------------------------------------
+            typename ShapeMatricesType::template MatrixType<DisplacementDim,
+                                                            displacement_size>
+                N_u = ShapeMatricesType::template MatrixType<
+                    DisplacementDim,
+                    displacement_size>::Zero(DisplacementDim,
+                                             displacement_size);
+
+            for (int i = 0; i < DisplacementDim; ++i)
+                N_u.template block<1, displacement_size / DisplacementDim>(
+                       i, i * displacement_size / DisplacementDim)
+                    .noalias() = N;
+
+            local_rhs.noalias() -=
+                (B.transpose() * sigma - N_u.transpose() * rho_bulk * b) * w;
+        }
+    }
+
 
 private:
     std::size_t setSigma(double const* values)
