@@ -291,15 +291,16 @@ void SmallDeformationWithPTProcess<DisplacementDim>::
     if (_process_data.nonequilibrium_stress && _process_data.r_neq==nullptr)
     {
         _process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(b);
+        //TODO
         MathLib::LinAlg::copy(b, _process_data.r_neq);
         _process_data.r_neq->setZero();
-
-        //_process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(ode_sys.getMatrixSpecifications(process_id));
 
         SmallDeformationWithPTGlobalAssembler ga;
         GlobalExecutor::executeSelectedMemberDereferenced(
             ga, &SmallDeformationWithPTGlobalAssembler::assembleResidual,
             _local_assemblers, pv.getActiveElementIDs(), dof_table[0], t, *_process_data.r_neq);
+
+        //TODO Neumann
     }
 
 
