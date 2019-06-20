@@ -312,6 +312,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::
     const int process_id = 0;
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
+    //TODO move to the initialization (how to get b?)
     if (_process_data.nonequilibrium_stress && _process_data.r_neq==nullptr)
     {
         _process_data.r_neq = &NumLib::GlobalVectorProvider::provider.getVector(b);
@@ -322,8 +323,9 @@ void SmallDeformationWithPTProcess<DisplacementDim>::
             ga, &SmallDeformationWithPTGlobalAssembler::assembleResidual,
             _local_assemblers, pv.getActiveElementIDs(), dof_table[0], 0.0, *_process_data.r_neq);
 
-        //TODO K
-        _boundary_conditions[process_id].applyNaturalBC(0.0, x, K, *_process_data.r_neq, nullptr);
+        GlobalMatrix* dummy = nullptr;
+        _boundary_conditions[process_id].applyNaturalBC(0.0, x, *dummy, *_process_data.r_neq, nullptr);
+        //std::cout << "r0=\n" << _process_data.r_neq->getRawVector() << "\n";
     }
 
 
@@ -336,8 +338,8 @@ void SmallDeformationWithPTProcess<DisplacementDim>::
     //
     if (_process_data.nonequilibrium_stress)
     {
-        //b -= *_process_data.r_neq;
         MathLib::LinAlg::axpy(b, -1., *_process_data.r_neq);
+        //std::cout << "r=\n" << b.getRawVector() << "\n";
     }
 }
 

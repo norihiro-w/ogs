@@ -32,10 +32,10 @@ public:
         const double t, GlobalVector &r)
     {
         auto const indices = NumLib::getIndices(mesh_item_id, dof_table);
-        auto local_r = r.get(indices);
 
-        //_local_r_data.clear();
-        local_assembler.assembleResidual(t, local_r);
+        _local_r_data.clear();
+        local_assembler.assembleResidual(t, _local_r_data);
+        r.add(indices, _local_r_data);
     }
 
 private:

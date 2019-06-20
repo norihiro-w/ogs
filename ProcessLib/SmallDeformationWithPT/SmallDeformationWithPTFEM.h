@@ -391,7 +391,7 @@ public:
             std::tie(eff_sigma, state, C) = std::move(*solution);
             sigma.noalias() = eff_sigma - biot * Invariants::identity2 * p1_ip;
 
-            if (_element.getID()==15142 && ip==0)
+            if (_element.getID()==0 && ip==0)
             {
                 std::cout << "eps=" << eps.transpose() << std::endl;
                 std::cout << "eps_m=" << eps_m.transpose() << std::endl;
@@ -463,7 +463,7 @@ public:
     void assembleResidual(double const t, std::vector<double>& local_rhs_data) const override
     {
         auto const local_matrix_size = displacement_size;
-        auto local_rhs = MathLib::toVector<RhsVector>(local_rhs_data, local_matrix_size);
+        auto local_rhs = MathLib::createZeroedVector<RhsVector>(local_rhs_data, local_matrix_size);
 
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();
