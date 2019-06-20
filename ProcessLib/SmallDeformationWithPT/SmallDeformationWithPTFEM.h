@@ -204,6 +204,53 @@ public:
         return 0;
     }
 
+    std::size_t setIPDataInitialConditions(std::string const& name, Parameter<double> const& function) override
+    {
+        if (name == "sigma_ip")
+        {
+            auto const kelvin_vector_size =
+                MathLib::KelvinVector::KelvinVectorDimensions<
+                    DisplacementDim>::value;
+            unsigned const n_integration_points =
+                _integration_method.getNumberOfPoints();
+
+            std::vector<double> ip_sigma_values;
+            auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+                double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+                ip_sigma_values, n_integration_points, kelvin_vector_size);
+
+            using FemType =
+                NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
+            FemType fe(
+                static_cast<const typename ShapeFunction::MeshElement&>(_element));
+
+            SpatialPosition x_position;
+            for (unsigned ip = 0; ip < n_integration_points; ip++)
+            {
+                MathLib::TemplatePoint<double, 3> coords_ip(fe.interpolateCoordinates(_ip_data[ip].N));
+                x_position.setCoordinates(coords_ip);
+                std::vector<double> sigma_neq_data =
+                    function(
+                        std::numeric_limits<
+                            double>::quiet_NaN() /* time independent */,
+                        x_position);
+
+                Eigen::VectorXd const sigma_neq =
+                    Eigen::Map<typename BMatricesType::KelvinVectorType>(
+                        sigma_neq_data.data(),
+                        MathLib::KelvinVector::KelvinVectorDimensions<
+                            DisplacementDim>::value,
+                        1);
+
+                cache_mat.row(ip) =
+                    MathLib::KelvinVector::kelvinVectorToSymmetricTensor(sigma_neq);
+            }
+
+            return setSigma(ip_sigma_values.data());
+        }
+        return 0;
+    }
+
     void assemble(double const /*t*/, std::vector<double> const& /*local_x*/,
                   std::vector<double>& /*local_M_data*/,
                   std::vector<double>& /*local_K_data*/,
@@ -416,8 +463,7 @@ public:
     void assembleResidual(double const t, std::vector<double>& local_rhs_data) const override
     {
         auto const local_matrix_size = displacement_size;
-        auto local_rhs = MathLib::createZeroedVector<RhsVector>(
-            local_rhs_data, local_matrix_size);
+        auto local_rhs = MathLib::toVector<RhsVector>(local_rhs_data, local_matrix_size);
 
         unsigned const n_integration_points =
             _integration_method.getNumberOfPoints();

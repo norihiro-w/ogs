@@ -74,6 +74,8 @@ public:
         SecondaryVariableCollection&& secondary_variables,
         NumLib::NamedFunctionCaller&& named_function_caller);
 
+    virtual ~SmallDeformationWithPTProcess();
+
     //! \name ODESystem interface
     //! @{
     bool isLinear() const override;
