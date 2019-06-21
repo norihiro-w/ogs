@@ -150,21 +150,21 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
             getExtrapolator(), _local_assemblers,
             &SmallDeformationWithPTLocalAssemblerInterface::getIntPtEpsilon));
 
-#if 0
-    auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
-        const_cast<MeshLib::Mesh&>(mesh), "pressure_prev",
-        MeshLib::MeshItemType::Node, 1);
-    mesh_prop_pressure_prev->resize(mesh.getNumberOfNodes());
+#if 1
+    // auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
+    //     const_cast<MeshLib::Mesh&>(mesh), "pressure_prev",
+    //     MeshLib::MeshItemType::Node, 1);
+    // mesh_prop_pressure_prev->resize(mesh.getNumberOfNodes());
 
     auto mesh_prop_pressure = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "pressure",
         MeshLib::MeshItemType::Node, 1);
     mesh_prop_pressure->resize(mesh.getNumberOfNodes());
 
-    auto mesh_prop_temperature_prev = MeshLib::getOrCreateMeshProperty<double>(
-        const_cast<MeshLib::Mesh&>(mesh), "temperature_prev",
-        MeshLib::MeshItemType::Node, 1);
-    mesh_prop_temperature_prev->resize(mesh.getNumberOfNodes());
+    // auto mesh_prop_temperature_prev = MeshLib::getOrCreateMeshProperty<double>(
+    //     const_cast<MeshLib::Mesh&>(mesh), "temperature_prev",
+    //     MeshLib::MeshItemType::Node, 1);
+    // mesh_prop_temperature_prev->resize(mesh.getNumberOfNodes());
 
     auto mesh_prop_temperature = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "temperature",
@@ -175,9 +175,9 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
     {
         SpatialPosition x_pos;
         x_pos.setNodeID(i);
-        (*mesh_prop_pressure_prev)[i] = _process_data.p0(0, x_pos)[0];
+        // (*mesh_prop_pressure_prev)[i] = _process_data.p0(0, x_pos)[0];
         (*mesh_prop_pressure)[i] = _process_data.p1(0, x_pos)[0];
-        (*mesh_prop_temperature_prev)[i] = _process_data.T0(0, x_pos)[0];
+        // (*mesh_prop_temperature_prev)[i] = _process_data.T0(0, x_pos)[0];
         (*mesh_prop_temperature)[i] = _process_data.T1(0, x_pos)[0];
     }
 #endif
@@ -386,7 +386,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::preTimestepConcreteProcess(
 
 template <int DisplacementDim>
 void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess(
-    GlobalVector const& x, const double /*t*/, const double /*delta_t*/,
+    GlobalVector const& x, const double t, const double /*delta_t*/,
     int const process_id)
 {
     DBUG("PostTimestep SmallDeformationWithPTProcess.");
@@ -473,6 +473,19 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     nodeValuesToElementValues(mesh, "sigma", "stress");
     nodeValuesToElementValues(mesh, "epsilon", "strain");
 #endif
+
+    auto* mesh_prop_pressure =
+        mesh.getProperties().getPropertyVector<double>("pressure");
+    auto* mesh_prop_temperature =
+        mesh.getProperties().getPropertyVector<double>("temperature");
+
+    for (std::size_t i=0; i<mesh.getNumberOfNodes(); i++)
+    {
+        SpatialPosition x_pos;
+        x_pos.setNodeID(i);
+        (*mesh_prop_pressure)[i] = _process_data.p1(t, x_pos)[0];
+        (*mesh_prop_temperature)[i] = _process_data.T1(t, x_pos)[0];
+    }
 
     // export mesh properties to a specified file
     if (!_process_data.vec_export_properties.empty())
