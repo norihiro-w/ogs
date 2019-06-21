@@ -38,6 +38,7 @@ enum class ConstitutiveModel
     LinearElasticIsotropic,
     Lubby2,
     CreepBGRa,
+    SCDamageModel,
     Invalid
 };
 

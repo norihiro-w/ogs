@@ -8,6 +8,7 @@
  */
 
 #include "LinearElasticIsotropic.h"
+#include "ProcessLib/Parameter/Parameter.h"
 
 namespace MaterialLib
 {
@@ -45,10 +46,10 @@ template <int DisplacementDim>
 typename LinearElasticIsotropic<DisplacementDim>::KelvinMatrix
 LinearElasticIsotropic<DisplacementDim>::getElasticTensor(
     double const t, ProcessLib::SpatialPosition const& x,
-    double const /*T*/) const
+    double const T) const
 {
-    return elasticTangentStiffness<DisplacementDim>(_mp.lambda(t, x),
-                                                    _mp.mu(t, x));
+    return elasticTangentStiffness<DisplacementDim>(_mp.lambda(t,x),
+                                                    _mp.mu(t,x));
 }
 
 template class LinearElasticIsotropic<2>;

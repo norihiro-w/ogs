@@ -15,6 +15,7 @@
 #include "CreateEhlers.h"
 #include "CreateLinearElasticIsotropic.h"
 #include "CreateLubby2.h"
+#include "CreateSCDamageModel.h"
 #include "MFront/CreateMFront.h"
 
 #include "MechanicsBase.h"
@@ -62,6 +63,11 @@ createConstitutiveRelation(
     if (type == "MFront")
     {
         return MaterialLib::Solids::MFront::createMFront<DisplacementDim>(
+            parameters, config);
+    }
+    if (type == "SCDamageModel")
+    {
+        return MaterialLib::Solids::createSCDamageModel<DisplacementDim>(
             parameters, config);
     }
     OGS_FATAL("Cannot construct constitutive relation of given type '%s'.",
