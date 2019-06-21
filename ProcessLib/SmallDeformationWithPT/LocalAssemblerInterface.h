@@ -32,6 +32,8 @@ struct SmallDeformationWithPTLocalAssemblerInterface
 
     virtual std::vector<double> getSigma() const = 0;
 
+    virtual std::vector<double> getSigmaEq() const = 0;
+
     virtual std::vector<double> getEpsilon() const = 0;
 
     virtual std::vector<double> getEpsilonMechanical() const = 0;

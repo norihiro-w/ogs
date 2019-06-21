@@ -150,6 +150,11 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
             getExtrapolator(), _local_assemblers,
             &SmallDeformationWithPTLocalAssemblerInterface::getIntPtEpsilon));
 
+    auto mesh_prop_element_stress_eq = MeshLib::getOrCreateMeshProperty<double>(
+        const_cast<MeshLib::Mesh&>(mesh), "ele_stress_eq",
+        MeshLib::MeshItemType::Cell, 1);
+    mesh_prop_element_stress_eq->resize(mesh.getNumberOfElements());
+
 #if 1
     // auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
     //     const_cast<MeshLib::Mesh&>(mesh), "pressure_prev",
@@ -417,6 +422,20 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
 
         for (unsigned k=0; k<n_comp; k++)
             (*prop_element_stress)[i*n_comp + k] /= static_cast<double>(nip);
+    }
+
+    auto* prop_element_stress_eq =
+        mesh.getProperties().getPropertyVector<double>("ele_stress_eq");
+    for (std::size_t i=0; i<prop_element_stress_eq->size(); i++)
+        (*prop_element_stress_eq)[i] = 0.0;
+    for (std::size_t i=0; i<_local_assemblers.size(); i++)
+    {
+        auto const& local_asm = *_local_assemblers[i];
+        auto const ip_stress_eq = local_asm.getSigmaEq();
+        auto const nip = local_asm.getNumberOfIntegrationPoints();
+        for (unsigned ip=0; ip<nip; ip++)
+            (*prop_element_stress_eq)[i] += ip_stress_eq[ip];
+        (*prop_element_stress_eq)[i] /= static_cast<double>(nip);
     }
 
     auto* prop_element_strain =
