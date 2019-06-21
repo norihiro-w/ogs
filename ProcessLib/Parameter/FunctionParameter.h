@@ -50,10 +50,10 @@ struct FunctionParameter final : public Parameter<T>
         : Parameter<T>(name_), _mesh(mesh_), _vec_expression_str(vec_expression_str_)
     {
         _symbol_table.add_constants();
-        _symbol_table.add_variable("x", _x);
-        _symbol_table.add_variable("y", _y);
-        _symbol_table.add_variable("z", _z);
-        _symbol_table.add_variable("t", _t);
+        _symbol_table.create_variable("x");
+        _symbol_table.create_variable("y");
+        _symbol_table.create_variable("z");
+        _symbol_table.create_variable("t");
 
         _vec_expression.resize(_vec_expression_str.size());
         for (unsigned i=0; i<_vec_expression_str.size(); i++)
@@ -66,51 +66,50 @@ struct FunctionParameter final : public Parameter<T>
                     _vec_expression_str[i].c_str());
             }
         }
-
-        _cache.resize(_vec_expression.size());
     }
 
-    bool isTimeDependent() const override { return false; }
+    bool isTimeDependent() const override { return true; }
 
     int getNumberOfComponents() const override
     {
         return _vec_expression.size();
     }
 
-    std::vector<T> const& operator()(double const t,
+    std::vector<T> const operator()(double const t_,
                                      SpatialPosition const& pos) const override
     {
+        std::vector<T> cache(getNumberOfComponents());
+        auto& x = _symbol_table.get_variable("x")->ref();
+        auto& y = _symbol_table.get_variable("y")->ref();
+        auto& z = _symbol_table.get_variable("z")->ref();
+        auto& t = _symbol_table.get_variable("t")->ref();
+        t = t_;
         if (pos.getCoordinates())
         {
             auto const coords = pos.getCoordinates().get();
-            _x = coords[0];
-            _y = coords[1];
-            _z = coords[2];
-            _t = t;
+            x = coords[0];
+            y = coords[1];
+            z = coords[2];
         }
         else if (pos.getNodeID())
         {
             auto const& node = *_mesh.getNode(pos.getNodeID().get());
-            _x = node[0];
-            _y = node[1];
-            _z = node[2];
-            _t = t;
+            x = node[0];
+            y = node[1];
+            z = node[2];
         }
 
         for (unsigned i=0; i<_vec_expression.size(); i++)
-            _cache[i] = _vec_expression[i].value();
+            cache[i] = _vec_expression[i].value();
 
-        return _cache;
+        return cache;
     }
 
 private:
     MeshLib::Mesh const& _mesh;
     std::vector<std::string> _vec_expression_str;
-
-    mutable double _x, _y, _z, _t;
     symbol_table_t _symbol_table;
     std::vector<expression_t> _vec_expression;
-    mutable std::vector<T> _cache;
 };
 
 std::unique_ptr<ParameterBase> createFunctionParameter(

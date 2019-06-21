@@ -43,7 +43,7 @@ struct CurveScaledParameter final : public Parameter<T> {
         return _parameter->getNumberOfComponents();
     }
 
-    std::vector<T> const& operator()(double const t,
+    std::vector<T> const operator()(double const t,
                                      SpatialPosition const& pos) const override
     {
         auto const& tup = (*_parameter)(t, pos);
