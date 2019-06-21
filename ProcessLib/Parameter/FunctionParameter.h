@@ -53,6 +53,7 @@ struct FunctionParameter final : public Parameter<T>
         _symbol_table.add_variable("x", _x);
         _symbol_table.add_variable("y", _y);
         _symbol_table.add_variable("z", _z);
+        _symbol_table.add_variable("t", _t);
 
         _vec_expression.resize(_vec_expression_str.size());
         for (unsigned i=0; i<_vec_expression_str.size(); i++)
@@ -76,7 +77,7 @@ struct FunctionParameter final : public Parameter<T>
         return _vec_expression.size();
     }
 
-    std::vector<T> const& operator()(double const /*t*/,
+    std::vector<T> const& operator()(double const t,
                                      SpatialPosition const& pos) const override
     {
         if (pos.getCoordinates())
@@ -85,6 +86,7 @@ struct FunctionParameter final : public Parameter<T>
             _x = coords[0];
             _y = coords[1];
             _z = coords[2];
+            _t = t;
         }
         else if (pos.getNodeID())
         {
@@ -92,6 +94,7 @@ struct FunctionParameter final : public Parameter<T>
             _x = node[0];
             _y = node[1];
             _z = node[2];
+            _t = t;
         }
 
         for (unsigned i=0; i<_vec_expression.size(); i++)
@@ -104,7 +107,7 @@ private:
     MeshLib::Mesh const& _mesh;
     std::vector<std::string> _vec_expression_str;
 
-    mutable double _x, _y, _z;
+    mutable double _x, _y, _z, _t;
     symbol_table_t _symbol_table;
     std::vector<expression_t> _vec_expression;
     mutable std::vector<T> _cache;
