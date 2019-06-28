@@ -360,13 +360,18 @@ public:
             // double const T0_ip = N.dot(nodal_T0);
             // double const T1_ip = N.dot(nodal_T1);
 
+            ParameterArguments pargs;
+            pargs.t = t;
+            pargs.pos = x_position;
+            pargs.exargs["T"] = T1_ip;
+            pargs.exargs["p"] = p1_ip;
+
             auto const alpha =
-                _process_data.solid_linear_thermal_expansion_coefficient(
-                    t, x_position)[0];
-            auto const biot = _process_data.biot_coefficient(t, x_position)[0];
-            auto const rho_s = _process_data.solid_density(t, x_position)[0];
-            auto const rho_f = _process_data.fluid_density(t, x_position)[0];
-            auto const porosity = _process_data.porosity(t, x_position)[0];
+                _process_data.solid_linear_thermal_expansion_coefficient(pargs)[0];
+            auto const biot = _process_data.biot_coefficient(pargs)[0];
+            auto const rho_s = _process_data.solid_density(pargs)[0];
+            auto const rho_f = _process_data.fluid_density(pargs)[0];
+            auto const porosity = _process_data.porosity(pargs)[0];
             auto const rho_bulk = rho_s * (1. - porosity) + porosity * rho_f;
             auto const& b = _process_data.specific_body_force;
 
