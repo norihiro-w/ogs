@@ -13,6 +13,7 @@
 
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
 #include "ProcessLib/LocalAssemblerInterface.h"
+#include "ProcessLib/Parameter/Parameter.h"
 
 namespace ProcessLib
 {
@@ -25,6 +26,9 @@ struct SmallDeformationWithPTLocalAssemblerInterface
     virtual std::size_t setIPDataInitialConditions(
         std::string const& name, double const* values,
         int const integration_order) = 0;
+
+    virtual std::size_t setIPDataInitialConditions(
+        std::string const& name, Parameter<double> const& function) = 0;
 
     virtual std::vector<double> getSigma() const = 0;
 
@@ -48,6 +52,9 @@ struct SmallDeformationWithPTLocalAssemblerInterface
 
     virtual unsigned getNumberOfIntegrationPoints() const = 0;
 
+    virtual void assembleResidual(
+        double const t,
+        std::vector<double>& local_rhs_data) const = 0;
 };
 
 }  // namespace SmallDeformationWithPT

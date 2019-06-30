@@ -203,6 +203,53 @@ public:
         return 0;
     }
 
+    std::size_t setIPDataInitialConditions(std::string const& name, Parameter<double> const& function) override
+    {
+        if (name == "sigma_ip")
+        {
+            auto const kelvin_vector_size =
+                MathLib::KelvinVector::KelvinVectorDimensions<
+                    DisplacementDim>::value;
+            unsigned const n_integration_points =
+                _integration_method.getNumberOfPoints();
+
+            std::vector<double> ip_sigma_values;
+            auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+                double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+                ip_sigma_values, n_integration_points, kelvin_vector_size);
+
+            using FemType =
+                NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
+            FemType fe(
+                static_cast<const typename ShapeFunction::MeshElement&>(_element));
+
+            SpatialPosition x_position;
+            for (unsigned ip = 0; ip < n_integration_points; ip++)
+            {
+                MathLib::TemplatePoint<double, 3> coords_ip(fe.interpolateCoordinates(_ip_data[ip].N));
+                x_position.setCoordinates(coords_ip);
+                std::vector<double> sigma_neq_data =
+                    function(
+                        std::numeric_limits<
+                            double>::quiet_NaN() /* time independent */,
+                        x_position);
+
+                Eigen::VectorXd const sigma_neq =
+                    Eigen::Map<typename BMatricesType::KelvinVectorType>(
+                        sigma_neq_data.data(),
+                        MathLib::KelvinVector::KelvinVectorDimensions<
+                            DisplacementDim>::value,
+                        1);
+
+                cache_mat.row(ip) =
+                    MathLib::KelvinVector::kelvinVectorToSymmetricTensor(sigma_neq);
+            }
+
+            return setSigma(ip_sigma_values.data());
+        }
+        return 0;
+    }
+
     void assemble(double const /*t*/, std::vector<double> const& /*local_x*/,
                   std::vector<double>& /*local_M_data*/,
                   std::vector<double>& /*local_K_data*/,
@@ -328,7 +375,7 @@ public:
             //------------------------------------------------------
             // stress, C calculation
             //------------------------------------------------------
-            if (sigma_prev.isZero(0)) { //TODO check 1st time step
+            if (sigma_prev.isZero(0)) {
                 eff_sigma_prev.noalias() = sigma_prev;
             } else {
                 eff_sigma_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
@@ -402,6 +449,65 @@ public:
     {
         return _integration_method.getNumberOfPoints();
     }
+
+    void assembleResidual(double const t, std::vector<double>& local_rhs_data) const override
+    {
+        auto const local_matrix_size = displacement_size;
+        auto local_rhs = MathLib::createZeroedVector<RhsVector>(local_rhs_data, local_matrix_size);
+
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        SpatialPosition x_position;
+        x_position.setElementID(_element.getID());
+
+        for (unsigned ip = 0; ip < n_integration_points; ip++)
+        {
+            x_position.setIntegrationPoint(ip);
+            auto const& w = _ip_data[ip].integration_weight;
+            auto const& N = _ip_data[ip].N;
+            auto const& dNdx = _ip_data[ip].dNdx;
+
+            auto const x_coord =
+                interpolateXCoordinate<ShapeFunction, ShapeMatricesType>(
+                    _element, N);
+            auto const& B = LinearBMatrix::computeBMatrix<
+                DisplacementDim, ShapeFunction::NPOINTS,
+                typename BMatricesType::BMatrixType>(dNdx, N, x_coord,
+                                                     _is_axially_symmetric);
+
+            auto& sigma = _ip_data[ip].sigma;
+
+            // auto& state = _ip_data[ip].material_state_variables;
+
+            // auto const biot = _process_data.biot_coefficient(t, x_position)[0];
+            auto const rho_s = _process_data.solid_density(t, x_position)[0];
+            auto const rho_f = _process_data.fluid_density(t, x_position)[0];
+            auto const porosity = _process_data.porosity(t, x_position)[0];
+            auto const rho_bulk = rho_s * (1. - porosity) + porosity * rho_f;
+            auto const& b = _process_data.specific_body_force;
+
+
+            //------------------------------------------------------
+            // residual
+            //------------------------------------------------------
+            typename ShapeMatricesType::template MatrixType<DisplacementDim,
+                                                            displacement_size>
+                N_u = ShapeMatricesType::template MatrixType<
+                    DisplacementDim,
+                    displacement_size>::Zero(DisplacementDim,
+                                             displacement_size);
+
+            for (int i = 0; i < DisplacementDim; ++i)
+                N_u.template block<1, displacement_size / DisplacementDim>(
+                       i, i * displacement_size / DisplacementDim)
+                    .noalias() = N;
+
+            local_rhs.noalias() -=
+                (B.transpose() * sigma - N_u.transpose() * rho_bulk * b) * w;
+        }
+    }
+
 
 private:
     std::size_t setSigma(double const* values)
