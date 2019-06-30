@@ -53,6 +53,7 @@ struct FunctionParameter final : public Parameter<T>
         _symbol_table.create_variable("x");
         _symbol_table.create_variable("y");
         _symbol_table.create_variable("z");
+        _symbol_table.create_variable("t");
 
         _vec_expression.resize(_vec_expression_str.size());
         for (unsigned i=0; i<_vec_expression_str.size(); i++)
@@ -67,20 +68,22 @@ struct FunctionParameter final : public Parameter<T>
         }
     }
 
-    bool isTimeDependent() const override { return false; }
+    bool isTimeDependent() const override { return true; }
 
     int getNumberOfComponents() const override
     {
         return _vec_expression.size();
     }
 
-    std::vector<T> const operator()(double const /*t*/,
+    std::vector<T> const operator()(double const t_,
                                      SpatialPosition const& pos) const override
     {
         std::vector<T> cache(getNumberOfComponents());
         auto& x = _symbol_table.get_variable("x")->ref();
         auto& y = _symbol_table.get_variable("y")->ref();
         auto& z = _symbol_table.get_variable("z")->ref();
+        auto& t = _symbol_table.get_variable("t")->ref();
+        t = t_;
         if (pos.getCoordinates())
         {
             auto const coords = pos.getCoordinates().get();
