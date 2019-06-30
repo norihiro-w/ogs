@@ -11,6 +11,7 @@
 
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -60,6 +61,13 @@ struct ParameterBase
     std::string const name;
 };
 
+struct ParameterArguments
+{
+    double t;
+    SpatialPosition pos;
+    std::unordered_map<std::string, double> exargs;
+};
+
 /*! A Parameter is a function \f$ (t, x) \mapsto f(t, x) \in T^n \f$.
  *
  * Where \f$ t \f$ is the time and \f$ x \f$ is the SpatialPosition.
@@ -79,6 +87,11 @@ struct Parameter : public ParameterBase
     //! Returns the parameter value at the given time and position.
     virtual std::vector<T> const operator()(
         double const t, SpatialPosition const& pos) const = 0;
+
+    virtual std::vector<T> const operator()(ParameterArguments const& args) const
+    {
+        return (*this)(args.t, args.pos);
+    }
 
     //! Returns a matrix of values for all nodes of the given element.
     //
