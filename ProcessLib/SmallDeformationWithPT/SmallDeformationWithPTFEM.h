@@ -314,10 +314,16 @@ public:
             MathLib::KelvinVector::KelvinVectorDimensions<
                 DisplacementDim>::value>;
 
+        using FemType =
+            NumLib::TemplateIsoparametric<ShapeFunction, ShapeMatricesType>;
+        FemType fe(
+            static_cast<const typename ShapeFunction::MeshElement&>(_element));
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
             x_position.setIntegrationPoint(ip);
+            MathLib::TemplatePoint<double, 3> ip_x(fe.interpolateCoordinates(_ip_data[ip].N));
+            x_position.setCoordinates(ip_x);
             auto const& w = _ip_data[ip].integration_weight;
             auto const& N = _ip_data[ip].N;
             auto const& dNdx = _ip_data[ip].dNdx;
