@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -45,6 +46,9 @@ struct IntegrationPointData final
 
     // total stress
     typename BMatricesType::KelvinVectorType sigma, sigma_prev;
+
+    // equivalent stress
+    double sigma_eq;
 
     // effective stress
     typename BMatricesType::KelvinVectorType eff_sigma, eff_sigma_prev;
@@ -152,6 +156,7 @@ public:
                     DisplacementDim>::value;
             ip_data.sigma.setZero(kelvin_vector_size);
             ip_data.sigma_prev.setZero(kelvin_vector_size);
+            ip_data.sigma_eq = 0;
             ip_data.eff_sigma.setZero(kelvin_vector_size);
             ip_data.eff_sigma_prev.setZero(kelvin_vector_size);
             ip_data.eps.setZero(kelvin_vector_size);
@@ -327,6 +332,7 @@ public:
 
             auto& sigma = _ip_data[ip].sigma;
             auto const& sigma_prev = _ip_data[ip].sigma_prev;
+            auto& sigma_eq = _ip_data[ip].sigma_eq;
 
             auto& eff_sigma = _ip_data[ip].eff_sigma;
             auto& eff_sigma_prev = _ip_data[ip].eff_sigma_prev;
@@ -389,6 +395,9 @@ public:
             MathLib::KelvinVector::KelvinMatrixType<DisplacementDim> C;
             std::tie(eff_sigma, state, C) = std::move(*solution);
             sigma.noalias() = eff_sigma - biot * Invariants::identity2 * p1_ip;
+
+            auto const ds = Invariants::deviatoric_projection * sigma;
+            sigma_eq = Invariants::equivalentStress(ds);
 
             //------------------------------------------------------
             // residual, jacobian calculation
@@ -558,6 +567,19 @@ private:
 
         return ip_sigma_values;
     }
+
+    std::vector<double> getSigmaEq() const override
+    {
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+        std::vector<double> ip_sigma_eq_values(n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+            ip_sigma_eq_values[ip] = _ip_data[ip].sigma_eq;
+
+        return ip_sigma_eq_values;
+    }
+
 
     std::vector<double> const& getIntPtSigma(
         const double /*t*/,
