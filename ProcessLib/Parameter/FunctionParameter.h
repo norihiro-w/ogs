@@ -76,7 +76,7 @@ struct FunctionParameter final : public Parameter<T>
         return _vec_expression.size();
     }
 
-    std::vector<T> const& operator()(double const /*t*/,
+    std::vector<T> const operator()(double const /*t*/,
                                      SpatialPosition const& pos) const override
     {
         if (pos.getCoordinates())
