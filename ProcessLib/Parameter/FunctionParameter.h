@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -46,14 +47,18 @@ struct FunctionParameter final : public Parameter<T>
      */
     FunctionParameter(std::string const& name_,
                          MeshLib::Mesh const& mesh_,
-                         std::vector<std::string> const& vec_expression_str_)
-        : Parameter<T>(name_), _mesh(mesh_), _vec_expression_str(vec_expression_str_)
+                         std::vector<std::string> const& vec_expression_str_,
+                         std::unordered_map<std::string,double> const& map_extra_variables_)
+        : Parameter<T>(name_), _mesh(mesh_), _vec_expression_str(vec_expression_str_),
+          _map_extra_variables(map_extra_variables_)
     {
         _symbol_table.add_constants();
         _symbol_table.create_variable("x");
         _symbol_table.create_variable("y");
         _symbol_table.create_variable("z");
         _symbol_table.create_variable("t");
+        for (auto &p : map_extra_variables_)
+            _symbol_table.create_variable(p.first);
 
         _vec_expression.resize(_vec_expression_str.size());
         for (unsigned i=0; i<_vec_expression_str.size(); i++)
@@ -98,6 +103,12 @@ struct FunctionParameter final : public Parameter<T>
             y = node[1];
             z = node[2];
         }
+        // set default values to extra args
+        for (auto const& p : _map_extra_variables)
+        {
+            auto& var = _symbol_table.get_variable(p.first)->ref();
+            var = p.second;
+        }
 
         for (unsigned i=0; i<_vec_expression.size(); i++)
             cache[i] = _vec_expression[i].value();
@@ -105,10 +116,51 @@ struct FunctionParameter final : public Parameter<T>
         return cache;
     }
 
+    std::vector<T> const operator()(ParameterArguments const& args) const override
+    {
+        std::vector<T> cache(getNumberOfComponents());
+        auto& x = _symbol_table.get_variable("x")->ref();
+        auto& y = _symbol_table.get_variable("y")->ref();
+        auto& z = _symbol_table.get_variable("z")->ref();
+        auto& t = _symbol_table.get_variable("t")->ref();
+        t = args.t;
+        auto &pos = args.pos;
+        if (pos.getCoordinates())
+        {
+            auto const coords = pos.getCoordinates().get();
+            x = coords[0];
+            y = coords[1];
+            z = coords[2];
+        }
+        else if (pos.getNodeID())
+        {
+            auto const& node = *_mesh.getNode(pos.getNodeID().get());
+            x = node[0];
+            y = node[1];
+            z = node[2];
+        }
+        // set values to extra args
+        for (auto const& p : _map_extra_variables)
+        {
+            auto& var = _symbol_table.get_variable(p.first)->ref();
+            auto args_p = args.exargs.find(p.first);
+            if (args_p != args.exargs.end())
+                var = args_p->second;
+            else
+                var = p.second;
+        }
+
+        for (unsigned i=0; i<_vec_expression.size(); i++)
+            cache[i] = _vec_expression[i].value();
+
+        return cache;
+    }
+
+
 private:
     MeshLib::Mesh const& _mesh;
     std::vector<std::string> _vec_expression_str;
-
+    std::unordered_map<std::string,double> _map_extra_variables;
     symbol_table_t _symbol_table;
     std::vector<expression_t> _vec_expression;
 };
