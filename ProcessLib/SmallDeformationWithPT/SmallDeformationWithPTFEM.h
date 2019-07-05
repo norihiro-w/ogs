@@ -66,6 +66,9 @@ struct IntegrationPointData final
     // double solid_density;
     // double solid_density_prev;
 
+    // yield function
+    double f = 0.0;
+
     double integration_weight;
     typename ShapeMatricesType::NodalRowVectorType N;
     typename ShapeMatricesType::GlobalDimNodalMatrixType dNdx;
@@ -590,6 +593,28 @@ private:
 
         return ip_sigma_eq_values;
     }
+
+    std::vector<double> getYieldValue(
+        double const t,
+        ProcessLib::SpatialPosition const& x,
+        double const dt
+    ) const override
+    {
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+        std::vector<double> ip_yield_values(n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto& sigma = _ip_data[ip].sigma;
+            auto& state = _ip_data[ip].material_state_variables;
+            double f = _ip_data[ip].solid_material.yieldFunctionMC(t,x,dt,sigma,state)
+            ip_yield_values[ip] = f;
+        }
+
+        return ip_yield_values;
+    }
+
 
 
     std::vector<double> const& getIntPtSigma(

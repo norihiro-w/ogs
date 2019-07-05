@@ -12,11 +12,14 @@
 #include <limits>
 
 #include "BaseLib/Error.h"
+#include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "MaterialLib/PhysicalConstant.h"
 
 namespace MaterialLib
 {
 namespace Solids
+{
+namespace SCDamage
 {
 
 namespace detail
@@ -41,6 +44,77 @@ double bulk_modulus(double E, double nu)
 }
 
 template <int DisplacementDim>
+struct PhysicalStressWithInvariants final
+{
+    static int const KelvinVectorSize =
+        MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value;
+    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
+    using KelvinVector =
+        MathLib::KelvinVector::KelvinVectorType<DisplacementDim>;
+
+    explicit PhysicalStressWithInvariants(KelvinVector const& stress)
+        : value{stress},
+          D{Invariants::deviatoric_projection * stress},
+          I_1{Invariants::trace(stress)},
+          J_2{Invariants::J2(D)},
+          J_3{Invariants::J3(D)}
+    {
+    }
+
+    KelvinVector value;
+    KelvinVector D;
+    double I_1;
+    double J_2;
+    double J_3;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+};
+
+
+// template <int DisplacementDim>
+// double yieldFunctionMC(MaterialProperties const& mp,
+//                      PhysicalStressWithInvariants<DisplacementDim> const& s)
+// {
+//     assert(s.J_2 != 0);
+
+//     double const phir = MathLib::to_radians(mp._friction_angle(t,x)[0]);
+//     double const c = mp._cohesion(t,x)[0];
+
+//     double theta = 1/3.*asin(-3.*std::sqrt(3.)*s.J_3/2./std::pow(s.J_2,1.5));
+//     double m = cos(theta) - 1./std::sqrt(3.)*sin(theta)*sin(phir);
+//     double beta = sin(phir)/m;
+//     double kappa = cos(phir)/m*c;
+//     double F = std::sqrt(J2) + beta * s.I_1/3. - kappa;
+
+//     return F;
+// }
+
+template <int DisplacementDim>
+double SCDamageModel<DisplacementDim>::yieldFunctionMC(
+    double const t, ProcessLib::SpatialPosition const& x, double const /*dt*/,
+    KelvinVector const& sigma,
+    typename MechanicsBase<DisplacementDim>::MaterialStateVariables const& material_state_variables
+    ) const
+{
+    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
+    MaterialProperties const mp(t, x, _mp);
+
+    PhysicalStressWithInvariants<DisplacementDim> const s{sigma};
+    assert(s.J_2 != 0);
+
+    double const phir = MathLib::to_radians(mp._friction_angle(t,x)[0]);
+    double const c = mp._cohesion(t,x)[0];
+
+    double theta = 1/3.*asin(-3.*std::sqrt(3.)*s.J_3/2./std::pow(s.J_2,1.5));
+    double m = cos(theta) - 1./std::sqrt(3.)*sin(theta)*sin(phir);
+    double beta = sin(phir)/m;
+    double kappa = cos(phir)/m*c;
+    double F = std::sqrt(J2) + beta * s.I_1/3. - kappa;
+    return F;
+}
+
+
+template <int DisplacementDim>
 boost::optional<std::tuple<typename SCDamageModel<DisplacementDim>::KelvinVector,
                            std::unique_ptr<typename MechanicsBase<
                                DisplacementDim>::MaterialStateVariables>,
@@ -53,8 +127,6 @@ SCDamageModel<DisplacementDim>::integrateStress(
     /*material_state_variables*/,
     double const T) const
 {
-    //using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
-
     const auto damaged = _damage_state(t, x)[0];
     const auto C = this->getElasticTensor(t, x, T, damaged);
     KelvinVector sigma_try = sigma_prev + C * (eps - eps_prev);
@@ -83,5 +155,6 @@ SCDamageModel<DisplacementDim>::getElasticTensor(
 template class SCDamageModel<2>;
 template class SCDamageModel<3>;
 
+}
 }  // namespace Solids
 }  // namespace MaterialLib

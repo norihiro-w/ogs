@@ -21,6 +21,9 @@ namespace MaterialLib
 namespace Solids
 {
 
+namespace SCDamage
+{
+
 /**
  * \brief A class for computing the SCDamageModel model
  *
@@ -33,14 +36,19 @@ public:
     {
         using P = ProcessLib::Parameter<double>;
 
-        MaterialProperties(P const& youngs_modulus, P const& youngs_modulus_damaged, P const& poissons_ratio)
-            : _youngs_modulus(youngs_modulus), _youngs_modulus_damaged(youngs_modulus_damaged), _poissons_ratio(poissons_ratio)
+        MaterialProperties(
+            P const& youngs_modulus, P const& youngs_modulus_damaged, P const& poissons_ratio,
+            P const& friction_angle, P const& cohesion)
+            : _youngs_modulus(youngs_modulus), _youngs_modulus_damaged(youngs_modulus_damaged), _poissons_ratio(poissons_ratio),
+              _friction_angle(friction_angle), _cohesion(cohesion)
         {
         }
 
         P const& _youngs_modulus;
         P const& _youngs_modulus_damaged;
         P const& _poissons_ratio;
+        P const& _friction_angle;
+        P const& _cohesion;
     };
 
 
@@ -82,9 +90,10 @@ public:
 
     SCDamageModel(
         typename SCDamageModel<DisplacementDim>::MaterialProperties mp,
-        Parameter const& damage_state)
+        Parameter const& damage_state, bool const check_MC)
         :  _mp(std::move(mp)),
-          _damage_state(damage_state)
+          _damage_state(damage_state),
+          _check_MC(check_MC)
     {
     }
 
@@ -100,6 +109,14 @@ public:
     {
         return eps.dot(sigma) / 2;
     }
+
+    double yieldFunctionMC(
+        double const /*t*/,
+        ProcessLib::SpatialPosition const& /*x*/,
+        double const /*dt*/,
+        KelvinVector const& sigma,
+        typename MechanicsBase<DisplacementDim>::MaterialStateVariables const&
+            material_state_variables) const;
 
     boost::optional<std::tuple<KelvinVector,
                                std::unique_ptr<typename MechanicsBase<
@@ -127,11 +144,12 @@ public:
 private:
     MaterialProperties _mp;
     Parameter const& _damage_state;
+    bool const _check_MC;
 };
 
 extern template class SCDamageModel<2>;
 extern template class SCDamageModel<3>;
 
-
+}
 }  // end of namespace Solids
 }  // namespace MaterialLib
