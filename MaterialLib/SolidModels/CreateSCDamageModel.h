@@ -16,6 +16,9 @@ namespace MaterialLib
 {
 namespace Solids
 {
+namespace SCDamage
+{
+
 template <int DisplacementDim>
 std::unique_ptr<SCDamageModel<DisplacementDim>>
 createSCDamageModel(
@@ -47,6 +50,18 @@ createSCDamageModel(
 
     DBUG("Use '%s' as youngs_modulus_damaged parameter.", youngs_modulus_damaged.name.c_str());
 
+    // Fricition angle
+    auto& friction_angle = ProcessLib::findParameter<double>(
+        //! \ogs_file_param_special{material__solid__constitutive_relation__SCDamageModel__friction_angle}
+        config, "friction_angle", parameters, 1);
+
+    // Cohesion
+    auto& cohesion = ProcessLib::findParameter<double>(
+        //! \ogs_file_param_special{material__solid__constitutive_relation__SCDamageModel__cohesion}
+        config, "cohesion", parameters, 1);
+
+    DBUG("Use '%s' as youngs_modulus_damaged parameter.", youngs_modulus_damaged.name.c_str());
+
     // Damage state
     auto& damage_state = ProcessLib::findParameter<double>(
         //! \ogs_file_param_special{material__solid__constitutive_relation__SCDamageModel__damage_state}
@@ -55,10 +70,12 @@ createSCDamageModel(
     DBUG("Use '%s' as damage_state parameter.", damage_state.name.c_str());
 
     typename SCDamageModel<DisplacementDim>::MaterialProperties mp{
-        youngs_modulus, youngs_modulus_damaged, poissons_ratio};
+        youngs_modulus, youngs_modulus_damaged, poissons_ratio,
+        friction_angle, cohesion};
 
     return std::make_unique<SCDamageModel<DisplacementDim>>(mp, damage_state);
 }
 
+}
 }  // namespace Solids
 }  // namespace MaterialLib

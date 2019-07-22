@@ -67,7 +67,7 @@ createConstitutiveRelation(
     }
     if (type == "SCDamageModel")
     {
-        return MaterialLib::Solids::createSCDamageModel<DisplacementDim>(
+        return MaterialLib::Solids::SCDamage::createSCDamageModel<DisplacementDim>(
             parameters, config);
     }
     OGS_FATAL("Cannot construct constitutive relation of given type '%s'.",

@@ -93,11 +93,12 @@ template <int DisplacementDim>
 double SCDamageModel<DisplacementDim>::yieldFunctionMC(
     double const t, ProcessLib::SpatialPosition const& x, double const /*dt*/,
     KelvinVector const& sigma,
-    typename MechanicsBase<DisplacementDim>::MaterialStateVariables const& material_state_variables
+    typename MechanicsBase<DisplacementDim>::MaterialStateVariables const& /*material_state_variables*/
     ) const
 {
-    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
-    MaterialProperties const mp(t, x, _mp);
+//    using Invariants = MathLib::KelvinVector::Invariants<KelvinVectorSize>;
+//    MaterialProperties const mp(t, x, _mp);
+    auto& mp = _mp;
 
     PhysicalStressWithInvariants<DisplacementDim> const s{sigma};
     assert(s.J_2 != 0);
@@ -105,11 +106,11 @@ double SCDamageModel<DisplacementDim>::yieldFunctionMC(
     double const phir = MathLib::to_radians(mp._friction_angle(t,x)[0]);
     double const c = mp._cohesion(t,x)[0];
 
-    double theta = 1/3.*asin(-3.*std::sqrt(3.)*s.J_3/2./std::pow(s.J_2,1.5));
-    double m = cos(theta) - 1./std::sqrt(3.)*sin(theta)*sin(phir);
-    double beta = sin(phir)/m;
-    double kappa = cos(phir)/m*c;
-    double F = std::sqrt(J2) + beta * s.I_1/3. - kappa;
+    double theta = 1/3.*std::asin(-3.*std::sqrt(3.)*s.J_3/2./std::pow(s.J_2,1.5));
+    double m = std::cos(theta) - 1./std::sqrt(3.)*std::sin(theta)*std::sin(phir);
+    double beta = std::sin(phir)/m;
+    double kappa = std::cos(phir)/m*c;
+    double F = std::sqrt(s.J_2) + beta * s.I_1/3. - kappa;
     return F;
 }
 

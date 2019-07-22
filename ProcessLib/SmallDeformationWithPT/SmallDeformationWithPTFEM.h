@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "MaterialLib/SolidModels/SelectSolidConstitutiveRelation.h"
+#include "MaterialLib/SolidModels/SCDamageModel.h"
 #include "MathLib/KelvinVector.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
@@ -608,13 +609,14 @@ private:
         {
             auto& sigma = _ip_data[ip].sigma;
             auto& state = _ip_data[ip].material_state_variables;
-            double f = _ip_data[ip].solid_material.yieldFunctionMC(t,x,dt,sigma,state)
+            auto const* sm = dynamic_cast<MaterialLib::Solids::SCDamage::SCDamageModel<DisplacementDim> const*>(&_ip_data[ip].solid_material);
+            assert(sm!=nullptr);
+            double f = sm->yieldFunctionMC(t,x,dt,sigma,*state.get());
             ip_yield_values[ip] = f;
         }
 
         return ip_yield_values;
     }
-
 
 
     std::vector<double> const& getIntPtSigma(

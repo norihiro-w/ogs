@@ -90,10 +90,9 @@ public:
 
     SCDamageModel(
         typename SCDamageModel<DisplacementDim>::MaterialProperties mp,
-        Parameter const& damage_state, bool const check_MC)
+        Parameter const& damage_state)
         :  _mp(std::move(mp)),
-          _damage_state(damage_state),
-          _check_MC(check_MC)
+          _damage_state(damage_state)
     {
     }
 
@@ -144,7 +143,6 @@ public:
 private:
     MaterialProperties _mp;
     Parameter const& _damage_state;
-    bool const _check_MC;
 };
 
 extern template class SCDamageModel<2>;

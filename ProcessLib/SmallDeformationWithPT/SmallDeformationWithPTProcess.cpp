@@ -396,7 +396,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::preTimestepConcreteProcess(
 
 template <int DisplacementDim>
 void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess(
-    GlobalVector const& x, const double t, const double /*delta_t*/,
+    GlobalVector const& x, const double t, const double dt,
     int const process_id)
 {
     DBUG("PostTimestep SmallDeformationWithPTProcess.");
@@ -468,7 +468,9 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     for (std::size_t i=0; i<_local_assemblers.size(); i++)
     {
         auto const& local_asm = *_local_assemblers[i];
-        auto ip_f = local_asm.getYieldValue();
+        SpatialPosition pos;
+        pos.setElementID(i);
+        auto ip_f = local_asm.getYieldValue(t,pos,dt);
         auto const nip = local_asm.getNumberOfIntegrationPoints();
         double Fmax = -99999;
         for (unsigned ip=0; ip<nip; ip++)
