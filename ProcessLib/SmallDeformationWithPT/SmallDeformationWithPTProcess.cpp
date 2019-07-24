@@ -164,14 +164,14 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
         mesh_prop_element_yield->resize(mesh.getNumberOfElements());
     }
 
-#if 1
+#if 0
     // auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
     //     const_cast<MeshLib::Mesh&>(mesh), "pressure_prev",
     //     MeshLib::MeshItemType::Node, 1);
     // mesh_prop_pressure_prev->resize(mesh.getNumberOfNodes());
 
     auto mesh_prop_pressure = MeshLib::getOrCreateMeshProperty<double>(
-        const_cast<MeshLib::Mesh&>(mesh), "pressure",
+        const_cast<MeshLib::Mesh&>(mesh), "nodal_pressure",
         MeshLib::MeshItemType::Node, 1);
     mesh_prop_pressure->resize(mesh.getNumberOfNodes());
 
@@ -181,7 +181,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
     // mesh_prop_temperature_prev->resize(mesh.getNumberOfNodes());
 
     auto mesh_prop_temperature = MeshLib::getOrCreateMeshProperty<double>(
-        const_cast<MeshLib::Mesh&>(mesh), "temperature",
+        const_cast<MeshLib::Mesh&>(mesh), "nodal_temperature",
         MeshLib::MeshItemType::Node, 1);
     mesh_prop_temperature->resize(mesh.getNumberOfNodes());
 
@@ -522,6 +522,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
     nodeValuesToElementValues(mesh, "epsilon", "strain");
 #endif
 
+#if 0
     auto* mesh_prop_pressure =
         mesh.getProperties().getPropertyVector<double>("pressure");
     auto* mesh_prop_temperature =
@@ -534,6 +535,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
         (*mesh_prop_pressure)[i] = _process_data.p1(t, x_pos)[0];
         (*mesh_prop_temperature)[i] = _process_data.T1(t, x_pos)[0];
     }
+#endif
 
     // export mesh properties to a specified file
     if (!_process_data.vec_export_properties.empty())
