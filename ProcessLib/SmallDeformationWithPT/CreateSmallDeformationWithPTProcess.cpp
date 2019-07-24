@@ -255,6 +255,13 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
                 DisplacementDim>::value);
     }
 
+    auto const config_check_yield =
+        config.getConfigParameterOptional<std::string>("check_yield");
+    bool const check_yield =
+        config_check_yield ? config_check_yield.get() == "true" : false;
+    if (check_yield)
+        DBUG("Using check_yield=%s", config_check_yield.get().c_str());
+
     SmallDeformationWithPTProcessData<DisplacementDim> process_data{
         materialIDs(mesh),
         T0,
@@ -271,7 +278,8 @@ std::unique_ptr<Process> createSmallDeformationWithPTProcess(
         vec_import_properties,
         vec_export_properties,
         reset_strain,
-        nonequilibrium_stress};
+        nonequilibrium_stress,
+        check_yield};
 
     SecondaryVariableCollection secondary_variables;
 

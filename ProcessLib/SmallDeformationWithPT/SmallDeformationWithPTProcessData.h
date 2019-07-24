@@ -52,7 +52,8 @@ struct SmallDeformationWithPTProcessData
         std::vector<std::pair<MeshLib::PropertyVector<double>*, std::string>>
             const& vec_export_properties_,
         bool const reset_strain_,
-        Parameter<double> const* const nonequilibrium_stress_)
+        Parameter<double> const* const nonequilibrium_stress_,
+        bool const check_yield_)
         : material_ids(material_ids_),
           T0(T0_), T1(T1_), p0(p0_), p1(p1_),
           solid_materials{std::move(solid_materials_)},
@@ -66,7 +67,8 @@ struct SmallDeformationWithPTProcessData
           vec_import_properties(vec_import_properties_),
           vec_export_properties(vec_export_properties_),
           reset_strain(reset_strain_),
-          nonequilibrium_stress(nonequilibrium_stress_)
+          nonequilibrium_stress(nonequilibrium_stress_),
+          check_yield(check_yield_)
     {
     }
 
@@ -109,6 +111,7 @@ struct SmallDeformationWithPTProcessData
     bool const reset_strain;
     Parameter<double> const* const nonequilibrium_stress;
     GlobalVector* r_neq = nullptr;
+    bool const check_yield;
 
     double dt = 0;
     double t = 0;
