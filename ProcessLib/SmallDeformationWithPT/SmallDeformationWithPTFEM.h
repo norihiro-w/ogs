@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "MaterialLib/SolidModels/SelectSolidConstitutiveRelation.h"
+#include "MaterialLib/SolidModels/SCDamageModel2.h"
 #include "MathLib/KelvinVector.h"
 #include "MathLib/LinAlg/Eigen/EigenMapTools.h"
 #include "NumLib/Extrapolation/ExtrapolatableElement.h"
@@ -65,6 +66,9 @@ struct IntegrationPointData final
         material_state_variables;
     // double solid_density;
     // double solid_density_prev;
+
+    // yield function
+    double f = 0.0;
 
     double integration_weight;
     typename ShapeMatricesType::NodalRowVectorType N;
@@ -589,6 +593,29 @@ private:
             ip_sigma_eq_values[ip] = _ip_data[ip].sigma_eq;
 
         return ip_sigma_eq_values;
+    }
+
+    std::vector<double> getYieldValue(
+        double const t,
+        ProcessLib::SpatialPosition const& x,
+        double const dt
+    ) const override
+    {
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+        std::vector<double> ip_yield_values(n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto& eff_sigma = _ip_data[ip].eff_sigma;
+            auto& state = _ip_data[ip].material_state_variables;
+            auto const* sm = dynamic_cast<MaterialLib::Solids::SCDamage2::SCDamageModel2<DisplacementDim> const*>(&_ip_data[ip].solid_material);
+            assert(sm!=nullptr);
+            double f = sm->yieldFunctionMC(t,x,dt,eff_sigma,*state.get());
+            ip_yield_values[ip] = f;
+        }
+
+        return ip_yield_values;
     }
 
 

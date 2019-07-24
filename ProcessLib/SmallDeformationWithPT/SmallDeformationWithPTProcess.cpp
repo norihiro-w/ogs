@@ -10,6 +10,7 @@
 #include "SmallDeformationWithPTProcess.h"
 
 #include <cassert>
+#include <limits>
 
 #include "BaseLib/Functional.h"
 #include "MathLib/LinAlg/LinAlg.h"
@@ -154,6 +155,14 @@ void SmallDeformationWithPTProcess<DisplacementDim>::initializeConcreteProcess(
         const_cast<MeshLib::Mesh&>(mesh), "ele_stress_eq",
         MeshLib::MeshItemType::Cell, 1);
     mesh_prop_element_stress_eq->resize(mesh.getNumberOfElements());
+
+    if (_process_data.check_yield)
+    {
+        auto mesh_prop_element_yield = MeshLib::getOrCreateMeshProperty<double>(
+            const_cast<MeshLib::Mesh&>(mesh), "ele_yield",
+            MeshLib::MeshItemType::Cell, 1);
+        mesh_prop_element_yield->resize(mesh.getNumberOfElements());
+    }
 
 #if 1
     // auto mesh_prop_pressure_prev = MeshLib::getOrCreateMeshProperty<double>(
@@ -391,7 +400,7 @@ void SmallDeformationWithPTProcess<DisplacementDim>::preTimestepConcreteProcess(
 
 template <int DisplacementDim>
 void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess(
-    GlobalVector const& x, const double t, const double /*delta_t*/,
+    GlobalVector const& x, const double t, const double dt,
     int const process_id)
 {
     DBUG("PostTimestep SmallDeformationWithPTProcess.");
@@ -454,6 +463,26 @@ void SmallDeformationWithPTProcess<DisplacementDim>::postTimestepConcreteProcess
 
         for (unsigned k=0; k<n_comp; k++)
             (*prop_element_strain)[i*n_comp + k] /= static_cast<double>(nip);
+    }
+
+    if (_process_data.check_yield)
+    {
+        auto* prop_element_yield =
+            mesh.getProperties().getPropertyVector<double>("ele_yield");
+        for (std::size_t i=0; i<prop_element_yield->size(); i++)
+            (*prop_element_yield)[i] = 0.0;
+        for (std::size_t i=0; i<_local_assemblers.size(); i++)
+        {
+            auto const& local_asm = *_local_assemblers[i];
+            SpatialPosition pos;
+            pos.setElementID(i);
+            auto ip_f = local_asm.getYieldValue(t,pos,dt);
+            auto const nip = local_asm.getNumberOfIntegrationPoints();
+            double Fmax = -std::numeric_limits<double>::max();
+            for (unsigned ip=0; ip<nip; ip++)
+                Fmax = std::max(Fmax, ip_f[ip]);
+            (*prop_element_yield)[i] += Fmax;
+        }
     }
 
 #if 0
