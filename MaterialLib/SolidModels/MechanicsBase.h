@@ -39,6 +39,7 @@ enum class ConstitutiveModel
     Lubby2,
     CreepBGRa,
     SCDamageModel,
+    SCDamageModel2,
     Invalid
 };
 
