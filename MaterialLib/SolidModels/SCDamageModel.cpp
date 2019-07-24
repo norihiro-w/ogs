@@ -18,6 +18,8 @@ namespace MaterialLib
 {
 namespace Solids
 {
+namespace SCDamage
+{
 
 namespace detail
 {
@@ -83,5 +85,6 @@ SCDamageModel<DisplacementDim>::getElasticTensor(
 template class SCDamageModel<2>;
 template class SCDamageModel<3>;
 
+}
 }  // namespace Solids
 }  // namespace MaterialLib

@@ -21,6 +21,9 @@ namespace MaterialLib
 namespace Solids
 {
 
+namespace SCDamage
+{
+
 /**
  * \brief A class for computing the SCDamageModel model
  *
@@ -132,6 +135,6 @@ private:
 extern template class SCDamageModel<2>;
 extern template class SCDamageModel<3>;
 
-
+}
 }  // end of namespace Solids
 }  // namespace MaterialLib

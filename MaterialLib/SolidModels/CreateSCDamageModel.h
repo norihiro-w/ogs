@@ -16,6 +16,9 @@ namespace MaterialLib
 {
 namespace Solids
 {
+namespace SCDamage
+{
+
 template <int DisplacementDim>
 std::unique_ptr<SCDamageModel<DisplacementDim>>
 createSCDamageModel(
@@ -60,5 +63,6 @@ createSCDamageModel(
     return std::make_unique<SCDamageModel<DisplacementDim>>(mp, damage_state);
 }
 
+}
 }  // namespace Solids
 }  // namespace MaterialLib
