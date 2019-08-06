@@ -54,6 +54,10 @@ if(COMPILER_IS_GCC OR COMPILER_IS_CLANG OR COMPILER_IS_INTEL)
         -Wextra
     )
 
+    if (COMPILER_IS_GCC)
+        add_compile_options (-fmax-errors=1)
+    endif()
+
     # Coloring output
     option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." ON)
     if (${FORCE_COLORED_OUTPUT})
