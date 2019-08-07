@@ -20,14 +20,14 @@
 #include "NumLib/DOF/LocalToGlobalIndexMap.h"
 
 #include "ParameterLib/MeshElementParameter.h"
+
 #include "ProcessLib/LIE/Common/BranchProperty.h"
 #include "ProcessLib/LIE/Common/JunctionProperty.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
-
-#include "LocalAssembler/CreateLocalAssemblers.h"
-#include "LocalAssembler/HydroMechanicsLocalAssemblerFracture.h"
-#include "LocalAssembler/HydroMechanicsLocalAssemblerMatrix.h"
-#include "LocalAssembler/HydroMechanicsLocalAssemblerMatrixNearFracture.h"
+#include "ProcessLib/LIE/HydroMechanics/LocalAssembler/CreateLocalAssemblers.h"
+#include "ProcessLib/LIE/HydroMechanics/LocalAssembler/HydroMechanicsLocalAssemblerFracture.h"
+#include "ProcessLib/LIE/HydroMechanics/LocalAssembler/HydroMechanicsLocalAssemblerMatrix.h"
+#include "ProcessLib/LIE/HydroMechanics/LocalAssembler/HydroMechanicsLocalAssemblerMatrixNearFracture.h"
 
 namespace ProcessLib
 {
@@ -55,37 +55,122 @@ HydroMechanicsProcess<GlobalDim>::HydroMechanicsProcess(
       _process_data(std::move(process_data))
 {
     INFO("[LIE/HM] looking for fracture elements in the given mesh");
-    std::vector<int> vec_fracture_mat_IDs;
-    std::vector<std::vector<MeshLib::Element*>> vec_vec_fracture_elements;
-    std::vector<std::vector<MeshLib::Element*>>
-        vec_vec_fracture_matrix_elements;
-    std::vector<std::vector<MeshLib::Node*>> vec_vec_fracture_nodes;
     std::vector<std::pair<std::size_t, std::vector<int>>>
         vec_branch_nodeID_matIDs;
     std::vector<std::pair<std::size_t, std::vector<int>>>
         vec_junction_nodeID_matIDs;
-    getFractureMatrixDataInMesh(
-        mesh, _vec_matrix_elements, vec_fracture_mat_IDs,
-        vec_vec_fracture_elements, vec_vec_fracture_matrix_elements,
-        vec_vec_fracture_nodes, vec_branch_nodeID_matIDs,
-        vec_junction_nodeID_matIDs);
-    _vec_fracture_elements.insert(_vec_fracture_elements.begin(),
-                                  vec_vec_fracture_elements[0].begin(),
-                                  vec_vec_fracture_elements[0].end());
-    _vec_fracture_matrix_elements.insert(
-        _vec_fracture_matrix_elements.begin(),
-        vec_vec_fracture_matrix_elements[0].begin(),
-        vec_vec_fracture_matrix_elements[0].end());
-    _vec_fracture_nodes.insert(_vec_fracture_nodes.begin(),
-                               vec_vec_fracture_nodes[0].begin(),
-                               vec_vec_fracture_nodes[0].end());
+    getFractureMatrixDataInMesh(mesh, _vec_matrix_elements,
+                                _vec_fracture_mat_IDs, _vec_fracture_elements,
+                                _vec_fracture_matrix_elements,
+                                _vec_fracture_nodes, vec_branch_nodeID_matIDs,
+                                vec_junction_nodeID_matIDs);
 
-    if (!_vec_fracture_elements.empty())
+    if (_vec_fracture_mat_IDs.size() !=
+        _process_data.fracture_properties.size())
     {
-        // set fracture property assuming a fracture forms a straight line
-        setFractureProperty(GlobalDim,
-                            *_vec_fracture_elements[0],
-                            *_process_data.fracture_property);
+        OGS_FATAL(
+            "The number of the given fracture properties (%d) are not "
+            "consistent"
+            " with the number of fracture groups in a mesh (%d).",
+            _process_data.fracture_properties.size(),
+            _vec_fracture_mat_IDs.size());
+    }
+
+    // create a map from a material ID to a fracture ID
+    auto max_frac_mat_id = std::max_element(_vec_fracture_mat_IDs.begin(),
+                                            _vec_fracture_mat_IDs.end());
+    _process_data.map_materialID_to_fractureID.resize(*max_frac_mat_id + 1);
+    for (unsigned i = 0; i < _vec_fracture_mat_IDs.size(); i++)
+    {
+        _process_data.map_materialID_to_fractureID[_vec_fracture_mat_IDs[i]] =
+            i;
+    }
+
+    // create a table of connected fracture IDs for each element
+    _process_data.vec_ele_connected_fractureIDs.resize(
+        mesh.getNumberOfElements());
+    for (unsigned i = 0; i < _vec_fracture_matrix_elements.size(); i++)
+    {
+        for (auto e : _vec_fracture_matrix_elements[i])
+        {
+            _process_data.vec_ele_connected_fractureIDs[e->getID()].push_back(
+                i);
+        }
+    }
+
+    // set fracture property
+    for (auto& fracture_prop : _process_data.fracture_properties)
+    {
+        // based on the 1st element assuming a fracture forms a straight line
+        setFractureProperty(
+            GlobalDim,
+            *_vec_fracture_elements[fracture_prop->fracture_id][0],
+            *fracture_prop);
+    }
+
+    // set branches
+    for (auto& vec_branch_nodeID_matID : vec_branch_nodeID_matIDs)
+    {
+        auto master_matId = vec_branch_nodeID_matID.second[0];
+        auto slave_matId = vec_branch_nodeID_matID.second[1];
+        auto& master_frac =
+            *_process_data.fracture_properties
+                [_process_data.map_materialID_to_fractureID[master_matId]];
+        auto& slave_frac =
+            *_process_data.fracture_properties
+                [_process_data.map_materialID_to_fractureID[slave_matId]];
+
+        master_frac.branches_master.push_back(
+            createBranchProperty(*mesh.getNode(vec_branch_nodeID_matID.first),
+                                 master_frac, slave_frac));
+
+        slave_frac.branches_slave.push_back(
+            createBranchProperty(*mesh.getNode(vec_branch_nodeID_matID.first),
+                                 master_frac, slave_frac));
+    }
+
+    // set junctions
+    for (auto& vec_junction_nodeID_matID : vec_junction_nodeID_matIDs)
+    {
+        _vec_junction_nodes.push_back(const_cast<MeshLib::Node*>(
+            _mesh.getNode(vec_junction_nodeID_matID.first)));
+    }
+    for (std::size_t i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        auto const& material_ids = vec_junction_nodeID_matIDs[i].second;
+        assert(material_ids.size() == 2);
+        std::array<int, 2> fracture_ids{
+            {_process_data.map_materialID_to_fractureID[material_ids[0]],
+             _process_data.map_materialID_to_fractureID[material_ids[1]]}};
+
+        _process_data.junction_properties.emplace_back(
+            i, *mesh.getNode(vec_junction_nodeID_matIDs[i].first),
+            fracture_ids);
+    }
+
+    // create a table of connected junction IDs for each element
+    _process_data.vec_ele_connected_junctionIDs.resize(
+        mesh.getNumberOfElements());
+    for (unsigned i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        auto node = mesh.getNode(vec_junction_nodeID_matIDs[i].first);
+        for (auto e : node->getElements())
+        {
+            _process_data.vec_ele_connected_junctionIDs[e->getID()].push_back(
+                i);
+        }
+    }
+
+    // create a table of junction node and connected elements
+    _vec_junction_fracture_matrix_elements.resize(
+        vec_junction_nodeID_matIDs.size());
+    for (unsigned i = 0; i < vec_junction_nodeID_matIDs.size(); i++)
+    {
+        auto node = mesh.getNode(vec_junction_nodeID_matIDs[i].first);
+        for (auto e : node->getElements())
+        {
+            _vec_junction_fracture_matrix_elements[i].push_back(e);
+        }
     }
 
     //
@@ -115,9 +200,9 @@ HydroMechanicsProcess<GlobalDim>::HydroMechanicsProcess(
         std::vector<int> vec_p_inactive_matIDs;
         for (int matID = range->first; matID <= range->second; matID++)
         {
-            if (std::find(vec_fracture_mat_IDs.begin(),
-                          vec_fracture_mat_IDs.end(),
-                          matID) == vec_fracture_mat_IDs.end())
+            if (std::find(_vec_fracture_mat_IDs.begin(),
+                          _vec_fracture_mat_IDs.end(),
+                          matID) == _vec_fracture_mat_IDs.end())
             {
                 vec_p_inactive_matIDs.push_back(matID);
             }
@@ -131,6 +216,10 @@ HydroMechanicsProcess<GlobalDim>::HydroMechanicsProcess(
             getProcessVariables(monolithic_process_id)[0];
         _process_data.p0 = &pv_p.getInitialCondition();
     }
+
+    MeshLib::PropertyVector<int> const* material_ids(
+        mesh.getProperties().getPropertyVector<int>("MaterialIDs"));
+    _process_data.mesh_prop_materialIDs = material_ids;
 }
 
 template <int GlobalDim>
@@ -150,12 +239,16 @@ void HydroMechanicsProcess<GlobalDim>::constructDofTable()
     // regular u
     _mesh_subset_matrix_nodes =
         std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh.getNodes());
-    if (!_vec_fracture_nodes.empty())
+    // u jump
+    for (unsigned i = 0; i < _vec_fracture_nodes.size(); i++)
     {
-        // u jump
-        _mesh_subset_fracture_nodes =
-            std::make_unique<MeshLib::MeshSubset>(_mesh, _vec_fracture_nodes);
+        _mesh_subset_fracture_nodes.push_back(
+            std::make_unique<MeshLib::MeshSubset const>(
+                _mesh, _vec_fracture_nodes[i]));
     }
+    // enrichment for junctions
+    _mesh_subset_junction_nodes =
+        std::make_unique<MeshLib::MeshSubset>(_mesh, _vec_junction_nodes);
 
     // Collect the mesh subsets in a vector.
     std::vector<MeshLib::MeshSubset> all_mesh_subsets;
@@ -172,20 +265,37 @@ void HydroMechanicsProcess<GlobalDim>::constructDofTable()
     {
         // TODO set elements including active nodes for pressure.
         // cannot use ElementStatus
-        vec_var_elements.push_back(&_vec_fracture_matrix_elements);
+        for (auto& vec : _vec_fracture_matrix_elements)
+            vec_var_elements.push_back(&vec);
     }
     // regular displacement
     vec_n_components.push_back(GlobalDim);
     std::generate_n(std::back_inserter(all_mesh_subsets), GlobalDim,
                     [&]() { return *_mesh_subset_matrix_nodes; });
-    vec_var_elements.push_back(&_vec_matrix_elements);
-    if (!_vec_fracture_nodes.empty())
+    for (auto& ms : _mesh_subset_fracture_nodes)
     {
-        // displacement jump
         vec_n_components.push_back(GlobalDim);
-        std::generate_n(std::back_inserter(all_mesh_subsets), GlobalDim,
-                        [&]() { return *_mesh_subset_fracture_nodes; });
-        vec_var_elements.push_back(&_vec_fracture_matrix_elements);
+        std::generate_n(std::back_inserter(all_mesh_subsets),
+                        GlobalDim,
+                        [&]() { return *ms; });
+    }
+    if (!_vec_junction_nodes.empty())
+    {
+        std::generate_n(std::back_inserter(all_mesh_subsets),
+                        GlobalDim,
+                        [&]() { return *_mesh_subset_junction_nodes; });
+        for (unsigned i=0; i<_vec_junction_nodes.size(); i++)
+        vec_n_components.push_back(GlobalDim);
+    }
+
+    vec_var_elements.push_back(&_vec_matrix_elements);
+    for (unsigned i = 0; i < _vec_fracture_matrix_elements.size(); i++)
+    {
+        vec_var_elements.push_back(&_vec_fracture_matrix_elements[i]);
+    }
+    for (unsigned i = 0; i < _vec_junction_fracture_matrix_elements.size(); i++)
+    {
+        vec_var_elements.push_back(&_vec_junction_fracture_matrix_elements[i]);
     }
 
     INFO("[LIE/HM] creating a DoF table");
@@ -317,7 +427,7 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
             }
 
             std::vector<FractureProperty*> fracture_props(
-                {_process_data.fracture_property.get()});
+                {_process_data.fracture_properties[0].get()});
             std::vector<JunctionProperty*> junction_props;
             std::unordered_map<int, int> fracID_to_local({{0, 0}});
             std::vector<double> levelsets = uGlobalEnrichments(
@@ -341,25 +451,23 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
             const_cast<MeshLib::Mesh&>(mesh), "aperture",
             MeshLib::MeshItemType::Cell, 1);
         mesh_prop_b->resize(mesh.getNumberOfElements());
-        auto const mesh_prop_matid = materialIDs(mesh);
-        if (!mesh_prop_matid)
+        auto const& mesh_prop_matid = *_process_data.mesh_prop_materialIDs;
+        for (auto const& frac : _process_data.fracture_properties)
         {
-            OGS_FATAL("Could not access MaterialIDs property from mesh.");
-        }
-        auto const& frac = _process_data.fracture_property;
-        for (MeshLib::Element const* e : _mesh.getElements())
-        {
-            if (e->getDimension() == GlobalDim)
+            for (MeshLib::Element const* e : _mesh.getElements())
             {
-                continue;
+                if (e->getDimension() == GlobalDim)
+                {
+                    continue;
+                }
+                if (mesh_prop_matid[e->getID()] != frac->mat_id)
+                {
+                    continue;
+                }
+                ParameterLib::SpatialPosition x;
+                x.setElementID(e->getID());
+                (*mesh_prop_b)[e->getID()] = frac->aperture0(0, x)[0];
             }
-            if ((*mesh_prop_matid)[e->getID()] != frac->mat_id)
-            {
-                continue;
-            }
-            ParameterLib::SpatialPosition x;
-            x.setElementID(e->getID());
-            (*mesh_prop_b)[e->getID()] = frac->aperture0(0, x)[0];
         }
         _process_data.mesh_prop_b = mesh_prop_b;
 
@@ -436,11 +544,12 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         assert(_process_data.mesh_prop_nodal_forces->size() ==
                GlobalDim * mesh.getNumberOfNodes());
 
-        _process_data.mesh_prop_nodal_forces_jump =
+        _process_data.vec_mesh_prop_nodal_forces_jump.resize(1);
+        _process_data.vec_mesh_prop_nodal_forces_jump[0] =
             MeshLib::getOrCreateMeshProperty<double>(
                 const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump",
                 MeshLib::MeshItemType::Node, GlobalDim);
-        assert(_process_data.mesh_prop_nodal_forces_jump->size() ==
+        assert(_process_data.vec_mesh_prop_nodal_forces_jump[0]->size() ==
                GlobalDim * mesh.getNumberOfNodes());
 
         _process_data.mesh_prop_hydraulic_flow =
@@ -516,8 +625,8 @@ void HydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
     }
 
     // compute nodal w and aperture
-    auto const& R = _process_data.fracture_property->R;
-    auto const& b0 = _process_data.fracture_property->aperture0;
+    auto const& R = _process_data.fracture_properties[0]->R;
+    auto const& b0 = _process_data.fracture_properties[0]->aperture0;
     MeshLib::PropertyVector<double>& vec_w = *_process_data.mesh_prop_nodal_w;
     MeshLib::PropertyVector<double>& vec_b = *_process_data.mesh_prop_nodal_b;
 
@@ -538,7 +647,7 @@ void HydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
 
     Eigen::VectorXd g(GlobalDim);
     Eigen::VectorXd w(GlobalDim);
-    for (MeshLib::Node const* node : _vec_fracture_nodes)
+    for (MeshLib::Node const* node : _vec_fracture_nodes[0])
     {
         auto const node_id = node->getID();
         g.setZero();
@@ -605,7 +714,7 @@ void HydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess(
     };
     copyRhs(0, *_process_data.mesh_prop_hydraulic_flow);
     copyRhs(1, *_process_data.mesh_prop_nodal_forces);
-    copyRhs(2, *_process_data.mesh_prop_nodal_forces_jump);
+    copyRhs(2, *_process_data.vec_mesh_prop_nodal_forces_jump[0]);
 }
 
 template <int GlobalDim>
