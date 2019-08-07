@@ -26,13 +26,12 @@ endif()
 target_link_libraries(ProcessLib
     PUBLIC
         BaseLib
-        MaterialLib
         MathLib
         MeshGeoToolsLib
         MeshLib
         NumLib
-        logog
         ChemistryLib
+        logog
     PRIVATE
         ParameterLib
 )

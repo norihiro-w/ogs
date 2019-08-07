@@ -5,7 +5,7 @@ if(BUILD_SHARED_LIBS)
     install(TARGETS TwoPhaseFlowWithPP LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 target_link_libraries(TwoPhaseFlowWithPP
-    PUBLIC ProcessLib
+    PUBLIC ProcessLib MaterialLib
     PRIVATE ParameterLib
 )
 
