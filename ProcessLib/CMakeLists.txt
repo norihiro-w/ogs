@@ -30,6 +30,7 @@ target_link_libraries(ProcessLib
         MeshGeoToolsLib
         MeshLib
         NumLib
+        ChemistryLib
         logog
     PRIVATE
         ParameterLib
