@@ -60,6 +60,8 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     std::vector<std::reference_wrapper<ProcessVariable>> u_process_variables;
     std::vector<std::vector<std::reference_wrapper<ProcessVariable>>>
         process_variables;
+
+    unsigned n_var_du = 0;
     for (std::string const& pv_name : range)
     {
         if (pv_name != "pressure" && pv_name != "displacement" &&
@@ -69,6 +71,10 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
                 "Found a process variable name '%s'. It should be "
                 "'displacement' or 'displacement_jumpN' or 'pressure'");
         }
+
+        if (pv_name.find("displacement_jump") == 0)
+            n_var_du++;
+
         auto variable = std::find_if(variables.cbegin(), variables.cend(),
                                      [&pv_name](ProcessVariable const& v) {
                                          return v.getName() == pv_name;
@@ -117,10 +123,8 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         }
     }
 
-    if (p_u_process_variables.size() > 3 || u_process_variables.size() > 2)
-    {
-        OGS_FATAL("Currently only one displacement jump is supported");
-    }
+    if (n_var_du == 0)
+        OGS_FATAL("No displacement jump variables are specified");
 
     if (!use_monolithic_scheme)
     {
@@ -252,15 +256,12 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
     }
 
     // Fracture properties
-    std::unique_ptr<FractureProperty> frac_prop = nullptr;
-    auto opt_fracture_properties_config =
+    std::vector<std::unique_ptr<FractureProperty>> fracture_properties;
+    for (auto fracture_properties_config :
         //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties}
-        config.getConfigSubtreeOptional("fracture_properties");
-    if (opt_fracture_properties_config)
+        config.getConfigSubtreeList("fracture_properties"))
     {
-        auto& fracture_properties_config = *opt_fracture_properties_config;
-
-        frac_prop = std::make_unique<ProcessLib::LIE::FractureProperty>(
+        auto frac_prop = std::make_unique<ProcessLib::LIE::FractureProperty>(
             0 /*fracture_id*/,
             //! \ogs_file_param{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__material_id}
             fracture_properties_config.getConfigParameter<int>("material_id"),
@@ -290,6 +291,16 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         frac_prop->permeability_model =
             MaterialLib::Fracture::Permeability::createPermeabilityModel(
                 permeability_model_config);
+
+        fracture_properties.emplace_back(std::move(frac_prop));
+    }
+
+    if (n_var_du != fracture_properties.size())
+    {
+        OGS_FATAL(
+            "The number of displacement jumps and the number of "
+            "<fracture_properties> "
+            "are not consistent");
     }
 
     // initial effective stress in matrix
@@ -338,7 +349,7 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         solid_density,
         specific_body_force,
         std::move(fracture_model),
-        std::move(frac_prop),
+        std::move(fracture_properties),
         initial_effective_stress,
         initial_fracture_effective_stress,
         deactivate_matrix_in_flow,
