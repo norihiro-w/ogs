@@ -5,7 +5,7 @@ if(BUILD_SHARED_LIBS)
     install(TARGETS TES LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 target_link_libraries(TES
-    PUBLIC ProcessLib
+    PUBLIC ProcessLib MaterialLib
     PRIVATE ParameterLib
 )
 
