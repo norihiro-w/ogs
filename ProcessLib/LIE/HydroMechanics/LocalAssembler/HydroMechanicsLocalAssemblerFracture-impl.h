@@ -225,9 +225,9 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& state = *ip_data.material_state_variables;
         auto& b_m = ip_data.aperture;
 
-        double const S = frac_prop.specific_storage(t, x_position)[0];
+        double const S = (*frac_prop.specific_storage)(t, x_position)[0];
         double const mu = _process_data.fluid_viscosity(t, x_position)[0];
-        auto const alpha = frac_prop.biot_coefficient(t, x_position)[0];
+        auto const alpha = (*frac_prop.biot_coefficient)(t, x_position)[0];
         auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
 
         // displacement jumps in local coordinates
