@@ -113,15 +113,21 @@ private:
                                      GlobalDim>;
 
     HydroMechanicsProcessData<GlobalDim>& _process_data;
+    std::vector<FractureProperty*> _fracture_props;
+    std::vector<JunctionProperty*> _junction_props;
+    std::unordered_map<int, int> _fracID_to_local;
+    FractureProperty const* _fracture_property = nullptr;
 
     std::vector<IntegrationPointDataType,
                 Eigen::aligned_allocator<IntegrationPointDataType>>
         _ip_data;
 
-    static const int pressure_index = 0;
-    static const int pressure_size = ShapeFunctionPressure::NPOINTS;
-    static const int displacement_index = ShapeFunctionPressure::NPOINTS;
-    static const int displacement_size =
+    Eigen::Vector3d _e_center_coords;
+
+    static const int pressure_index_ = 0;
+    static const int pressure_size_ = ShapeFunctionPressure::NPOINTS;
+    static const int displacement_jump_index_ = pressure_index_ + pressure_size_;
+    static const int displacement_jump_size_ =
         ShapeFunctionDisplacement::NPOINTS * GlobalDim;
 };
 
