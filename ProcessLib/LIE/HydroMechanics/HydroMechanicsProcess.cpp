@@ -413,6 +413,8 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
     mesh_prop_velocity->resize(mesh.getNumberOfElements() * 3);
     _process_data.mesh_prop_velocity = mesh_prop_velocity;
 
+    auto const n_enrich_var = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
+
     if (!_vec_fracture_elements.empty())
     {
         auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
@@ -544,13 +546,16 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         assert(_process_data.mesh_prop_nodal_forces->size() ==
                GlobalDim * mesh.getNumberOfNodes());
 
-        _process_data.vec_mesh_prop_nodal_forces_jump.resize(1);
-        _process_data.vec_mesh_prop_nodal_forces_jump[0] =
-            MeshLib::getOrCreateMeshProperty<double>(
-                const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump",
-                MeshLib::MeshItemType::Node, GlobalDim);
-        assert(_process_data.vec_mesh_prop_nodal_forces_jump[0]->size() ==
-               GlobalDim * mesh.getNumberOfNodes());
+        _process_data.vec_mesh_prop_nodal_forces_jump.resize(n_enrich_var);
+        for (unsigned ig=0; ig<n_enrich_var; ig++)
+        {
+            _process_data.vec_mesh_prop_nodal_forces_jump[ig] =
+                MeshLib::getOrCreateMeshProperty<double>(
+                    const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump" + std::to_string(ig+1),
+                    MeshLib::MeshItemType::Node, GlobalDim);
+            assert(_process_data.vec_mesh_prop_nodal_forces_jump[ig]->size() ==
+                GlobalDim * mesh.getNumberOfNodes());
+        }
 
         _process_data.mesh_prop_hydraulic_flow =
             MeshLib::getOrCreateMeshProperty<double>(
@@ -714,7 +719,9 @@ void HydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess(
     };
     copyRhs(0, *_process_data.mesh_prop_hydraulic_flow);
     copyRhs(1, *_process_data.mesh_prop_nodal_forces);
-    copyRhs(2, *_process_data.vec_mesh_prop_nodal_forces_jump[0]);
+    const auto n_pv_g = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
+    for (unsigned i=0; i<n_pv_g; i++)
+        copyRhs(i+2, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);
 }
 
 template <int GlobalDim>
