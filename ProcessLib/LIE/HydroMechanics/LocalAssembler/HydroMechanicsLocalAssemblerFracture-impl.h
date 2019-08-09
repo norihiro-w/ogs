@@ -155,25 +155,105 @@ void HydroMechanicsLocalAssemblerFracture<
     auto const pressure_size = pressure_size_;
     auto const displacement_jump_index = displacement_jump_index_;
     auto const displacement_jump_size = displacement_jump_size_;
-    auto const p = local_x.segment(pressure_index, pressure_size);
-    auto const p_dot = local_xdot.segment(pressure_index, pressure_size);
-    auto const g = local_x.segment(displacement_jump_index, displacement_jump_size);
-    auto const g_dot =
-        local_xdot.segment(displacement_jump_index, displacement_jump_size);
+    auto const n_fractures = _fracture_props.size();
+    auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
-    auto rhs_p = local_b.segment(pressure_index, pressure_size);
-    auto rhs_g = local_b.segment(displacement_jump_index, displacement_jump_size);
-    auto J_pp = local_J.block(pressure_index, pressure_index, pressure_size,
+    using BlockVectorTypeU =
+        typename Eigen::VectorXd::FixedSegmentReturnType<displacement_jump_size>::Type;
+    using BlockMatrixTypePU =
+        Eigen::Block<Eigen::MatrixXd, pressure_size, displacement_jump_size>;
+    using BlockMatrixTypeUP =
+        Eigen::Block<Eigen::MatrixXd, displacement_jump_size, pressure_size>;
+    using BlockMatrixTypeUU =
+        Eigen::Block<Eigen::MatrixXd, displacement_jump_size, displacement_jump_size>;
+
+    auto const local_p = local_x.segment(pressure_index, pressure_size);
+    auto const local_p_dot = local_xdot.segment(pressure_index, pressure_size);
+    std::vector<Eigen::VectorXd> vec_local_g;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub = local_x.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_local_g.push_back(sub);
+    }
+    std::vector<Eigen::VectorXd> vec_local_g_dot;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub = local_xdot.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_local_g_dot.push_back(sub);
+    }
+
+    //
+    auto local_b_p = local_b.segment(pressure_index, pressure_size);
+    std::vector<BlockVectorTypeU> vec_local_b_g;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        vec_local_b_g.push_back(
+            local_b.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size*i));
+    }
+    auto local_J_pp = local_J.block(pressure_index, pressure_index, pressure_size,
                               pressure_size);
-    auto J_pg = local_J.block(pressure_index, displacement_jump_index, pressure_size,
-                              displacement_jump_size);
-    auto J_gp = local_J.block(displacement_jump_index, pressure_index,
-                              displacement_jump_size, pressure_size);
-    auto J_gg = local_J.block(displacement_jump_index, displacement_jump_index,
-                              displacement_jump_size, displacement_jump_size);
+    std::vector<BlockMatrixTypePU> vec_local_J_pg;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_pg = local_J.block<pressure_size, displacement_jump_size>(
+            pressure_index, displacement_jump_index + displacement_jump_size * i);
+        vec_local_J_pg.push_back(sub_pg);
+    }
+    std::vector<BlockMatrixTypeUP> vec_local_J_gp;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_gp = local_J.block<displacement_jump_size, pressure_size>(
+            displacement_jump_index + displacement_jump_size * i, pressure_index);
+        vec_local_J_gp.push_back(sub_gp);
+    }
+    std::vector<std::vector<BlockMatrixTypeUU>> vec_local_J_gg(n_enrich_var);
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        for (unsigned j = 0; j < n_enrich_var; j++)
+        {
+            auto sub_gg = local_J.block<displacement_jump_size, displacement_jump_size>(
+                displacement_jump_index + displacement_jump_size * i, displacement_jump_index + displacement_jump_size * j);
+            vec_local_J_gg[i].push_back(sub_gg);
+        }
+    }
 
-    assembleBlockMatricesWithJacobian(t, p, p_dot, g, g_dot, rhs_p, rhs_g, J_pp,
-                                      J_pg, J_gg, J_gp);
+    // construct nodal w
+    Eigen::VectorXd local_w(displacement_jump_size), local_w_dot(displacement_jump_size);
+    local_w.setZero();
+    local_w_dot.setZero();
+
+    std::vector<double> const levelsets(duGlobalEnrichments(
+        _fracture_property->fracture_id, _fracture_props, _junction_props,
+        _fracID_to_local, _e_center_coords));
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        local_w.noalias() += levelsets[i] * vec_local_g[i];
+        local_w_dot.noalias() += levelsets[i] * vec_local_g_dot[i];
+    }
+
+    Eigen::VectorXd local_b_w(displacement_jump_size);
+    Eigen::MatrixXd local_J_pw(pressure_size, displacement_jump_size);
+    Eigen::MatrixXd local_J_ww(displacement_jump_size, displacement_jump_size);
+    Eigen::MatrixXd local_J_wp(displacement_jump_size, pressure_size);
+    local_b_w.setZero();
+    local_J_pw.setZero();
+    local_J_ww.setZero();
+    local_J_wp.setZero();
+
+    assembleBlockMatricesWithJacobian(t, local_p, local_p_dot, local_w, local_w_dot,
+                                      local_b_p, local_b_w, local_J_pp, local_J_pw,
+                                      local_J_ww, local_J_wp);
+
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        vec_local_b_g[i].noalias() -=  levelsets[i] * local_b_w;
+        vec_local_J_pg[i].noalias() +=  levelsets[i] * local_J_pw;
+        vec_local_J_gp[i].noalias() +=  levelsets[i] * local_J_wp;
+        for (unsigned j = 0; j < n_enrich_var; j++)
+            vec_local_J_gg[i][j].noalias() += levelsets[i] * levelsets[j] * local_J_ww;
+    }
+
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -351,10 +431,14 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     computeSecondaryVariableConcreteWithVector(const double t,
                                                Eigen::VectorXd const& local_x)
 {
-    auto const nodal_g = local_x.segment(displacement_jump_index_, displacement_jump_size_);
+    auto const displacement_jump_index = displacement_jump_index_;
+    auto const displacement_jump_size = displacement_jump_size_;
+    auto const n_fractures = _fracture_props.size();
+    auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
-    auto const& frac_prop = *_process_data.fracture_properties[0];
-    auto const& R = frac_prop.R;
+    auto const& R = _fracture_property->R;
+
     // the index of a normal (normal to a fracture plane) component
     // in a displacement vector
     auto constexpr index_normal = GlobalDim - 1;
@@ -363,6 +447,14 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     x_position.setElementID(_element.getID());
 
     unsigned const n_integration_points = _ip_data.size();
+
+    std::vector<Eigen::VectorXd> vec_nodal_g;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub = local_x.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_nodal_g.push_back(sub);
+    }
+
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
         x_position.setIntegrationPoint(ip);
@@ -377,9 +469,21 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& C = ip_data.C;
         auto& state = *ip_data.material_state_variables;
         auto& b_m = ip_data.aperture;
+        auto const& N = ip_data.N_p;
+
+        Eigen::Vector3d const ip_physical_coords(
+            computePhysicalCoordinates(_element, N).getCoords());
+        std::vector<double> const levelsets(duGlobalEnrichments(
+            _fracture_property->fracture_id, _fracture_props, _junction_props,
+            _fracID_to_local, ip_physical_coords));
+
+        Eigen::VectorXd nodal_gap(displacement_jump_size);
+        nodal_gap.setZero();
+        for (unsigned i = 0; i < n_enrich_var; i++)
+            nodal_gap.noalias() += levelsets[i] * vec_nodal_g[i];
 
         // displacement jumps in local coordinates
-        w.noalias() = R * H_g * nodal_g;
+        w.noalias() = R * H_g * nodal_gap;
 
         // aperture
         b_m = ip_data.aperture0 + w[index_normal];

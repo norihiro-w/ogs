@@ -619,87 +619,154 @@ void HydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
     // Remark: the copy is required because mesh properties for primary
     // variables are set during output and are not ready yet when this function
     // is called.
-    int g_variable_id = 0;
+    auto const n_enrich_vars = _vec_fracture_nodes.size() + _vec_junction_nodes.size();
+    std::vector<int> vec_g_variable_id(n_enrich_vars);
     {
         const int monolithic_process_id = 0;
         auto const& pvs = getProcessVariables(monolithic_process_id);
-        auto const it =
-            std::find_if(pvs.begin(), pvs.end(), [](ProcessVariable const& pv) {
-                return pv.getName() == "displacement_jump1";
-            });
-        if (it == pvs.end())
+        for (unsigned i=0; i<n_enrich_vars; i++)
         {
-            OGS_FATAL(
-                "Didn't find expected 'displacement_jump1' process "
-                "variable.");
+            auto const displacement_jump_name_i = "displacement_jump" + std::to_string(i+1);
+            auto const it =
+                std::find_if(pvs.begin(), pvs.end(), [&](ProcessVariable const& pv) {
+                    return pv.getName() == displacement_jump_name_i;
+                });
+            if (it == pvs.end())
+            {
+                OGS_FATAL(
+                    "Didn't find expected 'displacement_jump1' process "
+                    "variable.");
+            }
+            vec_g_variable_id[i] = static_cast<int>(std::distance(pvs.begin(), it));
         }
-        g_variable_id = static_cast<int>(std::distance(pvs.begin(), it));
     }
 
     MathLib::LinAlg::setLocalAccessibleVector(x);
 
     const int monolithic_process_id = 0;
-    ProcessVariable& pv_g =
-        this->getProcessVariables(monolithic_process_id)[g_variable_id];
-    auto const num_comp = pv_g.getNumberOfComponents();
-    auto& mesh_prop_g = *MeshLib::getOrCreateMeshProperty<double>(
-        _mesh, pv_g.getName(), MeshLib::MeshItemType::Node, num_comp);
-    for (int component_id = 0; component_id < num_comp; ++component_id)
+    for (auto const g_variable_id : vec_g_variable_id)
     {
-        auto const& mesh_subset = dof_table.getMeshSubset(
-            g_variable_id, component_id);
-        auto const mesh_id = mesh_subset.getMeshID();
-        for (auto const* node : mesh_subset.getNodes())
+        ProcessVariable& pv_g =
+            this->getProcessVariables(monolithic_process_id)[g_variable_id];
+        auto const num_comp = pv_g.getNumberOfComponents();
+        auto& mesh_prop_g = *MeshLib::getOrCreateMeshProperty<double>(
+            _mesh, pv_g.getName(), MeshLib::MeshItemType::Node, num_comp);
+        for (int component_id = 0; component_id < num_comp; ++component_id)
         {
-            MeshLib::Location const l(mesh_id, MeshLib::MeshItemType::Node,
-                                      node->getID());
+            auto const& mesh_subset = dof_table.getMeshSubset(
+                g_variable_id, component_id);
+            auto const mesh_id = mesh_subset.getMeshID();
+            for (auto const* node : mesh_subset.getNodes())
+            {
+                MeshLib::Location const l(mesh_id, MeshLib::MeshItemType::Node,
+                                        node->getID());
 
-            auto const global_index =
-                dof_table.getGlobalIndex(l, g_variable_id, component_id);
-            mesh_prop_g[node->getID() * num_comp + component_id] =
-                x[global_index];
+                auto const global_index =
+                    dof_table.getGlobalIndex(l, g_variable_id, component_id);
+                mesh_prop_g[node->getID() * num_comp + component_id] =
+                    x[global_index];
+            }
         }
     }
 
     // compute nodal w and aperture
-    auto const& R = _process_data.fracture_properties[0]->R;
-    auto const& b0 = _process_data.fracture_properties[0]->aperture0;
     MeshLib::PropertyVector<double>& vec_w = *_process_data.mesh_prop_nodal_w;
     MeshLib::PropertyVector<double>& vec_b = *_process_data.mesh_prop_nodal_b;
 
-    auto compute_nodal_aperture = [&](std::size_t const node_id,
-                                      double const w_n) {
-        // skip aperture computation for element-wise defined b0 because there
-        // are jumps on the nodes between the element's values.
-        if (dynamic_cast<ParameterLib::MeshElementParameter<double> const*>(
-                &b0))
-        {
-            return std::numeric_limits<double>::quiet_NaN();
-        }
-
-        ParameterLib::SpatialPosition x;
-        x.setNodeID(node_id);
-        return w_n + b0(/*time independent*/ 0, x)[0];
-    };
-
     Eigen::VectorXd g(GlobalDim);
     Eigen::VectorXd w(GlobalDim);
-    for (MeshLib::Node const* node : _vec_fracture_nodes[0])
+    for (unsigned frac_id=0; frac_id<_vec_fracture_nodes.size(); frac_id++)
     {
-        auto const node_id = node->getID();
-        g.setZero();
-        for (int k = 0; k < GlobalDim; k++)
-        {
-            g[k] = mesh_prop_g[node_id * GlobalDim + k];
-        }
+        auto const& R = _process_data.fracture_properties[frac_id]->R;
+        auto const& b0 = _process_data.fracture_properties[frac_id]->aperture0;
+        auto compute_nodal_aperture = [&](std::size_t const node_id,
+                                        double const w_n) {
+            // skip aperture computation for element-wise defined b0 because there
+            // are jumps on the nodes between the element's values.
+            if (dynamic_cast<ParameterLib::MeshElementParameter<double> const*>(
+                    &b0))
+            {
+                return std::numeric_limits<double>::quiet_NaN();
+            }
 
-        w.noalias() = R * g;
-        for (int k = 0; k < GlobalDim; k++)
-        {
-            vec_w[node_id * GlobalDim + k] = w[k];
-        }
+            ParameterLib::SpatialPosition x;
+            x.setNodeID(node_id);
+            return w_n + b0(/*time independent*/ 0, x)[0];
+        };
 
-        vec_b[node_id] = compute_nodal_aperture(node_id, w[GlobalDim - 1]);
+        for (MeshLib::Node const* node : _vec_fracture_nodes[frac_id])
+        {
+            auto const node_id = node->getID();
+            //---------------------------------------------------------------
+            // calc levelsets
+            //---------------------------------------------------------------
+            MeshLib::Element const* e = nullptr;
+            for (unsigned i=0; i<node->getNumberOfElements(); i++)
+            {
+                if (node->getElement(i)->getDimension()==GlobalDim-1)
+                {
+                    e = node->getElement(i);
+                    break;
+                }
+            }
+            assert(e!=nullptr);
+
+            Eigen::Vector3d const pt(e->getCenterOfGravity().getCoords());
+            std::vector<FractureProperty*> e_fracture_props;
+            std::unordered_map<int, int> e_fracID_to_local;
+            unsigned tmpi = 0;
+            for (auto fid :
+                _process_data.vec_ele_connected_fractureIDs[e->getID()])
+            {
+                e_fracture_props.push_back(&*_process_data.fracture_properties[fid]);
+                e_fracID_to_local.insert({fid, tmpi++});
+            }
+            std::vector<JunctionProperty*> e_junction_props;
+            std::unordered_map<int, int> e_juncID_to_local;
+            tmpi = 0;
+            for (auto fid :
+                _process_data.vec_ele_connected_junctionIDs[e->getID()])
+            {
+                e_junction_props.push_back(&_process_data.junction_properties[fid]);
+                e_juncID_to_local.insert({fid, tmpi++});
+            }
+            std::vector<double> const levelsets(duGlobalEnrichments(
+                frac_id, e_fracture_props, e_junction_props,
+                e_fracID_to_local, pt));
+            std::vector<int> localVarId_to_pvId(levelsets.size());
+            for (unsigned i=0; i<e_fracture_props.size(); i++)
+                localVarId_to_pvId[i] = e_fracture_props[i]->fracture_id;
+            for (unsigned i=0; i<e_junction_props.size(); i++)
+                localVarId_to_pvId[i+e_fracture_props.size()] = e_junction_props[i]->junction_id;
+
+            //---------------------------------------------------------------
+            // calc true g
+            //---------------------------------------------------------------
+            g.setZero();
+            for (unsigned i = 0; i < levelsets.size(); i++)
+            {
+                auto const g_variable_id = localVarId_to_pvId[i];
+                ProcessVariable& pv_g =
+                    this->getProcessVariables(monolithic_process_id)[g_variable_id];
+                auto& mesh_prop_g = *MeshLib::getOrCreateMeshProperty<double>(
+                    _mesh, pv_g.getName(), MeshLib::MeshItemType::Node, pv_g.getNumberOfComponents());
+                for (int k = 0; k < GlobalDim; k++)
+                {
+                    g[k] += levelsets[i] * mesh_prop_g[node_id * GlobalDim + k];
+                }
+            }
+
+            //---------------------------------------------------------------
+            // calc new uperture
+            //---------------------------------------------------------------
+            w.noalias() = R * g;
+            for (int k = 0; k < GlobalDim; k++)
+            {
+                vec_w[node_id * GlobalDim + k] = w[k];
+            }
+
+            vec_b[node_id] = compute_nodal_aperture(node_id, w[GlobalDim - 1]);
+        }
     }
 }
 
