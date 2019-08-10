@@ -367,7 +367,7 @@ private:
             }
             return LADataIntfPtr{new LAFractureData<ShapeFunctionDisplacement,
                                                     ShapeFunctionPressure>{
-                e, local_matrix_size, dofIndex_to_localIndex,
+                e, n_variables, local_matrix_size, dofIndex_to_localIndex,
                 std::forward<ConstructorArgs>(args)...}};
         };
     }
