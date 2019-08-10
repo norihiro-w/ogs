@@ -40,6 +40,7 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
                                      GlobalDim>::
     HydroMechanicsLocalAssemblerFracture(
         MeshLib::Element const& e,
+        std::size_t const n_variables,
         std::size_t const /*local_matrix_size*/,
         std::vector<unsigned> const& dofIndex_to_localIndex,
         bool const is_axially_symmetric,
@@ -47,7 +48,7 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         HydroMechanicsProcessData<GlobalDim>& process_data)
     : HydroMechanicsLocalAssemblerInterface(
           e, is_axially_symmetric,
-          ShapeFunctionDisplacement::NPOINTS * GlobalDim +
+          n_variables * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
               ShapeFunctionPressure::NPOINTS,
           dofIndex_to_localIndex),
       _process_data(process_data)
