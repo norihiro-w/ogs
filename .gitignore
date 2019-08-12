@@ -11,6 +11,9 @@ tags
 # Visual Studio Code project files
 .vscode
 
+# Visual Studio 
+.vs/
+
 # Conan package manager
 conanbuildinfo.cmake
 conaninfo.txt
