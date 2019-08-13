@@ -243,7 +243,7 @@ public:
         std::vector<unsigned> vec_n_element_nodes;
         // TODO how to get the shape function order for each variable?
         vec_n_element_nodes.push_back(
-            mesh_item.getNumberOfBaseNodes());  // pressure
+            mesh_item.getNumberOfBaseNodes() * 2);  // pressure, temperature
         auto const max_varID = *std::max_element(varIDs.begin(), varIDs.end());
         for (int i = 1; i < max_varID + 1; i++)
         {
@@ -351,7 +351,7 @@ private:
                   ConstructorArgs&&... args) {
             if (e.getDimension() == GlobalDim)
             {
-                if (n_variables == 2)
+                if (n_variables == 3) // no enrichment variable
                 {
                     return LADataIntfPtr{
                         new LADataMatrix<ShapeFunctionDisplacement,

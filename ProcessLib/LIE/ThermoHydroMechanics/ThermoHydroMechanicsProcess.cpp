@@ -54,7 +54,7 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
               use_monolithic_scheme),
       _process_data(std::move(process_data))
 {
-    INFO("[LIE/HM] looking for fracture elements in the given mesh");
+    INFO("[LIE/THM] looking for fracture elements in the given mesh");
     std::vector<std::pair<std::size_t, std::vector<int>>>
         vec_branch_nodeID_matIDs;
     std::vector<std::pair<std::size_t, std::vector<int>>>
@@ -236,6 +236,10 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
         _process_data.p_element_status->getActiveElements());
     _mesh_subset_nodes_p =
         std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh_nodes_p);
+    // temperature
+    _mesh_nodes_T = MeshLib::getBaseNodes(_mesh.getElements());
+    _mesh_subset_nodes_T =
+        std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh_nodes_T);
     // regular u
     _mesh_subset_matrix_nodes =
         std::make_unique<MeshLib::MeshSubset>(_mesh, _mesh.getNodes());
@@ -268,6 +272,10 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
         for (auto& vec : _vec_fracture_matrix_elements)
             vec_var_elements.push_back(&vec);
     }
+    // temperature
+    vec_n_components.push_back(1);
+    all_mesh_subsets.emplace_back(*_mesh_subset_nodes_T);
+    vec_var_elements.push_back(&_mesh.getElements());
     // regular displacement
     vec_n_components.push_back(GlobalDim);
     std::generate_n(std::back_inserter(all_mesh_subsets), GlobalDim,
@@ -298,7 +306,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
         vec_var_elements.push_back(&_vec_junction_fracture_matrix_elements[i]);
     }
 
-    INFO("[LIE/HM] creating a DoF table");
+    INFO("[LIE/THM] creating a DoF table");
     _local_to_global_index_map =
         std::make_unique<NumLib::LocalToGlobalIndexMap>(
             std::move(all_mesh_subsets),
@@ -316,7 +324,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
     unsigned const integration_order)
 {
     assert(mesh.getDimension() == GlobalDim);
-    INFO("[LIE/HM] creating local assemblers");
+    INFO("[LIE/THM] creating local assemblers");
     const int monolithic_process_id = 0;
     ProcessLib::LIE::ThermoHydroMechanics::createLocalAssemblers<
         GlobalDim, ThermoHydroMechanicsLocalAssemblerMatrix,
@@ -592,6 +600,13 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
                 MeshLib::MeshItemType::Node, 1);
         assert(_process_data.mesh_prop_hydraulic_flow->size() ==
                mesh.getNumberOfNodes());
+
+        _process_data.mesh_prop_thermal_flow =
+            MeshLib::getOrCreateMeshProperty<double>(
+                const_cast<MeshLib::Mesh&>(mesh), "ThermalFlow",
+                MeshLib::MeshItemType::Node, 1);
+        assert(_process_data.mesh_prop_thermal_flow->size() ==
+               mesh.getNumberOfNodes());
     }
 }
 
@@ -821,7 +836,8 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
                                           output_vector, std::negate<double>());
     };
     copyRhs(0, *_process_data.mesh_prop_hydraulic_flow);
-    copyRhs(1, *_process_data.mesh_prop_nodal_forces);
+    copyRhs(1, *_process_data.mesh_prop_thermal_flow);
+    copyRhs(2, *_process_data.mesh_prop_nodal_forces);
     const auto n_pv_g = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
     for (unsigned i=0; i<n_pv_g; i++)
         copyRhs(i+2, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);

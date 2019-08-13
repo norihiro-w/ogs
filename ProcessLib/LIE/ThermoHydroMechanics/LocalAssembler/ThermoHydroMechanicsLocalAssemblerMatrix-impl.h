@@ -131,24 +131,40 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<
         setPressureDotOfInactiveNodes(p_dot);
     }
 
+    auto T = const_cast<Eigen::VectorXd&>(local_x).segment(temperature_index,
+                                                           temperature_size);
+    auto T_dot = const_cast<Eigen::VectorXd&>(local_x_dot)
+                     .segment(temperature_index, temperature_size);
+
     auto u = local_x.segment(displacement_index, displacement_size);
     auto u_dot = local_x_dot.segment(displacement_index, displacement_size);
 
     auto rhs_p = local_rhs.template segment<pressure_size>(pressure_index);
+    auto rhs_T = local_rhs.template segment<temperature_size>(temperature_index);
     auto rhs_u =
         local_rhs.template segment<displacement_size>(displacement_index);
 
     auto J_pp = local_Jac.template block<pressure_size, pressure_size>(
         pressure_index, pressure_index);
+    auto J_pT = local_Jac.template block<pressure_size, temperature_size>(
+        pressure_index, temperature_index);
     auto J_pu = local_Jac.template block<pressure_size, displacement_size>(
         pressure_index, displacement_index);
+    auto J_TT = local_Jac.template block<temperature_size, temperature_size>(
+        temperature_index, pressure_index);
+    auto J_Tp = local_Jac.template block<temperature_size, pressure_size>(
+        temperature_index, temperature_index);
+    auto J_Tu = local_Jac.template block<temperature_size, displacement_size>(
+        temperature_index, displacement_index);
     auto J_uu = local_Jac.template block<displacement_size, displacement_size>(
         displacement_index, displacement_index);
     auto J_up = local_Jac.template block<displacement_size, pressure_size>(
         displacement_index, pressure_index);
+    auto J_uT = local_Jac.template block<displacement_size, temperature_size>(
+        displacement_index, temperature_index);
 
-    assembleBlockMatricesWithJacobian(t, p, p_dot, u, u_dot, rhs_p, rhs_u, J_pp,
-                                      J_pu, J_uu, J_up);
+    assembleBlockMatricesWithJacobian(t, p, p_dot, T, T_dot, u, u_dot, rhs_p, rhs_T, rhs_u, J_pp,
+                                      J_pT, J_pu, J_TT, J_Tp, J_Tu, J_uu, J_up, J_uT);
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -160,20 +176,34 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         double const t,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& p_dot,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
+        Eigen::Ref<const Eigen::VectorXd> const& T_dot,
         Eigen::Ref<const Eigen::VectorXd> const& u,
         Eigen::Ref<const Eigen::VectorXd> const& u_dot,
         Eigen::Ref<Eigen::VectorXd>
             rhs_p,
         Eigen::Ref<Eigen::VectorXd>
+            rhs_T,
+        Eigen::Ref<Eigen::VectorXd>
             rhs_u,
         Eigen::Ref<Eigen::MatrixXd>
             J_pp,
         Eigen::Ref<Eigen::MatrixXd>
+            J_pT,
+        Eigen::Ref<Eigen::MatrixXd>
             J_pu,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_TT,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tp,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tu,
         Eigen::Ref<Eigen::MatrixXd>
             J_uu,
         Eigen::Ref<Eigen::MatrixXd>
-            J_up)
+            J_up,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_uT)
 {
     assert(this->_element.getDimension() == GlobalDim);
 
@@ -181,9 +211,13 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
                                                          pressure_size);
 
-    typename ShapeMatricesTypePressure::NodalMatrixType storage_p =
+    typename ShapeMatricesTypePressure::NodalMatrixType storage_pp =
         ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
                                                          pressure_size);
+
+    typename ShapeMatricesTypePressure::NodalMatrixType storage_pT =
+        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
+                                                         temperatures_size);
 
     typename ShapeMatricesTypeDisplacement::template MatrixType<
         displacement_size, pressure_size>
@@ -221,6 +255,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
                 dNdx_u, N_u, x_coord, _is_axially_symmetric);
 
         auto const p1_ip = N_p * p;
+        auto const T1_ip = N_p * T;
+        auto const dT_ip = N_p.dot(T_dot) * dt;
         auto const& eps_prev = ip_data.eps_prev;
         auto const& sigma_eff_prev = ip_data.sigma_eff_prev;
         auto& sigma_eff = ip_data.sigma_eff;
@@ -237,18 +273,35 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         ArrayType fluid_vars;
         fluid_vars[static_cast<int>(
             MaterialLib::Fluid::PropertyVariableType::p)] = p1_ip;
+        fluid_vars[static_cast<int>(
+            MaterialLib::Fluid::PropertyVariableType::T)] = T1_ip;
 
-        auto const rho_fr = _process_data.fluid_density.getValue(fluid_vars);
+        auto const rho_f = _process_data.fluid_density.getValue(fluid_vars);
         double const mu = _process_data.fluid_viscosity.getValue(fluid_vars);
+
+        //------------------------------------------------------
+        // Solid properties
+        //------------------------------------------------------
+        auto const rho_s = _process_data.solid_density(t, x_position)[0];
+        double const lambda_s =
+            _process_data.solid_thermal_conductivity(t, x_position)[0];
+        double const C_s =
+            _process_data.solid_specific_heat_capacity(t, x_position)[0];
 
         //------------------------------------------------------
         // Bulk properties
         //------------------------------------------------------
-        auto const alpha = _process_data.biot_coefficient(t, x_position)[0];
-        auto const rho_sr = _process_data.solid_density(t, x_position)[0];
+        //------------------------------------------------------
+        double const S = _process_data.specific_storage(t, x_position)[0];
+        auto const ki = _process_data.intrinsic_permeability(t, x_position)[0];
+        auto const biot = _process_data.biot_coefficient(t, x_position)[0];
         auto const porosity = _process_data.porosity(t, x_position)[0];
+        auto const rho = rho_s * (1. - porosity) + porosity * rho_f;
+        auto const lambda = porosity * lambda_f + (1 - porosity) * lambda_s;
+        auto const heat_capacity =
+            porosity * C_f * rho_f + (1 - porosity) * C_s * rho_s;
+        auto const beta = porosity * beta_f + (1 - porosity) * 3 * alpha_s;
 
-        double const rho = rho_sr * (1 - porosity) + porosity * rho_fr;
         auto const& identity2 =
             MathLib::KelvinVector::Invariants<kelvin_vector_size>::identity2;
 
@@ -274,7 +327,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         //
         // displacement equation, pressure part
         //
-        Kup.noalias() += B.transpose() * alpha * identity2 * N_p * ip_w;
+        Kup.noalias() += B.transpose() * biot * identity2 * N_p * ip_w;
 
         //
         // pressure equation, pressure part.
@@ -282,19 +335,22 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         if (!_process_data.deactivate_matrix_in_flow)  // Only for hydraulically
                                                        // active matrix
         {
-            double const k_over_mu =
-                _process_data.intrinsic_permeability(t, x_position)[0] / mu;
-            double const S = _process_data.specific_storage(t, x_position)[0];
+            double const k_over_mu = ki / mu;
 
-            q.noalias() = -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
+            q.noalias() = - k_over_mu * (dNdx_p * p + rho_f * gravity_vec);
 
             laplace_p.noalias() +=
                 dNdx_p.transpose() * k_over_mu * dNdx_p * ip_w;
-            storage_p.noalias() += N_p.transpose() * S * N_p * ip_w;
+            storage_pp.noalias() += N_p.transpose() * S * N_p * ip_w;
+            storage_pT.noalias() += - N_p.transpose() * beta * N_p * ip_w;
 
             rhs_p.noalias() +=
-                dNdx_p.transpose() * rho_fr * k_over_mu * gravity_vec * ip_w;
+                dNdx_p.transpose() * rho_f * k_over_mu * gravity_vec * ip_w;
         }
+
+        // temperature equation
+        KTT.noalias() += N_T.transpose() * heat_capacity * N_T * ip_w;
+        //KTT.noalias() += - dNdx_T.transpose() * q* ip_w;
     }
 
     // displacement equation, pressure part
@@ -308,7 +364,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
     // pressure equation
     rhs_p.noalias() -=
-        laplace_p * p + storage_p * p_dot + Kup.transpose() * u_dot;
+        laplace_p * p + storage_pp * p_dot + storage_pT * T_dot + Kup.transpose() * u_dot;
 
     // displacement equation
     rhs_u.noalias() -= -Kup * p;
@@ -383,7 +439,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         fluid_vars[static_cast<int>(
             MaterialLib::Fluid::PropertyVariableType::p)] = p1_ip;
 
-        auto const rho_fr = _process_data.fluid_density.getValue(fluid_vars);
+        auto const rho_f = _process_data.fluid_density.getValue(fluid_vars);
         double const mu = _process_data.fluid_viscosity.getValue(fluid_vars);
 
         eps.noalias() = B * u;
@@ -409,7 +465,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
             auto const& dNdx_p = ip_data.dNdx_p;
 
             ip_data.darcy_velocity.head(GlobalDim).noalias() =
-                -k_over_mu * (dNdx_p * p + rho_fr * gravity_vec);
+                -k_over_mu * (dNdx_p * p + rho_f * gravity_vec);
         }
     }
 

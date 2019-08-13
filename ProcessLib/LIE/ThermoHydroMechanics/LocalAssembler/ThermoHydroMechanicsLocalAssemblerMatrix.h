@@ -77,20 +77,34 @@ protected:
         double const t,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& p_dot,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
+        Eigen::Ref<const Eigen::VectorXd> const& T_dot,
         Eigen::Ref<const Eigen::VectorXd> const& u,
         Eigen::Ref<const Eigen::VectorXd> const& u_dot,
         Eigen::Ref<Eigen::VectorXd>
             rhs_p,
         Eigen::Ref<Eigen::VectorXd>
+            rhs_T,
+        Eigen::Ref<Eigen::VectorXd>
             rhs_u,
         Eigen::Ref<Eigen::MatrixXd>
             J_pp,
         Eigen::Ref<Eigen::MatrixXd>
+            J_pT,
+        Eigen::Ref<Eigen::MatrixXd>
             J_pu,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_TT,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tp,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tu,
         Eigen::Ref<Eigen::MatrixXd>
             J_uu,
         Eigen::Ref<Eigen::MatrixXd>
-            J_up);
+            J_up,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_uT);
 
     void computeSecondaryVariableConcreteWithVector(
         double const t, Eigen::VectorXd const& local_x) override;
@@ -98,6 +112,7 @@ protected:
     void computeSecondaryVariableConcreteWithBlockVectors(
         double const t,
         Eigen::Ref<const Eigen::VectorXd> const& p,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
         Eigen::Ref<const Eigen::VectorXd> const& u);
 
     void setPressureOfInactiveNodes(
@@ -129,7 +144,9 @@ protected:
 
     static const int pressure_index = 0;
     static const int pressure_size = ShapeFunctionPressure::NPOINTS;
-    static const int displacement_index = ShapeFunctionPressure::NPOINTS;
+    static const int temperature_index = pressure_size + pressure_size;
+    static const int temperature_size = pressure_size;
+    static const int displacement_index = temperature_index + temperature_size;
     static const int displacement_size =
         ShapeFunctionDisplacement::NPOINTS * GlobalDim;
     static const int kelvin_vector_size =

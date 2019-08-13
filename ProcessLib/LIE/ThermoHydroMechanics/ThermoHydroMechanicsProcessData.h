@@ -172,6 +172,7 @@ struct ThermoHydroMechanicsProcessData
     MeshLib::PropertyVector<double>* mesh_prop_nodal_forces = nullptr;
     std::vector<MeshLib::PropertyVector<double>*> vec_mesh_prop_nodal_forces_jump;
     MeshLib::PropertyVector<double>* mesh_prop_hydraulic_flow = nullptr;
+    MeshLib::PropertyVector<double>* mesh_prop_thermal_flow = nullptr;
 
     double const reference_temperature;
 
