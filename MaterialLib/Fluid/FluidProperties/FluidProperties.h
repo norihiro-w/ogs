@@ -56,6 +56,12 @@ public:
 
     virtual ~FluidProperties() = default;
 
+    const FluidProperty& getProperty(
+        const FluidPropertyType property_type) const
+    {
+        return *_property_models[static_cast<unsigned>(property_type)];
+    }
+
     /**
      *  Get the value of a Property.
      *  \param property_type   Property type.
