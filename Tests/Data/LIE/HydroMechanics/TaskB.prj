@@ -27,7 +27,6 @@
             <fluid_density>rho_fr</fluid_density>
             <specific_body_force>0 0</specific_body_force>
             <initial_effective_stress>effective_stress0</initial_effective_stress>
-            <initial_fracture_effective_stress>fracture_effective_stress0</initial_fracture_effective_stress>
             <deactivate_matrix_in_flow>1</deactivate_matrix_in_flow>
             <fracture_model>
                 <type>LinearElasticIsotropic</type>
@@ -44,6 +43,7 @@
                 <permeability_model>
                     <type>CubicLaw</type>
                 </permeability_model>
+                <initial_fracture_effective_stress>fracture_effective_stress0</initial_fracture_effective_stress>
             </fracture_properties>
             <secondary_variables>
             </secondary_variables>

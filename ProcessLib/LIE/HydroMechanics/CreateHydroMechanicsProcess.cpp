@@ -275,6 +275,10 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
             ParameterLib::findParameter<double>(
                 //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__biot_coefficient}
                 fracture_properties_config, "biot_coefficient", parameters, 1,
+                &mesh),
+            ParameterLib::findParameter<double>(
+                //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__fracture_properties__initial_fracture_effective_stress}
+                fracture_properties_config, "initial_fracture_effective_stress", parameters, GlobalDim,
                 &mesh));
         if (frac_prop->aperture0.isTimeDependent())
         {
@@ -300,15 +304,6 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         MathLib::KelvinVector::KelvinVectorDimensions<GlobalDim>::value, &mesh);
     DBUG("Use '%s' as initial effective stress parameter.",
          initial_effective_stress.name.c_str());
-
-    // initial effective stress in fracture
-    auto& initial_fracture_effective_stress = ParameterLib::findParameter<
-        double>(
-        config,
-        //! \ogs_file_param_special{prj__processes__process__HYDRO_MECHANICS_WITH_LIE__initial_fracture_effective_stress}
-        "initial_fracture_effective_stress", parameters, GlobalDim, &mesh);
-    DBUG("Use '%s' as initial fracture effective stress parameter.",
-         initial_fracture_effective_stress.name.c_str());
 
     // deactivation of matrix elements in flow
     auto opt_deactivate_matrix_in_flow =
@@ -340,7 +335,6 @@ std::unique_ptr<Process> createHydroMechanicsProcess(
         std::move(fracture_model),
         std::move(frac_prop),
         initial_effective_stress,
-        initial_fracture_effective_stress,
         deactivate_matrix_in_flow,
         reference_temperature};
 

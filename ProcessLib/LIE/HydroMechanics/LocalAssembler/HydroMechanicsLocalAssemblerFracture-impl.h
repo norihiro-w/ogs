@@ -119,8 +119,7 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ip_data.permeability_state =
             frac_prop.permeability_model->getNewState();
 
-        auto const initial_effective_stress =
-            _process_data.initial_fracture_effective_stress(0, x_position);
+        auto const initial_effective_stress = (*frac_prop.initial_fracture_effective_stress)(0, x_position);
         for (int i = 0; i < GlobalDim; i++)
         {
             ip_data.sigma_eff[i] = initial_effective_stress[i];
@@ -246,7 +245,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         }
 
         auto const initial_effective_stress =
-            _process_data.initial_fracture_effective_stress(0, x_position);
+            (*frac_prop.initial_fracture_effective_stress)(0, x_position);
 
         Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
             initial_effective_stress.data(), initial_effective_stress.size());
@@ -375,7 +374,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         }
 
         auto const initial_effective_stress =
-            _process_data.initial_fracture_effective_stress(0, x_position);
+            (*frac_prop.initial_fracture_effective_stress)(0, x_position);
 
         Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
             initial_effective_stress.data(), initial_effective_stress.size());

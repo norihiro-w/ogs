@@ -42,8 +42,8 @@
                 <permeability_model>
                     <type>CubicLaw</type>
                 </permeability_model>
+               <initial_fracture_effective_stress>fracture_effective_stress0</initial_fracture_effective_stress>
             </fracture_properties>
-            <initial_fracture_effective_stress>fracture_effective_stress0</initial_fracture_effective_stress>
             <deactivate_matrix_in_flow>true</deactivate_matrix_in_flow>
             <secondary_variables>
             </secondary_variables>
