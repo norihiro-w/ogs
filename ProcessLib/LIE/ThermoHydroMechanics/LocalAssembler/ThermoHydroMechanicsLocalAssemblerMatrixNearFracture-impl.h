@@ -83,19 +83,34 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
         Base::setPressureOfInactiveNodes(t, p);
         Base::setPressureDotOfInactiveNodes(p_dot);
     }
+    auto T = const_cast<Eigen::VectorXd&>(local_x).segment(temperature_index,
+        temperature_size);
+    auto T_dot = const_cast<Eigen::VectorXd&>(local_x_dot)
+        .segment(temperature_index, temperature_size);
     auto const u = local_x.segment(displacement_index, displacement_size);
     auto const u_dot =
         local_x_dot.segment(displacement_index, displacement_size);
 
     auto rhs_p = local_b.segment(pressure_index, pressure_size);
+    auto rhs_T = local_b.segment(temperature_index, temperature_size);
     auto rhs_u = local_b.segment(displacement_index, displacement_size);
 
     auto J_pp = local_J.block(pressure_index, pressure_index, pressure_size,
                               pressure_size);
+    auto J_pT = local_J.block(pressure_index, temperature_index, pressure_size,
+        temperature_size);
     auto J_pu = local_J.block(pressure_index, displacement_index, pressure_size,
                               displacement_size);
+    auto J_Tp = local_J.block(temperature_index, pressure_index, temperature_size,
+        pressure_size);
+    auto J_TT = local_J.block(temperature_index, temperature_index, temperature_size,
+        temperature_size);
+    auto J_Tu = local_J.block(temperature_index, displacement_index, temperature_size,
+        displacement_size);
     auto J_up = local_J.block(displacement_index, pressure_index,
                               displacement_size, pressure_size);
+    auto J_uT = local_J.block(displacement_index, temperature_index,
+        displacement_size, temperature_size);
     auto J_uu = local_J.block(displacement_index, displacement_index,
                               displacement_size, displacement_size);
 
@@ -104,8 +119,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     if (!_hasActiveLevelset)
     {
         // no DoF exists for displacement jumps. do the normal assembly
-        Base::assembleBlockMatricesWithJacobian(t, p, p_dot, u, u_dot, rhs_p,
-                                                rhs_u, J_pp, J_pu, J_uu, J_up);
+        Base::assembleBlockMatricesWithJacobian(t, p, p_dot, T, T_dot, u, u_dot, rhs_p, rhs_T,
+                                                rhs_u, J_pp, J_pT, J_pu, J_TT, J_Tp, J_Tu, J_uu, J_up, J_uT);
         return;
     }
 
@@ -115,9 +130,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     const Eigen::VectorXd total_u_dot = compute_total_u(_ele_levelsets, local_x_dot);
 
     // evaluate residuals and Jacobians for pressure and displacements
-    Base::assembleBlockMatricesWithJacobian(t, p, p_dot, total_u, total_u_dot,
-                                            rhs_p, rhs_u, J_pp, J_pu, J_uu,
-                                            J_up);
+    Base::assembleBlockMatricesWithJacobian(t, p, p_dot, T, T_dot, total_u, total_u_dot,
+                                            rhs_p, rhs_T, rhs_u, J_pp, J_pT, J_pu, J_TT, J_Tp, J_Tu, J_uu, J_up, J_uT);
 
     // compute residuals and Jacobians for displacement jumps
     auto const n_enrich_var = _n_enrich_var;
@@ -165,6 +179,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     {
         Base::setPressureOfInactiveNodes(t, p);
     }
+    auto T = const_cast<Eigen::VectorXd&>(local_x).segment(pressure_index,
+        pressure_size);
     auto u = local_x.segment(displacement_index, displacement_size);
 
     // levelset value of the element
@@ -172,7 +188,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     if (!_hasActiveLevelset)
     {
         // no DoF exists for displacement jumps. do the normal assembly
-        Base::computeSecondaryVariableConcreteWithBlockVectors(t, p, u);
+        Base::computeSecondaryVariableConcreteWithBlockVectors(t, p, T, u);
         return;
     }
 
@@ -182,7 +198,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     const Eigen::VectorXd total_u = compute_total_u(_ele_levelsets, local_x);
 
     // evaluate residuals and Jacobians for pressure and displacements
-    Base::computeSecondaryVariableConcreteWithBlockVectors(t, p, total_u);
+    Base::computeSecondaryVariableConcreteWithBlockVectors(t, p, T, total_u);
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,

@@ -95,6 +95,8 @@ private:
 
     std::vector<MeshLib::Node*> _mesh_nodes_p;
     std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_nodes_p;
+    std::vector<MeshLib::Node*> _mesh_nodes_T;
+    std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_nodes_T;
 };
 
 extern template class ThermoHydroMechanicsProcess<2>;

@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include "MathLib/KelvinVector.h"
 #include "MaterialLib/SolidModels/MechanicsBase.h"
 
 namespace ProcessLib
@@ -31,6 +32,19 @@ struct IntegrationPointDataMatrix final
           material_state_variables(
               solid_material.createMaterialStateVariables())
     {
+        static const int kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                GlobalDim>::value;
+
+        sigma.setZero(kelvin_vector_size);
+        sigma_prev.resize(kelvin_vector_size);
+        sigma_eff.setZero(kelvin_vector_size);
+        sigma_eff_prev.resize(kelvin_vector_size);
+        eps.setZero(kelvin_vector_size);
+        eps_prev.resize(kelvin_vector_size);
+        eps_m.setZero(kelvin_vector_size);
+        eps_m_prev.resize(kelvin_vector_size);
+        q.setZero();
     }
 
     typename ShapeMatrixTypeDisplacement::NodalRowVectorType N_u;
@@ -38,8 +52,11 @@ struct IntegrationPointDataMatrix final
     typename ShapeMatrixTypeDisplacement::template MatrixType<
         GlobalDim, NPoints * GlobalDim>
         H_u;
+    typename BMatricesType::KelvinVectorType sigma, sigma_prev;
     typename BMatricesType::KelvinVectorType sigma_eff, sigma_eff_prev;
     typename BMatricesType::KelvinVectorType eps, eps_prev;
+    typename BMatricesType::KelvinVectorType eps_m, eps_m_prev;
+    Eigen::Matrix<double, GlobalDim, 1> q;
 
     typename ShapeMatrixTypePressure::NodalRowVectorType N_p;
     typename ShapeMatrixTypePressure::GlobalDimNodalMatrixType dNdx_p;
@@ -57,6 +74,8 @@ struct IntegrationPointDataMatrix final
     void pushBackState()
     {
         eps_prev = eps;
+        eps_m_prev = eps_m;
+        sigma_prev = sigma;
         sigma_eff_prev = sigma_eff;
         material_state_variables->pushBackState();
     }

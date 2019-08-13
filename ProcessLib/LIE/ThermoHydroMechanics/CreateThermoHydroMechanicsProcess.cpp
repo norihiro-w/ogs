@@ -351,12 +351,6 @@ std::unique_ptr<Process> createThermoHydroMechanicsProcess(
     if (deactivate_matrix_in_flow)
         INFO("Deactivate matrix elements in flow calculation.");
 
-    // Reference temperature
-    const auto& reference_temperature =
-        //! \ogs_file_param{prj__processes__process__THERMO_HYDRO_MECHANICS_WITH_LIE__reference_temperature}
-        config.getConfigParameter<double>(
-            "reference_temperature", std::numeric_limits<double>::quiet_NaN());
-
     ThermoHydroMechanicsProcessData<GlobalDim> process_data{
         materialIDs(mesh),
         std::move(solid_constitutive_relations),
@@ -373,8 +367,7 @@ std::unique_ptr<Process> createThermoHydroMechanicsProcess(
         std::move(fracture_model),
         std::move(fracture_properties),
         initial_effective_stress,
-        deactivate_matrix_in_flow,
-        reference_temperature};
+        deactivate_matrix_in_flow};
 
     SecondaryVariableCollection secondary_variables;
 

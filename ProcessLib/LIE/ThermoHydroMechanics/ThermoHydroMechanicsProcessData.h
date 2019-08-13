@@ -9,9 +9,10 @@
 
 #pragma once
 
-#include <Eigen/Dense>
 #include <memory>
 #include <utility>
+
+#include <Eigen/Dense>
 
 #include "MeshLib/ElementStatus.h"
 #include "MeshLib/PropertyVector.h"
@@ -59,8 +60,7 @@ struct ThermoHydroMechanicsProcessData
             fracture_model,
         std::vector<std::unique_ptr<FractureProperty>>&& fracture_properties,
         ParameterLib::Parameter<double> const& initial_effective_stress_,
-        bool const deactivate_matrix_in_flow_,
-        double const reference_temperature_)
+        bool const deactivate_matrix_in_flow_)
         : material_ids(material_ids_),
           solid_materials{std::move(solid_materials_)},
           fluid_props{std::move(fluid_props_)},
@@ -81,8 +81,7 @@ struct ThermoHydroMechanicsProcessData
           fracture_model{std::move(fracture_model)},
           fracture_properties{std::move(fracture_properties)},
           initial_effective_stress(initial_effective_stress_),
-          deactivate_matrix_in_flow(deactivate_matrix_in_flow_),
-          reference_temperature(reference_temperature_)
+          deactivate_matrix_in_flow(deactivate_matrix_in_flow_)
     {
     }
 
@@ -173,8 +172,6 @@ struct ThermoHydroMechanicsProcessData
     std::vector<MeshLib::PropertyVector<double>*> vec_mesh_prop_nodal_forces_jump;
     MeshLib::PropertyVector<double>* mesh_prop_hydraulic_flow = nullptr;
     MeshLib::PropertyVector<double>* mesh_prop_thermal_flow = nullptr;
-
-    double const reference_temperature;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };

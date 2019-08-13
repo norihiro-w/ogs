@@ -41,7 +41,7 @@ ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     : ThermoHydroMechanicsLocalAssemblerInterface(
           e, is_axially_symmetric,
           (n_variables - 1) * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
-              ShapeFunctionPressure::NPOINTS,
+              ShapeFunctionPressure::NPOINTS * 2,
           dofIndex_to_localIndex),
       _process_data(process_data)
 {
@@ -207,24 +207,6 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 {
     assert(this->_element.getDimension() == GlobalDim);
 
-    typename ShapeMatricesTypePressure::NodalMatrixType laplace_p =
-        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
-                                                         pressure_size);
-
-    typename ShapeMatricesTypePressure::NodalMatrixType storage_pp =
-        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
-                                                         pressure_size);
-
-    typename ShapeMatricesTypePressure::NodalMatrixType storage_pT =
-        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
-                                                         temperatures_size);
-
-    typename ShapeMatricesTypeDisplacement::template MatrixType<
-        displacement_size, pressure_size>
-        Kup = ShapeMatricesTypeDisplacement::template MatrixType<
-            displacement_size, pressure_size>::Zero(displacement_size,
-                                                    pressure_size);
-
     double const& dt = _process_data.dt;
     auto const& gravity_vec = _process_data.specific_body_force;
 
@@ -243,6 +225,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         auto const& N_p = ip_data.N_p;
         auto const& dNdx_p = ip_data.dNdx_p;
         auto const& H_u = ip_data.H_u;
+        auto const& N_T = N_p;
+        auto const& dNdx_T = dNdx_p;
 
         auto const x_coord =
             interpolateXCoordinate<ShapeFunctionDisplacement,
@@ -254,17 +238,26 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
                                           typename BMatricesType::BMatrixType>(
                 dNdx_u, N_u, x_coord, _is_axially_symmetric);
 
+        auto const dT_ip = N_T.dot(T_dot) * dt;
+        auto const T1_ip = N_T * T;
+        //auto const T0_ip = T1_ip - dT_ip;
+        auto const dp_ip = N_p.dot(p_dot) * dt;
         auto const p1_ip = N_p * p;
-        auto const T1_ip = N_p * T;
-        auto const dT_ip = N_p.dot(T_dot) * dt;
-        auto const& eps_prev = ip_data.eps_prev;
-        auto const& sigma_eff_prev = ip_data.sigma_eff_prev;
-        auto& sigma_eff = ip_data.sigma_eff;
+        auto const p0_ip = p1_ip - dp_ip;
+        auto const grad_p1 = (dNdx_p * p).eval();
+        auto const grad_T1 = (dNdx_T * T).eval();
 
         auto& eps = ip_data.eps;
-        auto& state = ip_data.material_state_variables;
+        auto const& eps_prev = ip_data.eps_prev;
+        auto& eps_m = ip_data.eps_m;
+        auto const& eps_m_prev = ip_data.eps_m_prev;
+        auto& sigma = ip_data.sigma;
+        auto const& sigma_prev = ip_data.sigma_prev;
+        auto& sigma_eff = ip_data.sigma_eff;
+        auto& sigma_eff_prev = ip_data.sigma_eff_prev;
+        auto& q = ip_data.q;
 
-        auto q = ip_data.darcy_velocity.head(GlobalDim);
+        auto& state = ip_data.material_state_variables;
 
         //------------------------------------------------------
         // fluid properties
@@ -272,102 +265,173 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         using ArrayType = MaterialLib::Fluid::FluidProperty::ArrayType;
         ArrayType fluid_vars;
         fluid_vars[static_cast<int>(
-            MaterialLib::Fluid::PropertyVariableType::p)] = p1_ip;
-        fluid_vars[static_cast<int>(
             MaterialLib::Fluid::PropertyVariableType::T)] = T1_ip;
+        fluid_vars[static_cast<int>(
+            MaterialLib::Fluid::PropertyVariableType::p)] = p1_ip;
 
         auto const rho_f = _process_data.fluid_density.getValue(fluid_vars);
-        double const mu = _process_data.fluid_viscosity.getValue(fluid_vars);
+        auto const drhof_dp = _process_data.fluid_density.getdValue(
+            fluid_vars, MaterialLib::Fluid::PropertyVariableType::p);
+        auto const drhof_dT = _process_data.fluid_density.getdValue(
+            fluid_vars, MaterialLib::Fluid::PropertyVariableType::T);
+        auto const beta_f = drhof_dT/rho_f; //TODO
+        double const mu_f = _process_data.fluid_viscosity.getValue(fluid_vars);
+        auto const dmuf_dp = _process_data.fluid_viscosity.getdValue(
+            fluid_vars, MaterialLib::Fluid::PropertyVariableType::p);
+        auto const dmuf_dT = _process_data.fluid_viscosity.getdValue(
+            fluid_vars, MaterialLib::Fluid::PropertyVariableType::T);
+        double const lambda_f =
+            _process_data.fluid_thermal_conductivity.getValue(fluid_vars);
+        double const C_f =
+            _process_data.fluid_specific_heat_capacity.getValue(fluid_vars);
+        double const dCf_dp =
+            _process_data.fluid_specific_heat_capacity.getdValue(
+                fluid_vars, MaterialLib::Fluid::PropertyVariableType::p);
+        double const dCf_dT =
+            _process_data.fluid_specific_heat_capacity.getdValue(
+                fluid_vars, MaterialLib::Fluid::PropertyVariableType::T);
 
         //------------------------------------------------------
-        // Solid properties
+        // solid properties
         //------------------------------------------------------
         auto const rho_s = _process_data.solid_density(t, x_position)[0];
+        auto const drhos_dp = 0.0;
+        auto const drhos_dT = 0.0;
+        //double const rho_s = rho_sr * (1 - 3 * thermal_strain);
+        double const alpha_s =
+            _process_data.solid_linear_thermal_expansion_coefficient(
+                t, x_position)[0];
         double const lambda_s =
             _process_data.solid_thermal_conductivity(t, x_position)[0];
         double const C_s =
             _process_data.solid_specific_heat_capacity(t, x_position)[0];
 
         //------------------------------------------------------
-        // Bulk properties
-        //------------------------------------------------------
+        // bulk properties
         //------------------------------------------------------
         double const S = _process_data.specific_storage(t, x_position)[0];
         auto const ki = _process_data.intrinsic_permeability(t, x_position)[0];
         auto const biot = _process_data.biot_coefficient(t, x_position)[0];
         auto const porosity = _process_data.porosity(t, x_position)[0];
         auto const rho = rho_s * (1. - porosity) + porosity * rho_f;
+        auto const drho_dp = drhos_dp * (1. - porosity) + porosity * drhof_dp;
+        auto const drho_dT = drhos_dT * (1. - porosity) + porosity * drhof_dT;
         auto const lambda = porosity * lambda_f + (1 - porosity) * lambda_s;
         auto const heat_capacity =
             porosity * C_f * rho_f + (1 - porosity) * C_s * rho_s;
+        auto const dheat_capacity_dp =
+            porosity * C_f * drhof_dp + (1 - porosity) * C_s * drhos_dp;
+        auto const dheat_capacity_dT =
+            porosity * C_f * drhof_dT + (1 - porosity) * C_s * drhos_dT;
         auto const beta = porosity * beta_f + (1 - porosity) * 3 * alpha_s;
 
-        auto const& identity2 =
-            MathLib::KelvinVector::Invariants<kelvin_vector_size>::identity2;
+        auto const& b = _process_data.specific_body_force;
 
+        //------------------------------------------------------
+        // Darcy q calculation
+        //------------------------------------------------------
+//        if (!_process_data.deactivate_matrix_in_flow)
+//		{
+        q.noalias() = -ki / mu_f * (grad_p1 - rho_f * b);
+        auto dq_dpi = (-ki / mu_f * dNdx_p).eval();
+        dq_dpi.noalias() += ki / mu_f * drhof_dp * b * N_p;
+        dq_dpi.noalias() += ki / mu_f / mu_f * dmuf_dp * grad_p1 * N_p;
+        auto dq_dTi = (ki / mu_f * drhof_dT * b * N_T).eval();
+        dq_dTi.noalias() += ki / mu_f / mu_f * dmuf_dT * grad_p1 * N_T;
+//		}
+
+        //------------------------------------------------------
+        // Heat flux calculation
+        //------------------------------------------------------
+        auto const jdiff = (- lambda * grad_T1).eval();
+        auto const djdiff_dpi = (0.0 * dNdx_p).eval();
+        auto const djdiff_dTi = (- lambda * dNdx_T).eval();
+        auto const jadv = (q * rho_f * C_f * T1_ip).eval();
+        auto djadv_dpi = (q * (drhof_dp * C_f + rho_f * dCf_dp ) * T1_ip * N_p).eval();
+        djadv_dpi.noalias() += dq_dpi * rho_f * C_f * T1_ip;
+        auto djadv_dTi = (q * rho_f * C_f * N_T).eval();
+        djadv_dTi.noalias() +=
+            q * (drhof_dT * C_f + rho_f * dCf_dT ) * T1_ip * N_T;
+        djadv_dTi.noalias() += dq_dTi * rho_f * C_f * T1_ip;
+
+        //------------------------------------------------------
+        // strain calculation
+        //------------------------------------------------------
         eps.noalias() = B * u;
 
+        // calculate thermally induced strain
+        // assume isotropic thermal expansion
+        double const linear_thermal_strain_increment = alpha_s * dT_ip;
+
+        using Invariants = MathLib::KelvinVector::Invariants<
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                GlobalDim>::value>;
+
+        eps_m.noalias() =
+            eps_m_prev + eps - eps_prev -
+            linear_thermal_strain_increment * Invariants::identity2;
+
+        //------------------------------------------------------
+        // stress, C calculation
+        //------------------------------------------------------
+        sigma_eff_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
         auto&& solution = _ip_data[ip].solid_material.integrateStress(
-            t, x_position, _process_data.dt, eps_prev, eps, sigma_eff_prev,
-            *state, _process_data.reference_temperature);
+            t, x_position, dt, eps_m_prev, eps_m, sigma_eff_prev, *state, T1_ip);
 
         if (!solution)
-        {
             OGS_FATAL("Computation of local constitutive relation failed.");
-        }
 
         MathLib::KelvinVector::KelvinMatrixType<GlobalDim> C;
         std::tie(sigma_eff, state, C) = std::move(*solution);
+        sigma.noalias() = sigma_eff - biot * Invariants::identity2 * p1_ip;
 
-        J_uu.noalias() += B.transpose() * C * B * ip_w;
-
-        rhs_u.noalias() -= B.transpose() * sigma_eff * ip_w;
-        rhs_u.noalias() -= -H_u.transpose() * rho * gravity_vec * ip_w;
-
-        //
-        // displacement equation, pressure part
-        //
-        Kup.noalias() += B.transpose() * biot * identity2 * N_p * ip_w;
-
-        //
-        // pressure equation, pressure part.
-        //
-        if (!_process_data.deactivate_matrix_in_flow)  // Only for hydraulically
-                                                       // active matrix
-        {
-            double const k_over_mu = ki / mu;
-
-            q.noalias() = - k_over_mu * (dNdx_p * p + rho_f * gravity_vec);
-
-            laplace_p.noalias() +=
-                dNdx_p.transpose() * k_over_mu * dNdx_p * ip_w;
-            storage_pp.noalias() += N_p.transpose() * S * N_p * ip_w;
-            storage_pT.noalias() += - N_p.transpose() * beta * N_p * ip_w;
-
-            rhs_p.noalias() +=
-                dNdx_p.transpose() * rho_f * k_over_mu * gravity_vec * ip_w;
-        }
+        //------------------------------------------------------
+        // residual calculations
+        //------------------------------------------------------
+        // pressure equation
+		if (!_process_data.deactivate_matrix_in_flow)
+		{
+            rhs_p.noalias() -=
+                N_p.transpose() * S * N_p * p_dot * ip_w
+                - N_p.transpose() * beta * N_T * T_dot * ip_w
+                + N_p.transpose() * biot * Invariants::identity2.transpose() * (B * u_dot) * ip_w
+                - dNdx_p.transpose() * q * ip_w;
+		}
 
         // temperature equation
-        KTT.noalias() += N_T.transpose() * heat_capacity * N_T * ip_w;
-        //KTT.noalias() += - dNdx_T.transpose() * q* ip_w;
+        rhs_T.noalias() -=
+            N_T.transpose() * heat_capacity * N_T * T_dot * ip_w
+            - dNdx_T.transpose() * (jdiff + jadv) * ip_w;
+
+        // displacement equation
+        rhs_u.noalias() -=
+            B.transpose() * sigma * ip_w
+            - H_u.transpose() * rho * b * ip_w;
+
+
+        //------------------------------------------------------
+        // jacobian calculations
+        //------------------------------------------------------
+        if (!_process_data.deactivate_matrix_in_flow)
+        {
+            J_pp.noalias() += N_p.transpose() * S * N_p * ip_w / dt;
+            J_pT.noalias() += -N_p.transpose() * beta * N_T * ip_w / dt;
+            J_pu.noalias() += (B.transpose() * biot * Invariants::identity2 * N_p).transpose() * ip_w / dt;
+            J_pp.noalias() += -dNdx_p.transpose() * dq_dpi * ip_w;
+            J_pT.noalias() += -dNdx_p.transpose() * dq_dTi * ip_w;
+        }
+
+        J_TT.noalias() += N_T.transpose() * heat_capacity * N_T * ip_w / dt;
+        J_Tp.noalias() += N_T.transpose() * dheat_capacity_dp * N_T * T_dot * N_p * ip_w;
+        J_TT.noalias() += N_T.transpose() * dheat_capacity_dT * N_T * T_dot * N_T * ip_w;
+        J_TT.noalias() += - dNdx_T.transpose() * (djdiff_dTi + djadv_dTi) * ip_w;
+        J_Tp.noalias() += - dNdx_T.transpose() * (djdiff_dpi + djadv_dpi) * ip_w;
+
+        J_uu.noalias() += B.transpose() * C * B * ip_w;
+        J_up.noalias() += - B.transpose() * biot * Invariants::identity2 * N_p * ip_w;
+        J_up.noalias() += - H_u.transpose() * drho_dp * b * N_p * ip_w;
+        J_uT.noalias() += - H_u.transpose() * drho_dT * b * N_T * ip_w;
     }
-
-    // displacement equation, pressure part
-    J_up.noalias() -= Kup;
-
-    // pressure equation, pressure part.
-    J_pp.noalias() += laplace_p + storage_p / dt;
-
-    // pressure equation, displacement part.
-    J_pu.noalias() += Kup.transpose() / dt;
-
-    // pressure equation
-    rhs_p.noalias() -=
-        laplace_p * p + storage_pp * p_dot + storage_pT * T_dot + Kup.transpose() * u_dot;
-
-    // displacement equation
-    rhs_u.noalias() -= -Kup * p;
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -384,9 +448,11 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     {
         setPressureOfInactiveNodes(t, p);
     }
+    auto T = const_cast<Eigen::VectorXd&>(local_x).segment(temperature_index,
+        temperature_size);
     auto u = local_x.segment(displacement_index, displacement_size);
 
-    computeSecondaryVariableConcreteWithBlockVectors(t, p, u);
+    computeSecondaryVariableConcreteWithBlockVectors(t, p, T, u);
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -397,6 +463,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     computeSecondaryVariableConcreteWithBlockVectors(
         double const t,
         Eigen::Ref<const Eigen::VectorXd> const& p,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
         Eigen::Ref<const Eigen::VectorXd> const& u)
 {
     ParameterLib::SpatialPosition x_position;
@@ -446,7 +513,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
 
         auto&& solution = _ip_data[ip].solid_material.integrateStress(
             t, x_position, _process_data.dt, eps_prev, eps, sigma_eff_prev,
-            *state, _process_data.reference_temperature);
+            *state, 0.0);
 
         if (!solution)
         {
