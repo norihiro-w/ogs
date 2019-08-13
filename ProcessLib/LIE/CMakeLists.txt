@@ -3,6 +3,8 @@ APPEND_SOURCE_FILES(SOURCES HydroMechanics)
 APPEND_SOURCE_FILES(SOURCES HydroMechanics/LocalAssembler)
 APPEND_SOURCE_FILES(SOURCES SmallDeformation)
 APPEND_SOURCE_FILES(SOURCES SmallDeformation/LocalAssembler)
+APPEND_SOURCE_FILES(SOURCES ThermoHydroMechanics)
+APPEND_SOURCE_FILES(SOURCES ThermoHydroMechanics/LocalAssembler)
 
 add_library(LIE ${SOURCES})
 if(BUILD_SHARED_LIBS)
@@ -15,3 +17,4 @@ target_link_libraries(LIE
 
 include(HydroMechanics/Tests.cmake)
 include(SmallDeformation/Tests.cmake)
+include(ThermoHydroMechanics/Tests.cmake)

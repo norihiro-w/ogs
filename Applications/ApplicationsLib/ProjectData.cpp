@@ -72,6 +72,7 @@
 #ifdef OGS_BUILD_PROCESS_LIE
 #include "ProcessLib/LIE/HydroMechanics/CreateHydroMechanicsProcess.h"
 #include "ProcessLib/LIE/SmallDeformation/CreateSmallDeformationProcess.h"
+#include "ProcessLib/LIE/ThermoHydroMechanics/CreateThermoHydroMechanicsProcess.h"
 #endif
 #ifdef OGS_BUILD_PROCESS_LIQUIDFLOW
 #include "ProcessLib/LiquidFlow/CreateLiquidFlowProcess.h"
@@ -793,6 +794,36 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                 default:
                     OGS_FATAL(
                         "THERMO_HYDRO_MECHANICS process does not support given "
+                        "dimension");
+            }
+        }
+        else
+#endif
+#ifdef OGS_BUILD_PROCESS_LIE
+            if (type == "THERMO_HYDRO_MECHANICS_WITH_LIE")
+        {
+            //! \ogs_file_param{prj__processes__process__THERMO_HYDRO_MECHANICS_WITH_LIE__dimension}
+            switch (process_config.getConfigParameter<int>("dimension"))
+            {
+                case 2:
+                    process = ProcessLib::LIE::ThermoHydroMechanics::
+                        createThermoHydroMechanicsProcess<2>(
+                            name, *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters,
+                            _local_coordinate_system, integration_order,
+                            process_config);
+                    break;
+                case 3:
+                    process = ProcessLib::LIE::ThermoHydroMechanics::
+                        createThermoHydroMechanicsProcess<3>(
+                            name, *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters,
+                            _local_coordinate_system, integration_order,
+                            process_config);
+                    break;
+                default:
+                    OGS_FATAL(
+                        "THERMO_HYDRO_MECHANICS_WITH_LIE process does not support given "
                         "dimension");
             }
         }
