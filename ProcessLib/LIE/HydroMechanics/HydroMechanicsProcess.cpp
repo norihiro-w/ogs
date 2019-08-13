@@ -438,7 +438,7 @@ void HydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
 
         _process_data.mesh_prop_nodal_forces_jump =
             MeshLib::getOrCreateMeshProperty<double>(
-                const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump",
+                const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump1",
                 MeshLib::MeshItemType::Node, GlobalDim);
         assert(_process_data.mesh_prop_nodal_forces_jump->size() ==
                GlobalDim * mesh.getNumberOfNodes());
