@@ -51,7 +51,8 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
           n_variables * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
               ShapeFunctionPressure::NPOINTS,
           dofIndex_to_localIndex),
-      _process_data(process_data)
+      _process_data(process_data),
+      _e_center_coords(e.getCenterOfGravity().getCoords())
 {
     assert(e.getDimension() == GlobalDim - 1);
 
@@ -72,12 +73,24 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
                           IntegrationMethod, GlobalDim>(e, is_axially_symmetric,
                                                         integration_method);
 
-    auto const& frac_prop = *_process_data.fracture_property;
+    auto mat_id = (*_process_data.mesh_prop_materialIDs)[e.getID()];
+    auto frac_id = _process_data.map_materialID_to_fractureID[mat_id];
+    _fracture_property = &*_process_data.fracture_properties[frac_id];
+
+    // collect properties of connecting fractures, junctions
+    for (auto fid : process_data.vec_ele_connected_fractureIDs[e.getID()])
+    {
+        _fracID_to_local.insert({fid, _fracture_props.size()});
+        _fracture_props.push_back(&*_process_data.fracture_properties[fid]);
+    }
+    for (auto jid : process_data.vec_ele_connected_junctionIDs[e.getID()])
+        _junction_props.push_back(&_process_data.junction_properties[jid]);
 
     // Get element nodes for aperture0 interpolation from nodes to integration
     // point. The aperture0 parameter is time-independent.
     typename ShapeMatricesTypeDisplacement::NodalVectorType
-        aperture0_node_values = frac_prop.aperture0.getNodalValuesOnElement(
+        aperture0_node_values =
+            _fracture_property->aperture0.getNodalValuesOnElement(
             e, /*time independent*/ 0);
 
     ParameterLib::SpatialPosition x_position;
@@ -117,9 +130,9 @@ HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ip_data.aperture = ip_data.aperture0;
 
         ip_data.permeability_state =
-            frac_prop.permeability_model->getNewState();
+            _fracture_property->permeability_model->getNewState();
 
-        auto const initial_effective_stress = (*frac_prop.initial_fracture_effective_stress)(0, x_position);
+        auto const initial_effective_stress = (*_fracture_property->initial_fracture_effective_stress)(0, x_position);
         for (int i = 0; i < GlobalDim; i++)
         {
             ip_data.sigma_eff[i] = initial_effective_stress[i];
@@ -138,25 +151,105 @@ void HydroMechanicsLocalAssemblerFracture<
                                              Eigen::VectorXd& local_b,
                                              Eigen::MatrixXd& local_J)
 {
-    auto const p = local_x.segment(pressure_index, pressure_size);
-    auto const p_dot = local_xdot.segment(pressure_index, pressure_size);
-    auto const g = local_x.segment(displacement_index, displacement_size);
-    auto const g_dot =
-        local_xdot.segment(displacement_index, displacement_size);
+    auto const pressure_index = pressure_index_;
+    auto const pressure_size = pressure_size_;
+    auto const displacement_jump_index = displacement_jump_index_;
+    auto const displacement_jump_size = displacement_jump_size_;
+    auto const n_fractures = _fracture_props.size();
+    auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
-    auto rhs_p = local_b.segment(pressure_index, pressure_size);
-    auto rhs_g = local_b.segment(displacement_index, displacement_size);
-    auto J_pp = local_J.block(pressure_index, pressure_index, pressure_size,
-                              pressure_size);
-    auto J_pg = local_J.block(pressure_index, displacement_index, pressure_size,
-                              displacement_size);
-    auto J_gp = local_J.block(displacement_index, pressure_index,
-                              displacement_size, pressure_size);
-    auto J_gg = local_J.block(displacement_index, displacement_index,
-                              displacement_size, displacement_size);
+    auto const local_p = local_x.segment<pressure_size>(pressure_index);
+    auto const local_p_dot = local_xdot.segment<pressure_size>(pressure_index);
+    std::vector<Eigen::VectorXd> vec_local_g;
+    std::vector<Eigen::VectorXd> vec_local_g_dot;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub = local_x.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_local_g.push_back(sub);
+        auto sub_dot = local_xdot.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_local_g_dot.push_back(sub_dot);
+    }
 
-    assembleBlockMatricesWithJacobian(t, p, p_dot, g, g_dot, rhs_p, rhs_g, J_pp,
-                                      J_pg, J_gg, J_gp);
+    //
+    using BlockVectorTypeU =
+        typename Eigen::VectorXd::FixedSegmentReturnType<displacement_jump_size>::Type;
+    using BlockMatrixTypePU =
+        Eigen::Block<Eigen::MatrixXd, pressure_size, displacement_jump_size>;
+    using BlockMatrixTypeUP =
+        Eigen::Block<Eigen::MatrixXd, displacement_jump_size, pressure_size>;
+    using BlockMatrixTypeUU =
+        Eigen::Block<Eigen::MatrixXd, displacement_jump_size, displacement_jump_size>;
+
+    auto local_b_p = local_b.segment<pressure_size>(pressure_index);
+    std::vector<BlockVectorTypeU> vec_local_b_g;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        vec_local_b_g.push_back(
+            local_b.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size*i));
+    }
+    auto local_J_pp = local_J.block<pressure_size,pressure_size>(pressure_index, pressure_index);
+    std::vector<BlockMatrixTypePU> vec_local_J_pg;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_pg = local_J.block<pressure_size, displacement_jump_size>(
+            pressure_index, displacement_jump_index + displacement_jump_size * i);
+        vec_local_J_pg.push_back(sub_pg);
+    }
+    std::vector<BlockMatrixTypeUP> vec_local_J_gp;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_gp = local_J.block<displacement_jump_size, pressure_size>(
+            displacement_jump_index + displacement_jump_size * i, pressure_index);
+        vec_local_J_gp.push_back(sub_gp);
+    }
+    std::vector<std::vector<BlockMatrixTypeUU>> vec_local_J_gg(n_enrich_var);
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        for (unsigned j = 0; j < n_enrich_var; j++)
+        {
+            auto sub_gg = local_J.block<displacement_jump_size, displacement_jump_size>(
+                displacement_jump_index + displacement_jump_size * i, displacement_jump_index + displacement_jump_size * j);
+            vec_local_J_gg[i].push_back(sub_gg);
+        }
+    }
+
+    // construct nodal w
+    Eigen::VectorXd local_w(displacement_jump_size), local_w_dot(displacement_jump_size);
+    local_w.setZero();
+    local_w_dot.setZero();
+
+    std::vector<double> const levelsets(duGlobalEnrichments(
+        _fracture_property->fracture_id, _fracture_props, _junction_props,
+        _fracID_to_local, _e_center_coords));
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        local_w.noalias() += levelsets[i] * vec_local_g[i];
+        local_w_dot.noalias() += levelsets[i] * vec_local_g_dot[i];
+    }
+
+    Eigen::VectorXd local_b_w(displacement_jump_size);
+    Eigen::MatrixXd local_J_pw(pressure_size, displacement_jump_size);
+    Eigen::MatrixXd local_J_ww(displacement_jump_size, displacement_jump_size);
+    Eigen::MatrixXd local_J_wp(displacement_jump_size, pressure_size);
+    local_b_w.setZero();
+    local_J_pw.setZero();
+    local_J_ww.setZero();
+    local_J_wp.setZero();
+
+    assembleBlockMatricesWithJacobian(t, local_p, local_p_dot, local_w, local_w_dot,
+                                      local_b_p, local_b_w, local_J_pp, local_J_pw,
+                                      local_J_ww, local_J_wp);
+
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        vec_local_b_g[i].noalias() =  levelsets[i] * local_b_w;
+        vec_local_J_pg[i].noalias() =  levelsets[i] * local_J_pw;
+        vec_local_J_gp[i].noalias() =  levelsets[i] * local_J_wp;
+        for (unsigned j = 0; j < n_enrich_var; j++)
+            vec_local_J_gg[i][j].noalias() = levelsets[i] * levelsets[j] * local_J_ww;
+    }
+
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
@@ -173,8 +266,9 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         Eigen::Ref<Eigen::MatrixXd> J_pp, Eigen::Ref<Eigen::MatrixXd> J_pg,
         Eigen::Ref<Eigen::MatrixXd> J_gg, Eigen::Ref<Eigen::MatrixXd> J_gp)
 {
-    auto const& frac_prop = *_process_data.fracture_property;
-    auto const& R = frac_prop.R;
+    auto const pressure_size = pressure_size_;
+    auto const displacement_jump_size = displacement_jump_size_;
+    auto const& R = _fracture_property->R;
     double const& dt = _process_data.dt;
 
     // the index of a normal (normal to a fracture plane) component
@@ -190,9 +284,9 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
                                                          pressure_size);
 
     typename ShapeMatricesTypeDisplacement::template MatrixType<
-        displacement_size, pressure_size>
+        displacement_jump_size, pressure_size>
         Kgp = ShapeMatricesTypeDisplacement::template MatrixType<
-            displacement_size, pressure_size>::Zero(displacement_size,
+            displacement_jump_size, pressure_size>::Zero(displacement_jump_size,
                                                     pressure_size);
 
     using GlobalDimMatrix = Eigen::Matrix<double, GlobalDim, GlobalDim>;
@@ -225,9 +319,9 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& state = *ip_data.material_state_variables;
         auto& b_m = ip_data.aperture;
 
-        double const S = (*frac_prop.specific_storage)(t, x_position)[0];
+        double const S = (*_fracture_property->specific_storage)(t, x_position)[0];
         double const mu = _process_data.fluid_viscosity(t, x_position)[0];
-        auto const alpha = (*frac_prop.biot_coefficient)(t, x_position)[0];
+        auto const alpha = (*_fracture_property->biot_coefficient)(t, x_position)[0];
         auto const rho_fr = _process_data.fluid_density(t, x_position)[0];
 
         // displacement jumps in local coordinates
@@ -245,7 +339,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         }
 
         auto const initial_effective_stress =
-            (*frac_prop.initial_fracture_effective_stress)(0, x_position);
+            (*_fracture_property->initial_fracture_effective_stress)(0, x_position);
 
         Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
             initial_effective_stress.data(), initial_effective_stress.size());
@@ -256,7 +350,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
             effective_stress_prev, effective_stress, C, state);
 
         auto& permeability = ip_data.permeability;
-        permeability = frac_prop.permeability_model->permeability(
+        permeability = _fracture_property->permeability_model->permeability(
             ip_data.permeability_state.get(), ip_data.aperture0, b_m);
 
         GlobalDimMatrix const k =
@@ -264,7 +358,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
 
         // derivative of permeability respect to aperture
         double const local_dk_db =
-            frac_prop.permeability_model->dpermeability_daperture(
+            _fracture_property->permeability_model->dpermeability_daperture(
                 ip_data.permeability_state.get(), ip_data.aperture0, b_m);
         GlobalDimMatrix const dk_db =
             createRotatedTensor<GlobalDim>(R, local_dk_db);
@@ -296,7 +390,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         //
         GlobalDimVector const grad_head_over_mu =
             (dNdx_p * p + rho_fr * gravity_vec) / mu;
-        Eigen::Matrix<double, 1, displacement_size> const mT_R_Hg =
+        Eigen::Matrix<double, 1, displacement_jump_size> const mT_R_Hg =
             identity2.transpose() * R * H_g;
         // velocity in global coordinates
         ip_data.darcy_velocity.head(GlobalDim).noalias() =
@@ -333,10 +427,14 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     computeSecondaryVariableConcreteWithVector(const double t,
                                                Eigen::VectorXd const& local_x)
 {
-    auto const nodal_g = local_x.segment(displacement_index, displacement_size);
+    auto const displacement_jump_index = displacement_jump_index_;
+    auto const displacement_jump_size = displacement_jump_size_;
+    auto const n_fractures = _fracture_props.size();
+    auto const n_junctions = _junction_props.size();
+    auto const n_enrich_var = n_fractures + n_junctions;
 
-    auto const& frac_prop = *_process_data.fracture_property;
-    auto const& R = frac_prop.R;
+    auto const& R = _fracture_property->R;
+
     // the index of a normal (normal to a fracture plane) component
     // in a displacement vector
     auto constexpr index_normal = GlobalDim - 1;
@@ -345,6 +443,14 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     x_position.setElementID(_element.getID());
 
     unsigned const n_integration_points = _ip_data.size();
+
+    std::vector<Eigen::VectorXd> vec_nodal_g;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub = local_x.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size * i);
+        vec_nodal_g.push_back(sub);
+    }
+
     for (unsigned ip = 0; ip < n_integration_points; ip++)
     {
         x_position.setIntegrationPoint(ip);
@@ -359,9 +465,21 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& C = ip_data.C;
         auto& state = *ip_data.material_state_variables;
         auto& b_m = ip_data.aperture;
+        auto const& N = ip_data.N_p;
+
+        Eigen::Vector3d const ip_physical_coords(
+            computePhysicalCoordinates(_element, N).getCoords());
+        std::vector<double> const levelsets(duGlobalEnrichments(
+            _fracture_property->fracture_id, _fracture_props, _junction_props,
+            _fracID_to_local, ip_physical_coords));
+
+        Eigen::VectorXd nodal_gap(displacement_jump_size);
+        nodal_gap.setZero();
+        for (unsigned i = 0; i < n_enrich_var; i++)
+            nodal_gap.noalias() += levelsets[i] * vec_nodal_g[i];
 
         // displacement jumps in local coordinates
-        w.noalias() = R * H_g * nodal_g;
+        w.noalias() = R * H_g * nodal_gap;
 
         // aperture
         b_m = ip_data.aperture0 + w[index_normal];
@@ -374,7 +492,7 @@ void HydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         }
 
         auto const initial_effective_stress =
-            (*frac_prop.initial_fracture_effective_stress)(0, x_position);
+            (*_fracture_property->initial_fracture_effective_stress)(0, x_position);
 
         Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
             initial_effective_stress.data(), initial_effective_stress.size());
