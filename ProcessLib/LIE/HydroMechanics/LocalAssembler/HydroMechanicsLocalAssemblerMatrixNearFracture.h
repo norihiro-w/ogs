@@ -73,6 +73,9 @@ private:
     void computeSecondaryVariableConcreteWithVector(
         double const t, Eigen::VectorXd const& local_x) override;
 
+    Eigen::VectorXd compute_total_u(std::vector<double> const& levelsets,
+                                    Eigen::VectorXd const& local_x) const;
+
     using Base::_element;
     using Base::_ip_data;
     using Base::_process_data;
@@ -86,11 +89,15 @@ private:
 
     static const int displacement_jump_index =
         displacement_index + displacement_size;
+    static const int displacement_jump_size = displacement_size;
 
     std::vector<FractureProperty*> _fracture_props;
     std::vector<JunctionProperty*> _junction_props;
     std::unordered_map<int, int> _fracID_to_local;
-    Eigen::Vector3d _e_center_coords;
+    unsigned _n_enrich_var;
+    Eigen::Vector3d const _e_center_coords;
+    std::vector<double> _ele_levelsets;
+    bool _hasActiveLevelset = false;
 };
 
 }  // namespace HydroMechanics

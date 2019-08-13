@@ -20,6 +20,7 @@
 #include "MaterialLib/SolidModels/MechanicsBase.h"
 
 #include "ProcessLib/LIE/Common/FractureProperty.h"
+#include "ProcessLib/LIE/Common/JunctionProperty.h"
 
 namespace MeshLib
 {
@@ -52,7 +53,7 @@ struct HydroMechanicsProcessData
             specific_body_force_,
         std::unique_ptr<MaterialLib::Fracture::FractureModelBase<GlobalDim>>&&
             fracture_model,
-        std::unique_ptr<FractureProperty>&& fracture_prop,
+        std::vector<std::unique_ptr<FractureProperty>>&& fracture_properties,
         ParameterLib::Parameter<double> const& initial_effective_stress_,
         bool const deactivate_matrix_in_flow_,
         double const reference_temperature_)
@@ -67,7 +68,7 @@ struct HydroMechanicsProcessData
           solid_density(solid_density_),
           specific_body_force(std::move(specific_body_force_)),
           fracture_model{std::move(fracture_model)},
-          fracture_property{std::move(fracture_prop)},
+          fracture_properties{std::move(fracture_properties)},
           initial_effective_stress(initial_effective_stress_),
           deactivate_matrix_in_flow(deactivate_matrix_in_flow_),
           reference_temperature(reference_temperature_)
@@ -99,7 +100,14 @@ struct HydroMechanicsProcessData
     Eigen::Matrix<double, GlobalDim, 1> const specific_body_force;
     std::unique_ptr<MaterialLib::Fracture::FractureModelBase<GlobalDim>>
         fracture_model;
-    std::unique_ptr<FractureProperty> fracture_property;
+    std::vector<std::unique_ptr<FractureProperty>> fracture_properties;
+    std::vector<JunctionProperty> junction_properties;
+    MeshLib::PropertyVector<int> const* mesh_prop_materialIDs = nullptr;
+    std::vector<int> map_materialID_to_fractureID;
+    // a table of connected fracture IDs for each element
+    std::vector<std::vector<int>> vec_ele_connected_fractureIDs;
+    std::vector<std::vector<int>> vec_ele_connected_junctionIDs;
+
     ParameterLib::Parameter<double> const& initial_effective_stress;
 
     bool const deactivate_matrix_in_flow;
@@ -137,7 +145,7 @@ struct HydroMechanicsProcessData
     MeshLib::PropertyVector<double>* mesh_prop_nodal_p = nullptr;
 
     MeshLib::PropertyVector<double>* mesh_prop_nodal_forces = nullptr;
-    MeshLib::PropertyVector<double>* mesh_prop_nodal_forces_jump = nullptr;
+    std::vector<MeshLib::PropertyVector<double>*> vec_mesh_prop_nodal_forces_jump;
     MeshLib::PropertyVector<double>* mesh_prop_hydraulic_flow = nullptr;
 
     double const reference_temperature;
