@@ -44,6 +44,8 @@ struct FractureProperty
     ParameterLib::Parameter<double> const& aperture0;
     ParameterLib::Parameter<double> const* specific_storage = nullptr;
     ParameterLib::Parameter<double> const* biot_coefficient = nullptr;
+    ParameterLib::Parameter<double> const* initial_fracture_effective_stress = nullptr;
+
     std::vector<BranchProperty> branches_master;
     std::vector<BranchProperty> branches_slave;
 
@@ -58,12 +60,15 @@ struct FractureProperty
     FractureProperty(int const fracture_id_, int const material_id,
                      ParameterLib::Parameter<double> const& initial_aperture,
                      ParameterLib::Parameter<double> const& specific_storage_,
-                     ParameterLib::Parameter<double> const& biot_coefficient_)
+                     ParameterLib::Parameter<double> const& biot_coefficient_,
+                     ParameterLib::Parameter<double> const& initial_fracture_effective_stress_
+        )
         : fracture_id(fracture_id_),
           mat_id(material_id),
           aperture0(initial_aperture),
           specific_storage(&specific_storage_),
-          biot_coefficient(&biot_coefficient_)
+          biot_coefficient(&biot_coefficient_),
+          initial_fracture_effective_stress(&initial_fracture_effective_stress_)
     {
     }
 

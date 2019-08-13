@@ -54,8 +54,6 @@ struct HydroMechanicsProcessData
             fracture_model,
         std::unique_ptr<FractureProperty>&& fracture_prop,
         ParameterLib::Parameter<double> const& initial_effective_stress_,
-        ParameterLib::Parameter<double> const&
-            initial_fracture_effective_stress_,
         bool const deactivate_matrix_in_flow_,
         double const reference_temperature_)
         : material_ids(material_ids_),
@@ -71,7 +69,6 @@ struct HydroMechanicsProcessData
           fracture_model{std::move(fracture_model)},
           fracture_property{std::move(fracture_prop)},
           initial_effective_stress(initial_effective_stress_),
-          initial_fracture_effective_stress(initial_fracture_effective_stress_),
           deactivate_matrix_in_flow(deactivate_matrix_in_flow_),
           reference_temperature(reference_temperature_)
     {
@@ -104,7 +101,6 @@ struct HydroMechanicsProcessData
         fracture_model;
     std::unique_ptr<FractureProperty> fracture_property;
     ParameterLib::Parameter<double> const& initial_effective_stress;
-    ParameterLib::Parameter<double> const& initial_fracture_effective_stress;
 
     bool const deactivate_matrix_in_flow;
     std::unique_ptr<MeshLib::ElementStatus> p_element_status;
