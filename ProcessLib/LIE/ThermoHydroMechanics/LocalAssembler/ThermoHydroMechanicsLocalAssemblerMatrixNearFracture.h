@@ -84,6 +84,8 @@ private:
     using Base::kelvin_vector_size;
     using Base::pressure_index;
     using Base::pressure_size;
+    using Base::temperature_index;
+    using Base::temperature_size;
     using typename Base::BMatricesType;
     using typename Base::ShapeMatricesTypeDisplacement;
 
