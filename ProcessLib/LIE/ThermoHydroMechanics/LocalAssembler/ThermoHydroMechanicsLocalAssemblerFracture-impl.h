@@ -444,6 +444,8 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
             t, x_position, ip_data.aperture0, stress0, w_prev, w,
             effective_stress_prev, effective_stress, C, state);
 
+        auto const stress = effective_stress; //TODO - biot * p1_ip * identity2;
+
         //------------------------------------------------------
         // Darcy flux calculation
         //------------------------------------------------------
@@ -453,6 +455,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         dq_dpi.noalias() +=  R.transpose() * k / mu / mu * dmu_dp * grad_p1 * N_p;
         auto dq_dTi = ( R.transpose() * k / mu * drhof_dT * b * N_T).eval();
         dq_dTi.noalias() +=  R.transpose() * k / mu / mu * dmu_dT * grad_p1 * N_T;
+        auto dq_dgi = - R.transpose() * dk_db / mu * (grad_p1 - rho_f * b);
 
         //------------------------------------------------------
         // Heat flux calculation
@@ -485,7 +488,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
                            b_m * N_T.transpose() * djadv_dx * ip_w;
 
         rhs_g.noalias() -=
-            H_g.transpose() * R.transpose() * (effective_stress - biot * p1_ip * identity2) * ip_w;
+            H_g.transpose() * R.transpose() * stress * ip_w;
 
         //------------------------------------------------------
         // jacobian calculations
