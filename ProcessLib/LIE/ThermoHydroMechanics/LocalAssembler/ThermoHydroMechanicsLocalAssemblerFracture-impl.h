@@ -153,6 +153,8 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
 {
     auto const pressure_index = pressure_index_;
     auto const pressure_size = pressure_size_;
+    auto const temperature_index = temperature_index_;
+    auto const temperature_size = temperature_size_;
     auto const displacement_jump_index = displacement_jump_index_;
     auto const displacement_jump_size = displacement_jump_size_;
     auto const n_fractures = _fracture_props.size();
@@ -161,6 +163,8 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
 
     auto const local_p = local_x.segment<pressure_size>(pressure_index);
     auto const local_p_dot = local_xdot.segment<pressure_size>(pressure_index);
+    auto const local_T = local_x.segment<temperature_size>(temperature_index);
+    auto const local_T_dot = local_xdot.segment<temperature_size>(temperature_index);
     std::vector<Eigen::VectorXd> vec_local_g;
     std::vector<Eigen::VectorXd> vec_local_g_dot;
     for (unsigned i = 0; i < n_enrich_var; i++)
@@ -176,12 +180,17 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
         typename Eigen::VectorXd::FixedSegmentReturnType<displacement_jump_size>::Type;
     using BlockMatrixTypePU =
         Eigen::Block<Eigen::MatrixXd, pressure_size, displacement_jump_size>;
+    using BlockMatrixTypeTU =
+        Eigen::Block<Eigen::MatrixXd, temperature_size, displacement_jump_size>;
     using BlockMatrixTypeUP =
         Eigen::Block<Eigen::MatrixXd, displacement_jump_size, pressure_size>;
+    using BlockMatrixTypeUT =
+        Eigen::Block<Eigen::MatrixXd, displacement_jump_size, temperature_size>;
     using BlockMatrixTypeUU =
         Eigen::Block<Eigen::MatrixXd, displacement_jump_size, displacement_jump_size>;
 
     auto local_b_p = local_b.segment<pressure_size>(pressure_index);
+    auto local_b_T = local_b.segment<temperature_size>(temperature_index);
     std::vector<BlockVectorTypeU> vec_local_b_g;
     for (unsigned i = 0; i < n_enrich_var; i++)
     {
@@ -189,6 +198,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
             local_b.segment<displacement_jump_size>(displacement_jump_index + displacement_jump_size*i));
     }
     auto local_J_pp = local_J.block<pressure_size,pressure_size>(pressure_index, pressure_index);
+    auto local_J_pT = local_J.block<pressure_size,temperature_size>(pressure_index, temperature_index);
     std::vector<BlockMatrixTypePU> vec_local_J_pg;
     for (unsigned i = 0; i < n_enrich_var; i++)
     {
@@ -196,12 +206,28 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
             pressure_index, displacement_jump_index + displacement_jump_size * i);
         vec_local_J_pg.push_back(sub_pg);
     }
+    auto local_J_Tp = local_J.block<temperature_size,pressure_size>(temperature_index, pressure_index);
+    auto local_J_TT = local_J.block<temperature_size,temperature_size>(temperature_index, temperature_index);
+    std::vector<BlockMatrixTypeTU> vec_local_J_Tg;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_Tg = local_J.block<temperature_size, displacement_jump_size>(
+            temperature_index, displacement_jump_index + displacement_jump_size * i);
+        vec_local_J_Tg.push_back(sub_Tg);
+    }
     std::vector<BlockMatrixTypeUP> vec_local_J_gp;
     for (unsigned i = 0; i < n_enrich_var; i++)
     {
         auto sub_gp = local_J.block<displacement_jump_size, pressure_size>(
             displacement_jump_index + displacement_jump_size * i, pressure_index);
         vec_local_J_gp.push_back(sub_gp);
+    }
+    std::vector<BlockMatrixTypeUT> vec_local_J_gT;
+    for (unsigned i = 0; i < n_enrich_var; i++)
+    {
+        auto sub_gT = local_J.block<displacement_jump_size, temperature_size>(
+            displacement_jump_index + displacement_jump_size * i, temperature_index);
+        vec_local_J_gT.push_back(sub_gT);
     }
     std::vector<std::vector<BlockMatrixTypeUU>> vec_local_J_gg(n_enrich_var);
     for (unsigned i = 0; i < n_enrich_var; i++)
@@ -230,22 +256,29 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
 
     Eigen::VectorXd local_b_w(displacement_jump_size);
     Eigen::MatrixXd local_J_pw(pressure_size, displacement_jump_size);
+    Eigen::MatrixXd local_J_Tw(temperature_size, displacement_jump_size);
     Eigen::MatrixXd local_J_ww(displacement_jump_size, displacement_jump_size);
     Eigen::MatrixXd local_J_wp(displacement_jump_size, pressure_size);
+    Eigen::MatrixXd local_J_wT(displacement_jump_size, temperature_size);
     local_b_w.setZero();
     local_J_pw.setZero();
+    local_J_Tw.setZero();
     local_J_ww.setZero();
     local_J_wp.setZero();
+    local_J_wT.setZero();
 
-    assembleBlockMatricesWithJacobian(t, local_p, local_p_dot, local_w, local_w_dot,
-                                      local_b_p, local_b_w, local_J_pp, local_J_pw,
-                                      local_J_ww, local_J_wp);
+    assembleBlockMatricesWithJacobian(
+        t, local_p, local_p_dot, local_T, local_T_dot, local_w, local_w_dot,
+        local_b_p, local_b_T, local_b_w, local_J_pp, local_J_pT, local_J_pw,
+        local_J_TT, local_J_Tp, local_J_Tw, local_J_ww, local_J_wp, local_J_wT);
 
     for (unsigned i = 0; i < n_enrich_var; i++)
     {
         vec_local_b_g[i].noalias() =  levelsets[i] * local_b_w;
         vec_local_J_pg[i].noalias() =  levelsets[i] * local_J_pw;
+        vec_local_J_Tg[i].noalias() =  levelsets[i] * local_J_Tw;
         vec_local_J_gp[i].noalias() =  levelsets[i] * local_J_wp;
+        vec_local_J_gT[i].noalias() =  levelsets[i] * local_J_wT;
         for (unsigned j = 0; j < n_enrich_var; j++)
             vec_local_J_gg[i][j].noalias() = levelsets[i] * levelsets[j] * local_J_ww;
     }
@@ -255,18 +288,24 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
           typename IntegrationMethod, int GlobalDim>
 void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
-                                          ShapeFunctionPressure,
-                                          IntegrationMethod, GlobalDim>::
+                                                ShapeFunctionPressure,
+                                                IntegrationMethod, GlobalDim>::
     assembleBlockMatricesWithJacobian(
         double const t, Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& p_dot,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
+        Eigen::Ref<const Eigen::VectorXd> const& T_dot,
         Eigen::Ref<const Eigen::VectorXd> const& g,
         Eigen::Ref<const Eigen::VectorXd> const& g_dot,
-        Eigen::Ref<Eigen::VectorXd> rhs_p, Eigen::Ref<Eigen::VectorXd> rhs_g,
-        Eigen::Ref<Eigen::MatrixXd> J_pp, Eigen::Ref<Eigen::MatrixXd> J_pg,
-        Eigen::Ref<Eigen::MatrixXd> J_gg, Eigen::Ref<Eigen::MatrixXd> J_gp)
+        Eigen::Ref<Eigen::VectorXd> rhs_p, Eigen::Ref<Eigen::VectorXd> rhs_T,
+        Eigen::Ref<Eigen::VectorXd> rhs_g, Eigen::Ref<Eigen::MatrixXd> J_pp,
+        Eigen::Ref<Eigen::MatrixXd> J_pT, Eigen::Ref<Eigen::MatrixXd> J_pg,
+        Eigen::Ref<Eigen::MatrixXd> J_TT, Eigen::Ref<Eigen::MatrixXd> J_Tp,
+        Eigen::Ref<Eigen::MatrixXd> J_Tg, Eigen::Ref<Eigen::MatrixXd> J_gg,
+        Eigen::Ref<Eigen::MatrixXd> J_gp, Eigen::Ref<Eigen::MatrixXd> J_gT)
 {
     auto const pressure_size = pressure_size_;
+    auto const temperature_size = temperature_size_;
     auto const displacement_jump_size = displacement_jump_size_;
     auto const& R = _fracture_property->R;
     double const& dt = _process_data.dt;
@@ -275,24 +314,12 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     // in a displacement vector
     auto constexpr index_normal = GlobalDim - 1;
 
-    typename ShapeMatricesTypePressure::NodalMatrixType laplace_p =
-        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
-                                                         pressure_size);
-
-    typename ShapeMatricesTypePressure::NodalMatrixType storage_p =
-        ShapeMatricesTypePressure::NodalMatrixType::Zero(pressure_size,
-                                                         pressure_size);
-
-    typename ShapeMatricesTypeDisplacement::template MatrixType<
-        displacement_jump_size, pressure_size>
-        Kgp = ShapeMatricesTypeDisplacement::template MatrixType<
-            displacement_jump_size, pressure_size>::Zero(displacement_jump_size,
-                                                    pressure_size);
-
     using GlobalDimMatrix = Eigen::Matrix<double, GlobalDim, GlobalDim>;
     using GlobalDimVector = Eigen::Matrix<double, GlobalDim, 1>;
 
-    auto const& gravity_vec = _process_data.specific_body_force;
+    auto const& b = _process_data.specific_body_force;
+    auto const& identity2 =
+        MaterialLib::Fracture::FractureIdentity2<GlobalDim>::value;
 
     ParameterLib::SpatialPosition x_position;
     x_position.setElementID(_element.getID());
@@ -306,13 +333,23 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto const& ip_w = ip_data.integration_weight;
         auto const& N_p = ip_data.N_p;
         auto const& dNdx_p = ip_data.dNdx_p;
+        auto const& N_T = ip_data.N_p;
+        auto const& dNdx_T = ip_data.dNdx_p;
         auto const& H_g = ip_data.H_u;
-        auto const& identity2 =
-            MaterialLib::Fracture::FractureIdentity2<GlobalDim>::value;
 
         auto& mat = ip_data.fracture_material;
 
+        auto const T_dot_ip = N_T.dot(T_dot);
+        auto const dT_ip = T_dot_ip * dt;
+        auto const T1_ip = N_T * T;
+        //auto const T0_ip = T1_ip - dT_ip;
+        auto const p_dot_ip = N_p.dot(p_dot);
+        auto const dp_ip = p_dot_ip * dt;
         auto const p1_ip = N_p * p;
+        auto const p0_ip = p1_ip - dp_ip;
+        auto const grad_p1 = (dNdx_p * p).eval();
+        auto const grad_T1 = (dNdx_T * T).eval();
+
         auto& effective_stress = ip_data.sigma_eff;
         auto const& effective_stress_prev = ip_data.sigma_eff_prev;
         auto& w = ip_data.w;
@@ -320,26 +357,48 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& C = ip_data.C;
         auto& state = *ip_data.material_state_variables;
         auto& b_m = ip_data.aperture;
+        auto& q = ip_data.q;
 
         //------------------------------------------------------
         // fluid properties
         //------------------------------------------------------
         using ArrayType = MaterialLib::Fluid::FluidProperty::ArrayType;
+        using VariableType = MaterialLib::Fluid::PropertyVariableType;
         ArrayType fluid_vars;
-        fluid_vars[static_cast<int>(
-            MaterialLib::Fluid::PropertyVariableType::p)] = p1_ip;
+        fluid_vars[static_cast<int>(VariableType::T)] = T1_ip;
+        fluid_vars[static_cast<int>(VariableType::p)] = p1_ip;
 
-        auto const rho_fr = _process_data.fluid_density.getValue(fluid_vars);
+        auto const rho_f = _process_data.fluid_density.getValue(fluid_vars);
+        auto const drhof_dp =
+            _process_data.fluid_density.getdValue(fluid_vars, VariableType::p);
+        auto const drhof_dT =
+            _process_data.fluid_density.getdValue(fluid_vars, VariableType::T);
+        auto const beta_T_f = drhof_dT / rho_f;  // TODO
         double const mu = _process_data.fluid_viscosity.getValue(fluid_vars);
+        auto const dmu_dp = _process_data.fluid_viscosity.getdValue(
+            fluid_vars, VariableType::p);
+        auto const dmu_dT = _process_data.fluid_viscosity.getdValue(
+            fluid_vars, VariableType::T);
+        double const lambda_f =
+            _process_data.fluid_thermal_conductivity.getValue(fluid_vars);
+        double const cp_f =
+            _process_data.fluid_specific_heat_capacity.getValue(fluid_vars);
+        double const dcpf_dp =
+            _process_data.fluid_specific_heat_capacity.getdValue(
+                fluid_vars, VariableType::p);
+        double const dcpf_dT =
+            _process_data.fluid_specific_heat_capacity.getdValue(
+                fluid_vars, VariableType::T);
+        double const Cp_f = rho_f * cp_f;;
+        double const dCpf_dp = drhof_dp * cp_f + rho_f * dcpf_dp;
+        double const dCpf_dT = drhof_dT * cp_f + rho_f * dcpf_dT;
 
         //------------------------------------------------------
-        // Bulk properties
+        // aperture calculation
         //------------------------------------------------------
-        double const S = (*_fracture_property->specific_storage)(t, x_position)[0];
-        auto const alpha = (*_fracture_property->biot_coefficient)(t, x_position)[0];
-
         // displacement jumps in local coordinates
         w.noalias() = R * H_g * g;
+        auto const w_dot = R * H_g * g_dot;
 
         // aperture
         b_m = ip_data.aperture0 + w[index_normal];
@@ -352,17 +411,11 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
             b_m = 0;
         }
 
-        auto const initial_effective_stress =
-            (*_fracture_property->initial_fracture_effective_stress)(0, x_position);
-
-        Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
-            initial_effective_stress.data(), initial_effective_stress.size());
-
-        // local C, local stress
-        mat.computeConstitutiveRelation(
-            t, x_position, ip_data.aperture0, stress0, w_prev, w,
-            effective_stress_prev, effective_stress, C, state);
-
+        //------------------------------------------------------
+        // bulk properties
+        //------------------------------------------------------
+        double const S = (*_fracture_property->specific_storage)(t, x_position)[0];
+        auto const biot = (*_fracture_property->biot_coefficient)(t, x_position)[0];
         auto& permeability = ip_data.permeability;
         permeability = _fracture_property->permeability_model->permeability(
             ip_data.permeability_state.get(), ip_data.aperture0, b_m);
@@ -377,60 +430,89 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         GlobalDimMatrix const dk_db =
             createRotatedTensor<GlobalDim>(R, local_dk_db);
 
-        //
-        // displacement equation, displacement jump part
-        //
+        //------------------------------------------------------
+        // stress, C calculation
+        //------------------------------------------------------
+        auto const initial_effective_stress =
+            (*_fracture_property->initial_fracture_effective_stress)(0, x_position);
+
+        Eigen::Map<typename HMatricesType::ForceVectorType const> const stress0(
+            initial_effective_stress.data(), initial_effective_stress.size());
+
+        // local C, local stress
+        mat.computeConstitutiveRelation(
+            t, x_position, ip_data.aperture0, stress0, w_prev, w,
+            effective_stress_prev, effective_stress, C, state);
+
+        //------------------------------------------------------
+        // Darcy flux calculation
+        //------------------------------------------------------
+        q.noalias() = - R.transpose() * k / mu * (grad_p1 - rho_f * b);
+        auto dq_dpi = (- R.transpose() * k / mu * dNdx_p).eval();
+        dq_dpi.noalias() +=  R.transpose() * k / mu * drhof_dp * b * N_p;
+        dq_dpi.noalias() +=  R.transpose() * k / mu / mu * dmu_dp * grad_p1 * N_p;
+        auto dq_dTi = ( R.transpose() * k / mu * drhof_dT * b * N_T).eval();
+        dq_dTi.noalias() +=  R.transpose() * k / mu / mu * dmu_dT * grad_p1 * N_T;
+
+        //------------------------------------------------------
+        // Heat flux calculation
+        //------------------------------------------------------
+        // conduction
+        auto const jdiff = (- lambda_f * grad_T1).eval();
+        auto const djdiff_dTi = (- lambda_f * dNdx_T).eval();
+        // advection
+        auto const djadv_dx = (q.transpose() * Cp_f * grad_T1).eval();
+        auto ddjadvdx_dpi = (q.transpose() * dCpf_dp * grad_T1 * N_p).eval();
+        ddjadvdx_dpi.noalias() += dq_dpi.transpose() * Cp_f * grad_T1;
+        auto ddjadvdx_dTi = (q.transpose() * Cp_f * dNdx_T).eval();
+        ddjadvdx_dTi.noalias() +=
+            q.transpose() * dCpf_dT * grad_T1 * N_T;
+        ddjadvdx_dTi.noalias() += dq_dTi.transpose() * Cp_f * grad_T1;
+
+
+        //------------------------------------------------------
+        // residual calculations
+        //------------------------------------------------------
+        rhs_p.noalias() -=
+            N_p.transpose() * b_m *
+                (S * p_dot_ip - beta_T_f * T_dot_ip +
+                 biot * identity2.transpose() * w_dot) *
+                ip_w -
+            dNdx_p.transpose() * b_m * q * ip_w;
+
+        rhs_T.noalias() -= b_m * N_T.transpose() * Cp_f * T_dot_ip * ip_w -
+                           b_m * dNdx_T.transpose() * jdiff * ip_w +
+                           b_m * N_T.transpose() * djadv_dx * ip_w;
+
         rhs_g.noalias() -=
-            H_g.transpose() * R.transpose() * effective_stress * ip_w;
-        J_gg.noalias() += H_g.transpose() * R.transpose() * C * R * H_g * ip_w;
+            H_g.transpose() * R.transpose() * (effective_stress - biot * p1_ip * identity2) * ip_w;
 
-        //
-        // displacement equation, pressure part
-        //
-        Kgp.noalias() +=
-            H_g.transpose() * R.transpose() * alpha * identity2 * N_p * ip_w;
-
-        //
-        // pressure equation, pressure part.
-        //
-        storage_p.noalias() += N_p.transpose() * b_m * S * N_p * ip_w;
-        laplace_p.noalias() +=
-            dNdx_p.transpose() * b_m * k / mu * dNdx_p * ip_w;
-        rhs_p.noalias() +=
-            dNdx_p.transpose() * b_m * k / mu * rho_fr * gravity_vec * ip_w;
-
-        //
-        // pressure equation, displacement jump part.
-        //
-        GlobalDimVector const grad_head_over_mu =
-            (dNdx_p * p + rho_fr * gravity_vec) / mu;
+        //------------------------------------------------------
+        // jacobian calculations
+        //------------------------------------------------------
         Eigen::Matrix<double, 1, displacement_jump_size> const mT_R_Hg =
             identity2.transpose() * R * H_g;
-        // velocity in global coordinates
-        ip_data.darcy_velocity.head(GlobalDim).noalias() =
-            -R.transpose() * k * grad_head_over_mu;
-        J_pg.noalias() += N_p.transpose() * S * N_p * p_dot * mT_R_Hg * ip_w;
-        J_pg.noalias() +=
-            dNdx_p.transpose() * k * grad_head_over_mu * mT_R_Hg * ip_w;
-        J_pg.noalias() += dNdx_p.transpose() * b_m * dk_db * grad_head_over_mu *
-                          mT_R_Hg * ip_w;
+        J_pp.noalias() += b_m * N_p.transpose() * S * N_p * ip_w / dt;
+        J_pp.noalias() += - b_m * dNdx_p.transpose() * dq_dpi * ip_w;
+        J_pT.noalias() += - b_m * N_p.transpose() * beta_T_f * N_T * ip_w / dt;
+        J_pT.noalias() += - b_m * dNdx_p.transpose() * dq_dTi * ip_w;
+        J_pg.noalias() += (H_g.transpose() * R.transpose() * biot * identity2 * N_p).transpose() * ip_w / dt;
+        // J_pg.noalias() += N_p.transpose() * S * N_p * p_dot * mT_R_Hg * ip_w;
+        // J_pg.noalias() +=
+        //     dNdx_p.transpose() * q * mT_R_Hg * ip_w;
+        // J_pg.noalias() += dNdx_p.transpose() * b_m * dk_db * grad_head_over_mu *
+        //                   mT_R_Hg * ip_w;
+
+        J_TT.noalias() += b_m * N_T.transpose() * Cp_f * N_T * ip_w / dt;
+        J_TT.noalias() += b_m * N_T.transpose() * dCpf_dT * T_dot_ip * N_T * ip_w;
+        J_TT.noalias() += - b_m * dNdx_T.transpose() * djdiff_dTi * ip_w;
+        J_Tp.noalias() += b_m * N_T.transpose() * dCpf_dp * T_dot_ip * N_p * ip_w;
+        J_TT.noalias() += b_m * N_T.transpose() * ddjadvdx_dTi * ip_w;
+        J_Tp.noalias() += b_m * N_T.transpose() * ddjadvdx_dpi * ip_w;
+
+        J_gg.noalias() += H_g.transpose() * R.transpose() * C * R * H_g * ip_w;
+        J_gp.noalias() += H_g.transpose() * R.transpose() * biot * identity2 * N_p * ip_w;
     }
-
-    // displacement equation, pressure part
-    J_gp.noalias() -= Kgp;
-
-    // pressure equation, pressure part.
-    J_pp.noalias() += laplace_p + storage_p / dt;
-
-    // pressure equation, displacement jump part.
-    J_pg.noalias() += Kgp.transpose() / dt;
-
-    // pressure equation
-    rhs_p.noalias() -=
-        laplace_p * p + storage_p * p_dot + Kgp.transpose() * g_dot;
-
-    // displacement equation
-    rhs_g.noalias() -= -Kgp * p;
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,

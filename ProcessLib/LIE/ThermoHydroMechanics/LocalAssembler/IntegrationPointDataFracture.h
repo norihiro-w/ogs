@@ -41,6 +41,7 @@ struct IntegrationPointDataFracture final
     double aperture = 0.0;
     double aperture0 = 0.0;
     double permeability = 0.0;
+    Eigen::Matrix<double, GlobalDim, 1> q;
 
     MaterialLib::Fracture::FractureModelBase<GlobalDim>& fracture_material;
     std::unique_ptr<typename MaterialLib::Fracture::FractureModelBase<

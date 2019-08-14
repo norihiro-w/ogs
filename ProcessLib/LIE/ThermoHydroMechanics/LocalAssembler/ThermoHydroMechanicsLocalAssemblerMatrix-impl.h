@@ -463,7 +463,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
                                         ShapeFunctionPressure,
                                         IntegrationMethod, GlobalDim>::
     computeSecondaryVariableConcreteWithBlockVectors(
-        double const t,
+        double const /*t*/,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& /*T*/,
         Eigen::Ref<const Eigen::VectorXd> const& /*u*/)

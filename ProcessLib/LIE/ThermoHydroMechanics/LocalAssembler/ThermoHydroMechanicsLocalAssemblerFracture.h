@@ -80,20 +80,34 @@ private:
         double const t,
         Eigen::Ref<const Eigen::VectorXd> const& p,
         Eigen::Ref<const Eigen::VectorXd> const& p_dot,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
+        Eigen::Ref<const Eigen::VectorXd> const& T_dot,
         Eigen::Ref<const Eigen::VectorXd> const& g,
         Eigen::Ref<const Eigen::VectorXd> const& g_dot,
         Eigen::Ref<Eigen::VectorXd>
             rhs_p,
         Eigen::Ref<Eigen::VectorXd>
+            rhs_T,
+        Eigen::Ref<Eigen::VectorXd>
             rhs_g,
         Eigen::Ref<Eigen::MatrixXd>
             J_pp,
         Eigen::Ref<Eigen::MatrixXd>
+            J_pT,
+        Eigen::Ref<Eigen::MatrixXd>
             J_pg,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_TT,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tp,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_Tg,
         Eigen::Ref<Eigen::MatrixXd>
             J_gg,
         Eigen::Ref<Eigen::MatrixXd>
-            J_gp);
+            J_gp,
+        Eigen::Ref<Eigen::MatrixXd>
+            J_gT);
 
     // Types for displacement.
     using ShapeMatricesTypeDisplacement =
@@ -127,7 +141,9 @@ private:
 
     static const int pressure_index_ = 0;
     static const int pressure_size_ = ShapeFunctionPressure::NPOINTS;
-    static const int displacement_jump_index_ = pressure_index_ + pressure_size_;
+    static const int temperature_index_ = pressure_index_ + pressure_size_;
+    static const int temperature_size_ = ShapeFunctionPressure::NPOINTS;
+    static const int displacement_jump_index_ = temperature_index_ + temperature_size_;
     static const int displacement_jump_size_ =
         ShapeFunctionDisplacement::NPOINTS * GlobalDim;
 };
