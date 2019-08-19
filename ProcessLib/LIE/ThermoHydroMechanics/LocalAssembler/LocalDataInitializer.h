@@ -243,9 +243,11 @@ public:
         std::vector<unsigned> vec_n_element_nodes;
         // TODO how to get the shape function order for each variable?
         vec_n_element_nodes.push_back(
-            mesh_item.getNumberOfBaseNodes() * 2);  // pressure, temperature
+            mesh_item.getNumberOfBaseNodes());  // pressure
+        vec_n_element_nodes.push_back(
+            mesh_item.getNumberOfBaseNodes());  // temperature
         auto const max_varID = *std::max_element(varIDs.begin(), varIDs.end());
-        for (int i = 1; i < max_varID + 1; i++)
+        for (int i = 2; i < max_varID + 1; i++)
         {
             vec_n_element_nodes.push_back(
                 mesh_item.getNumberOfNodes());  // displacements

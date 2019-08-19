@@ -49,7 +49,7 @@ ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     : ThermoHydroMechanicsLocalAssemblerInterface(
           e, is_axially_symmetric,
           n_variables * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
-              ShapeFunctionPressure::NPOINTS,
+              ShapeFunctionPressure::NPOINTS * 2,
           dofIndex_to_localIndex),
       _process_data(process_data),
       _e_center_coords(e.getCenterOfGravity().getCoords())

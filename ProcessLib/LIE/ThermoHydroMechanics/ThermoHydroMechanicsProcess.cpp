@@ -830,6 +830,9 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
         xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 
+    b.write("b.txt");
+    Jac.write("J.txt");
+
     auto copyRhs = [&](int const variable_id, auto& output_vector) {
         transformVariableFromGlobalVector(b, variable_id,
                                           *_local_to_global_index_map,

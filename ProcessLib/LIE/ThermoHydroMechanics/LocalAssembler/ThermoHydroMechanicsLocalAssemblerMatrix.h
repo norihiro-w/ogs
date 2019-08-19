@@ -144,7 +144,7 @@ protected:
 
     static const int pressure_index = 0;
     static const int pressure_size = ShapeFunctionPressure::NPOINTS;
-    static const int temperature_index = pressure_size + pressure_size;
+    static const int temperature_index = pressure_index + pressure_size;
     static const int temperature_size = pressure_size;
     static const int displacement_index = temperature_index + temperature_size;
     static const int displacement_size =
