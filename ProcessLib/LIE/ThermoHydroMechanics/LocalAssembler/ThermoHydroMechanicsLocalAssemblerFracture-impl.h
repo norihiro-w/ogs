@@ -449,13 +449,15 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         //------------------------------------------------------
         // Darcy flux calculation
         //------------------------------------------------------
+        Eigen::Matrix<double, 1, displacement_jump_size> const mT_R_Hg =
+            identity2.transpose() * R * H_g;
         q.noalias() = - k / mu * (grad_p1 - rho_f * b);
         auto dq_dpi = (- k / mu * dNdx_p).eval();
         dq_dpi.noalias() +=  k / mu * drhof_dp * b * N_p;
         dq_dpi.noalias() +=  k / mu / mu * dmu_dp * (grad_p1 - rho_f * b) * N_p;
         auto dq_dTi = (k / mu * drhof_dT * b * N_T).eval();
         dq_dTi.noalias() +=  k / mu / mu * dmu_dT * (grad_p1 - rho_f * b) * N_T;
-        auto dq_dgi = - dk_db / mu * (grad_p1 - rho_f * b) * identity2.transpose() * R * H_g;
+        auto dq_dgi = - dk_db / mu * (grad_p1 - rho_f * b) * mT_R_Hg;
 
 
         //------------------------------------------------------
@@ -472,7 +474,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ddjadvdx_dTi.noalias() +=
             q.transpose() * dCpf_dT * grad_T1 * N_T;
         ddjadvdx_dTi.noalias() += dq_dTi.transpose() * Cp_f * grad_T1;
-        auto const ddjadvdx_dgi = (dq_dpi.transpose() * Cp_f * grad_T1).eval();
+        auto ddjadvdx_dgi = (dq_dgi.transpose() * Cp_f * grad_T1).eval();
 
 
         //------------------------------------------------------
@@ -495,8 +497,6 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         //------------------------------------------------------
         // jacobian calculations
         //------------------------------------------------------
-        Eigen::Matrix<double, 1, displacement_jump_size> const mT_R_Hg =
-            identity2.transpose() * R * H_g;
         J_pp.noalias() += b_m * N_p.transpose() * S * N_p * ip_w / dt;
         J_pp.noalias() += - b_m * dNdx_p.transpose() * dq_dpi * ip_w;
         J_pT.noalias() += - b_m * N_p.transpose() * beta_T_f * N_T * ip_w / dt;
@@ -505,8 +505,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         J_pg.noalias() += N_p.transpose() * S * p_dot_ip * ip_w * mT_R_Hg;
         J_pg.noalias() +=
             - dNdx_p.transpose() * q * mT_R_Hg * ip_w;
-        J_pg.noalias() += dNdx_p.transpose() * b_m * dk_db * grad_head_over_mu *
-            mT_R_Hg * ip_w;
+        J_pg.noalias() += - dNdx_p.transpose() * b_m * dq_dgi * ip_w;
 
         J_TT.noalias() += b_m * N_T.transpose() * Cp_f * N_T * ip_w / dt;
         J_TT.noalias() += b_m * N_T.transpose() * dCpf_dT * T_dot_ip * N_T * ip_w;
@@ -514,7 +513,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         J_Tp.noalias() += b_m * N_T.transpose() * dCpf_dp * T_dot_ip * N_p * ip_w;
         J_TT.noalias() += b_m * N_T.transpose() * ddjadvdx_dTi * ip_w;
         J_Tp.noalias() += b_m * N_T.transpose() * ddjadvdx_dpi * ip_w;
-        J_Tg.noalias() += b_m * N_T.transpose() * ddjadvdx_dgi * ip_w;
+        //J_Tg.noalias() += b_m * N_T.transpose() * ddjadvdx_dgi * ip_w;
 
         J_gg.noalias() += H_g.transpose() * R.transpose() * C * R * H_g * ip_w;
         J_gp.noalias() += H_g.transpose() * R.transpose() * biot * identity2 * N_p * ip_w;

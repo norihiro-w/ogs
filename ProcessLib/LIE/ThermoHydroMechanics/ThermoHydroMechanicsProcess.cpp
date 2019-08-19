@@ -333,7 +333,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         mesh.getElements(), dof_table,
         // use displacment process variable for shapefunction order
         getProcessVariables(
-            monolithic_process_id)[1].get().getShapeFunctionOrder(),
+            monolithic_process_id)[2].get().getShapeFunctionOrder(),
             _local_assemblers, mesh.isAxiallySymmetric(), integration_order,
             _process_data);
 
