@@ -326,6 +326,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
     assert(mesh.getDimension() == GlobalDim);
     INFO("[LIE/THM] creating local assemblers");
     const int monolithic_process_id = 0;
+    const int monolithic_pv_id_u = 2;
     ProcessLib::LIE::ThermoHydroMechanics::createLocalAssemblers<
         GlobalDim, ThermoHydroMechanicsLocalAssemblerMatrix,
         ThermoHydroMechanicsLocalAssemblerMatrixNearFracture,
@@ -333,7 +334,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         mesh.getElements(), dof_table,
         // use displacment process variable for shapefunction order
         getProcessVariables(
-            monolithic_process_id)[2].get().getShapeFunctionOrder(),
+            monolithic_process_id)[monolithic_pv_id_u].get().getShapeFunctionOrder(),
             _local_assemblers, mesh.isAxiallySymmetric(), integration_order,
             _process_data);
 
@@ -830,8 +831,8 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
         _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
         xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 
-    b.write("b.txt");
-    Jac.write("J.txt");
+    // b.write("b.txt");
+    // Jac.write("J.txt");
 
     auto copyRhs = [&](int const variable_id, auto& output_vector) {
         transformVariableFromGlobalVector(b, variable_id,
@@ -843,7 +844,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
     copyRhs(2, *_process_data.mesh_prop_nodal_forces);
     const auto n_pv_g = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
     for (unsigned i=0; i<n_pv_g; i++)
-        copyRhs(i+2, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);
+        copyRhs(i+3, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);
 }
 
 template <int GlobalDim>

@@ -48,7 +48,7 @@ ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ThermoHydroMechanicsProcessData<GlobalDim>& process_data)
     : ThermoHydroMechanicsLocalAssemblerInterface(
           e, is_axially_symmetric,
-          n_variables * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
+          (n_variables - 2) * ShapeFunctionDisplacement::NPOINTS * GlobalDim +
               ShapeFunctionPressure::NPOINTS * 2,
           dofIndex_to_localIndex),
       _process_data(process_data),
