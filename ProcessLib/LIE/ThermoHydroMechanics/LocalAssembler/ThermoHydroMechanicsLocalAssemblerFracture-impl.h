@@ -507,7 +507,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         //J_Tg.noalias() += b_m * N_T.transpose() * ddjadvdx_dgi * ip_w;
 
         J_gg.noalias() += H_g.transpose() * R.transpose() * C * R * H_g * ip_w;
-        J_gp.noalias() += H_g.transpose() * R.transpose() * biot * identity2 * N_p * ip_w;
+        J_gp.noalias() += - H_g.transpose() * R.transpose() * biot * identity2 * N_p * ip_w;
     }
 }
 
