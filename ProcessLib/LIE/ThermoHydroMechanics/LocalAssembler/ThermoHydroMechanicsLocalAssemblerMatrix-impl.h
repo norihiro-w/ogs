@@ -422,21 +422,21 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         }
 
         J_TT.noalias() += N_T.transpose() * Cp * N_T * ip_w / dt;
-        J_TT.noalias() += N_T.transpose() * dCp_dT * T_dot_ip * N_T * ip_w;
+        // J_TT.noalias() += N_T.transpose() * dCp_dT * T_dot_ip * N_T * ip_w;
         J_TT.noalias() += - dNdx_T.transpose() * djdiff_dTi * ip_w;
-        J_Tp.noalias() += N_T.transpose() * dCp_dp * T_dot_ip * N_p * ip_w;
-        if (!_process_data.deactivate_matrix_in_flow)
-        {
-            J_TT.noalias() += N_T.transpose() * ddjadvdx_dTi * ip_w;
-            J_Tp.noalias() += N_T.transpose() * ddjadvdx_dpi * ip_w;
-        }
+        // J_Tp.noalias() += N_T.transpose() * dCp_dp * T_dot_ip * N_p * ip_w;
+        // if (!_process_data.deactivate_matrix_in_flow)
+        // {
+        //     J_TT.noalias() += N_T.transpose() * ddjadvdx_dTi * ip_w;
+        //     J_Tp.noalias() += N_T.transpose() * ddjadvdx_dpi * ip_w;
+        // }
 
         J_uu.noalias() += B.transpose() * C * B * ip_w;
         J_up.noalias() += - B.transpose() * biot * Invariants::identity2 * N_p * ip_w;
-        J_up.noalias() += - H_u.transpose() * drho_dp * b * N_p * ip_w;
-        J_uT.noalias() +=
-            B.transpose() * C * alpha_T_s * Invariants::identity2 * N_T * ip_w;
-        J_uT.noalias() += - H_u.transpose() * drho_dT * b * N_T * ip_w;
+        // J_up.noalias() += - H_u.transpose() * drho_dp * b * N_p * ip_w;
+        // J_uT.noalias() +=
+        //     B.transpose() * C * alpha_T_s * Invariants::identity2 * N_T * ip_w;
+        // J_uT.noalias() += - H_u.transpose() * drho_dT * b * N_T * ip_w;
     }
 }
 
