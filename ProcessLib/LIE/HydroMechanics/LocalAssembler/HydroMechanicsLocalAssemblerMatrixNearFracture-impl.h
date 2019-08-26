@@ -125,7 +125,7 @@ void HydroMechanicsLocalAssemblerMatrixNearFracture<
     {
         auto g1_offset = displacement_jump_index + displacement_size * i;
         auto rhs_g = local_b.segment(g1_offset, displacement_size);
-        auto J_pg = local_J.block(pressure_index, displacement_jump_index,
+        auto J_pg = local_J.block(pressure_index, g1_offset,
                                 pressure_size, displacement_size);
         auto J_ug = local_J.block(displacement_index, g1_offset,
                                 displacement_size, displacement_size);
