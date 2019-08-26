@@ -137,20 +137,20 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
     auto const n_enrich_var = _n_enrich_var;
     for (unsigned i = 0; i < n_enrich_var; i++)
     {
-        auto g1_offset = displacement_jump_index + displacement_size * i;
-        auto rhs_g = local_b.segment(g1_offset, displacement_size);
-        auto J_pg = local_J.block(pressure_index, displacement_jump_index,
-                                pressure_size, displacement_size);
-        auto J_Tg = local_J.block(temperature_index, displacement_jump_index,
-                                temperature_size, displacement_size);
+        auto g1_offset = displacement_jump_index + displacement_jump_size * i;
+        auto rhs_g = local_b.segment(g1_offset, displacement_jump_size);
+        auto J_pg = local_J.block(pressure_index, g1_offset,
+                                pressure_size, displacement_jump_size);
+        auto J_Tg = local_J.block(temperature_index, g1_offset,
+                                temperature_size, displacement_jump_size);
         auto J_ug = local_J.block(displacement_index, g1_offset,
-                                displacement_size, displacement_size);
+                                displacement_size, displacement_jump_size);
         auto J_gp = local_J.block(g1_offset, pressure_index,
-                                displacement_size, pressure_size);
+                                displacement_jump_size, pressure_size);
         auto J_gT = local_J.block(g1_offset, temperature_index,
-                                displacement_size, temperature_size);
+                                displacement_jump_size, temperature_size);
         auto J_gu = local_J.block(g1_offset, displacement_index,
-                                displacement_size, displacement_size);
+                                displacement_jump_size, displacement_size);
 
         rhs_g = _ele_levelsets[i] * rhs_u;
         J_pg = _ele_levelsets[i] * J_pu;
@@ -162,9 +162,9 @@ void ThermoHydroMechanicsLocalAssemblerMatrixNearFracture<
 
         for (unsigned j = 0; j < n_enrich_var; j++)
         {
-            auto g2_offset = displacement_jump_index + displacement_size * j;
+            auto g2_offset = displacement_jump_index + displacement_jump_size * j;
             auto J_gg = local_J.block(g1_offset, g2_offset,
-                                    displacement_size, displacement_size);
+                                    displacement_jump_size, displacement_jump_size);
             J_gg = _ele_levelsets[i] * _ele_levelsets[j] * J_uu;
         }
     }

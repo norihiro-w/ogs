@@ -241,16 +241,16 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
                                           typename BMatricesType::BMatrixType>(
                 dNdx_u, N_u, x_coord, _is_axially_symmetric);
 
-        auto const T_dot_ip = N_T.dot(T_dot);
-        auto const dT_ip = T_dot_ip * dt;
-        auto const T1_ip = N_T * T;
-        //auto const T0_ip = T1_ip - dT_ip;
         auto const p_dot_ip = N_p.dot(p_dot);
         auto const dp_ip = p_dot_ip * dt;
         auto const p1_ip = N_p * p;
         auto const p0_ip = p1_ip - dp_ip;
-        auto const grad_p1 = (dNdx_p * p).eval();
-        auto const grad_T1 = (dNdx_T * T).eval();
+        auto const grad_p1_ip = (dNdx_p * p).eval();
+        auto const T_dot_ip = N_T.dot(T_dot);
+        auto const dT_ip = T_dot_ip * dt;
+        auto const T1_ip = N_T * T;
+        //auto const T0_ip = T1_ip - dT_ip;
+        auto const grad_T1_ip = (dNdx_T * T).eval();
 
         auto& eps = ip_data.eps;
         auto const& eps_prev = ip_data.eps_prev;
@@ -333,27 +333,27 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         //------------------------------------------------------
         // Darcy flux calculation
         //------------------------------------------------------
-        q.noalias() = -ki / mu * (grad_p1 - rho_f * b);
+        q.noalias() = -ki / mu * (grad_p1_ip - rho_f * b);
         auto dq_dpi = (-ki / mu * dNdx_p).eval();
         dq_dpi.noalias() += ki / mu * drhof_dp * b * N_p;
-        dq_dpi.noalias() += ki / mu / mu * dmu_dp * grad_p1 * N_p;
+        dq_dpi.noalias() += ki / mu / mu * dmu_dp * grad_p1_ip * N_p;
         auto dq_dTi = (ki / mu * drhof_dT * b * N_T).eval();
-        dq_dTi.noalias() += ki / mu / mu * dmu_dT * grad_p1 * N_T;
+        dq_dTi.noalias() += ki / mu / mu * dmu_dT * grad_p1_ip * N_T;
 
         //------------------------------------------------------
         // Heat flux calculation
         //------------------------------------------------------
         // conduction
-        auto const jdiff = (- lambda * grad_T1).eval();
+        auto const jdiff = (- lambda * grad_T1_ip).eval();
         auto const djdiff_dTi = (- lambda * dNdx_T).eval();
         // advection
-        auto const djadv_dx = (q.transpose() * rho_f * cp_f * grad_T1).eval();
-        auto ddjadvdx_dpi = (q.transpose() * (drhof_dp * cp_f + rho_f * dcpf_dp ) * grad_T1 * N_p).eval();
-        ddjadvdx_dpi.noalias() += dq_dpi.transpose() * rho_f * cp_f * grad_T1;
+        auto const djadv_dx = (q.transpose() * rho_f * cp_f * grad_T1_ip).eval();
+        auto ddjadvdx_dpi = (q.transpose() * (drhof_dp * cp_f + rho_f * dcpf_dp ) * grad_T1_ip * N_p).eval();
+        ddjadvdx_dpi.noalias() += dq_dpi.transpose() * rho_f * cp_f * grad_T1_ip;
         auto ddjadvdx_dTi = (q.transpose() * rho_f * cp_f * dNdx_T).eval();
         ddjadvdx_dTi.noalias() +=
-            q.transpose() * (drhof_dT * cp_f + rho_f * dcpf_dT ) * grad_T1 * N_T;
-        ddjadvdx_dTi.noalias() += dq_dTi.transpose() * rho_f * cp_f * grad_T1;
+            q.transpose() * (drhof_dT * cp_f + rho_f * dcpf_dT ) * grad_T1_ip * N_T;
+        ddjadvdx_dTi.noalias() += dq_dTi.transpose() * rho_f * cp_f * grad_T1_ip;
 
         //------------------------------------------------------
         // strain calculation
@@ -367,7 +367,11 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         //------------------------------------------------------
         // stress, C calculation
         //------------------------------------------------------
-        sigma_eff_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
+        // if (sigma_prev.isZero(0)) {
+        //     sigma_eff_prev.noalias() = sigma_prev;
+        // } else {
+        //     sigma_eff_prev.noalias() = sigma_prev + biot * p0_ip * Invariants::identity2;
+        // }
         auto&& solution = _ip_data[ip].solid_material.integrateStress(
             t, x_position, dt, eps_m_prev, eps_m, sigma_eff_prev, *state, T1_ip);
 
