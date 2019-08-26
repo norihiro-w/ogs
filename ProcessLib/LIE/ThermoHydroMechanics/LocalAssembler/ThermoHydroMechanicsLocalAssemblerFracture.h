@@ -139,12 +139,12 @@ private:
 
     Eigen::Vector3d _e_center_coords;
 
-    static const int pressure_index_ = 0;
-    static const int pressure_size_ = ShapeFunctionPressure::NPOINTS;
-    static const int temperature_index_ = pressure_index_ + pressure_size_;
-    static const int temperature_size_ = ShapeFunctionPressure::NPOINTS;
-    static const int displacement_jump_index_ = temperature_index_ + temperature_size_;
-    static const int displacement_jump_size_ =
+    static constexpr int pressure_index = 0;
+    static constexpr int pressure_size = ShapeFunctionPressure::NPOINTS;
+    static constexpr int temperature_index = pressure_index + pressure_size;
+    static constexpr int temperature_size = ShapeFunctionPressure::NPOINTS;
+    static constexpr int displacement_jump_index = temperature_index + temperature_size;
+    static constexpr int displacement_jump_size =
         ShapeFunctionDisplacement::NPOINTS * GlobalDim;
 };
 

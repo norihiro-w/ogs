@@ -151,12 +151,6 @@ void ThermoHydroMechanicsLocalAssemblerFracture<
                                              Eigen::VectorXd& local_b,
                                              Eigen::MatrixXd& local_J)
 {
-    auto const pressure_index = pressure_index_;
-    auto const pressure_size = pressure_size_;
-    auto const temperature_index = temperature_index_;
-    auto const temperature_size = temperature_size_;
-    auto const displacement_jump_index = displacement_jump_index_;
-    auto const displacement_jump_size = displacement_jump_size_;
     auto const n_fractures = _fracture_props.size();
     auto const n_junctions = _junction_props.size();
     auto const n_enrich_var = n_fractures + n_junctions;
@@ -301,12 +295,9 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         Eigen::Ref<Eigen::VectorXd> rhs_g, Eigen::Ref<Eigen::MatrixXd> J_pp,
         Eigen::Ref<Eigen::MatrixXd> J_pT, Eigen::Ref<Eigen::MatrixXd> J_pg,
         Eigen::Ref<Eigen::MatrixXd> J_TT, Eigen::Ref<Eigen::MatrixXd> J_Tp,
-        Eigen::Ref<Eigen::MatrixXd> J_Tg, Eigen::Ref<Eigen::MatrixXd> J_gg,
-        Eigen::Ref<Eigen::MatrixXd> J_gp, Eigen::Ref<Eigen::MatrixXd> J_gT)
+        Eigen::Ref<Eigen::MatrixXd> /*J_Tg*/, Eigen::Ref<Eigen::MatrixXd> J_gg,
+        Eigen::Ref<Eigen::MatrixXd> J_gp, Eigen::Ref<Eigen::MatrixXd> /*J_gT*/)
 {
-    auto const pressure_size = pressure_size_;
-    auto const temperature_size = temperature_size_;
-    auto const displacement_jump_size = displacement_jump_size_;
     auto const& R = _fracture_property->R;
     double const& dt = _process_data.dt;
 
@@ -315,7 +306,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     auto constexpr index_normal = GlobalDim - 1;
 
     using GlobalDimMatrix = Eigen::Matrix<double, GlobalDim, GlobalDim>;
-    using GlobalDimVector = Eigen::Matrix<double, GlobalDim, 1>;
+    // using GlobalDimVector = Eigen::Matrix<double, GlobalDim, 1>;
 
     auto const& b = _process_data.specific_body_force;
     auto const& identity2 =
@@ -340,13 +331,13 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         auto& mat = ip_data.fracture_material;
 
         auto const T_dot_ip = N_T.dot(T_dot);
-        auto const dT_ip = T_dot_ip * dt;
+        // auto const dT_ip = T_dot_ip * dt;
         auto const T1_ip = N_T * T;
         //auto const T0_ip = T1_ip - dT_ip;
         auto const p_dot_ip = N_p.dot(p_dot);
-        auto const dp_ip = p_dot_ip * dt;
+        // auto const dp_ip = p_dot_ip * dt;
         double const p1_ip = N_p * p;
-        auto const p0_ip = p1_ip - dp_ip;
+        // auto const p0_ip = p1_ip - dp_ip;
         auto const grad_p1 = (dNdx_p * p).eval();
         auto const grad_T1 = (dNdx_T * T).eval();
 
@@ -474,7 +465,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ddjadvdx_dTi.noalias() +=
             q.transpose() * dCpf_dT * grad_T1 * N_T;
         ddjadvdx_dTi.noalias() += dq_dTi.transpose() * Cp_f * grad_T1;
-        auto ddjadvdx_dgi = (dq_dgi.transpose() * Cp_f * grad_T1).eval();
+        //auto ddjadvdx_dgi = (dq_dgi.transpose() * Cp_f * grad_T1).eval();
 
 
         //------------------------------------------------------
@@ -528,8 +519,6 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
     computeSecondaryVariableConcreteWithVector(const double t,
                                                Eigen::VectorXd const& local_x)
 {
-    auto const displacement_jump_index = displacement_jump_index_;
-    auto const displacement_jump_size = displacement_jump_size_;
     auto const n_fractures = _fracture_props.size();
     auto const n_junctions = _junction_props.size();
     auto const n_enrich_var = n_fractures + n_junctions;

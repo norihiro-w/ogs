@@ -89,9 +89,9 @@ private:
     using typename Base::BMatricesType;
     using typename Base::ShapeMatricesTypeDisplacement;
 
-    static const int displacement_jump_index =
+    static constexpr int displacement_jump_index =
         displacement_index + displacement_size;
-    static const int displacement_jump_size = displacement_size;
+    static constexpr int displacement_jump_size = displacement_size;
 
     std::vector<FractureProperty*> _fracture_props;
     std::vector<JunctionProperty*> _junction_props;

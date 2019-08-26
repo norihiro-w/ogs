@@ -142,12 +142,12 @@ protected:
                 Eigen::aligned_allocator<IntegrationPointDataType>>
         _ip_data;
 
-    static const int pressure_index = 0;
-    static const int pressure_size = ShapeFunctionPressure::NPOINTS;
-    static const int temperature_index = pressure_index + pressure_size;
-    static const int temperature_size = pressure_size;
-    static const int displacement_index = temperature_index + temperature_size;
-    static const int displacement_size =
+    static constexpr int pressure_index = 0;
+    static constexpr int pressure_size = ShapeFunctionPressure::NPOINTS;
+    static constexpr int temperature_index = pressure_index + pressure_size;
+    static constexpr int temperature_size = pressure_size;
+    static constexpr int displacement_index = temperature_index + temperature_size;
+    static constexpr int displacement_size =
         ShapeFunctionDisplacement::NPOINTS * GlobalDim;
     static const int kelvin_vector_size =
         MathLib::KelvinVector::KelvinVectorDimensions<GlobalDim>::value;

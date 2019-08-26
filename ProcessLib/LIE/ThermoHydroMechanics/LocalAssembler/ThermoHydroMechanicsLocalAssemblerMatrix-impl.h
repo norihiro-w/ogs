@@ -153,7 +153,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<
     auto J_TT = local_Jac.template block<temperature_size, temperature_size>(
         temperature_index, temperature_index);
     auto J_Tp = local_Jac.template block<temperature_size, pressure_size>(
-        temperature_index, presssure_index);
+        temperature_index, pressure_index);
     auto J_Tu = local_Jac.template block<temperature_size, displacement_size>(
         temperature_index, displacement_index);
     auto J_uu = local_Jac.template block<displacement_size, displacement_size>(
