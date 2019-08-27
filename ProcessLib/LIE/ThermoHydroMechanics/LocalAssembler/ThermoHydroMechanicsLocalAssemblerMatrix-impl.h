@@ -416,9 +416,10 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         {
             J_pp.noalias() += N_p.transpose() * S * N_p * ip_w / dt;
             J_pp.noalias() += -dNdx_p.transpose() * dq_dpi * ip_w;
-            J_pT.noalias() += -N_p.transpose() * beta_T * N_T * ip_w / dt;
-            J_pT.noalias() += -dNdx_p.transpose() * dq_dTi * ip_w;
-            J_pu.noalias() += (B.transpose() * biot * Invariants::identity2 * N_p).transpose() * ip_w / dt;
+            // J_pT.noalias() += -N_p.transpose() * beta_T * N_T * ip_w / dt;
+            // J_pT.noalias() += -dNdx_p.transpose() * dq_dTi * ip_w;
+            J_pu.noalias() += N_p.transpose() * biot *
+                              Invariants::identity2.transpose() * B * ip_w / dt;
         }
 
         J_TT.noalias() += N_T.transpose() * Cp * N_T * ip_w / dt;
