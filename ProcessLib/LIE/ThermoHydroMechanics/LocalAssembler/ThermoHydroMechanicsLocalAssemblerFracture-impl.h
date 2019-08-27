@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include "ThermoHydroMechanicsLocalAssemblerFracture.h"
 
 #include "MaterialLib/FractureModels/FractureIdentity2.h"
@@ -508,6 +510,16 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         J_gg.noalias() += H_g.transpose() * R.transpose() * C * R * H_g * ip_w;
         J_gp.noalias() += - H_g.transpose() * R.transpose() * biot * identity2 * N_p * ip_w;
     }
+
+    // std::cout << "Element: " << _element.getID() << "\n";
+    // std::cout << "p:\n" << p << "\n"; 
+    // std::cout << "g:\n" << g << "\n"; 
+    // std::cout << "r_p:\n" << rhs_p << "\n"; 
+    // std::cout << "r_g:\n" << rhs_g << "\n"; 
+    // std::cout << "J_pp:\n" << J_pp << "\n"; 
+    // std::cout << "J_pg:\n" << J_pg << "\n"; 
+    // std::cout << "J_gp:\n" << J_gp << "\n"; 
+    // std::cout << "J_gu:\n" << J_gg << "\n"; 
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,

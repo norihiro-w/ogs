@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include "ThermoHydroMechanicsLocalAssemblerMatrix.h"
 
 #include "MaterialLib/PhysicalConstant.h"
@@ -439,6 +441,14 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         //     B.transpose() * C * alpha_T_s * Invariants::identity2 * N_T * ip_w;
         // J_uT.noalias() += - H_u.transpose() * drho_dT * b * N_T * ip_w;
     }
+
+    // std::cout << "Element: " << _element.getID() << "\n";
+    // std::cout << "r_p:\n" << rhs_p << "\n"; 
+    // std::cout << "r_u:\n" << rhs_u << "\n"; 
+    // std::cout << "J_pp:\n" << J_pp << "\n"; 
+    // std::cout << "J_pu:\n" << J_pu << "\n"; 
+    // std::cout << "J_up:\n" << J_up << "\n"; 
+    // std::cout << "J_uu:\n" << J_uu << "\n"; 
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
