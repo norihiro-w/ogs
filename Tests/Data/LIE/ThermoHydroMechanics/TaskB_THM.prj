@@ -34,7 +34,7 @@
                 </specific_heat_capacity>
                 <thermal_conductivity>
                     <type>Constant</type>
-                    <value>0.6</value>
+                    <value>50.0</value>
                 </thermal_conductivity>
             </fluid>
             <intrinsic_permeability>k</intrinsic_permeability>
@@ -133,6 +133,7 @@
             <type>Constant</type>
             <value>1.e-6</value>
         </parameter>
+<!--
         <parameter>
             <name>cp_s</name>
             <type>Constant</type>
@@ -142,6 +143,17 @@
             <name>lambda_s</name>
             <type>Constant</type>
             <value>2.0</value>
+        </parameter>
+-->
+        <parameter>
+            <name>cp_s</name>
+            <type>Constant</type>
+            <value>0.0</value>
+        </parameter>
+        <parameter>
+            <name>lambda_s</name>
+            <type>Constant</type>
+            <value>0.0</value>
         </parameter>
         <!-- Porous medium properties -->
         <parameter>

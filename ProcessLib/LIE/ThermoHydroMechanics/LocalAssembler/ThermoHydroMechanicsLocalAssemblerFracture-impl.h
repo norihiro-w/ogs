@@ -620,7 +620,7 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         ele_sigma_eff += ip.sigma_eff;
         ele_Fs = std::max(
             ele_Fs, ip.material_state_variables->getShearYieldFunctionValue());
-        ele_velocity += ip.darcy_velocity;
+        ele_velocity.head(GlobalDim) += ip.q;
     }
     ele_b /= static_cast<double>(n_integration_points);
     ele_k /= static_cast<double>(n_integration_points);
