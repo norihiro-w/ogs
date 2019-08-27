@@ -19,7 +19,7 @@ AddTest(
     expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu strain_xx strain_xx 1e-12 1e-12
     expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu strain_yy strain_yy 1e-12 1e-12
     expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu strain_xy strain_xy 1e-12 1e-12
-    expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu stress_xx stress_xx 1e-12 1e-12
-    expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu stress_yy stress_yy 1e-12 1e-12
+    expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu stress_xx stress_xx 1e-4 1e-10
+    expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu stress_yy stress_yy 1e-4 1e-10
     expected_TaskB_HM_pcs_0_ts_4_t_18.000000.vtu TaskB_HM_pcs_0_ts_4_t_18.000000.vtu velocity velocity 1e-12 1e-12
 )
