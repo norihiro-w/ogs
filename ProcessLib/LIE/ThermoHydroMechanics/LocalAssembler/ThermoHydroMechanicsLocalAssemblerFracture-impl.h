@@ -472,10 +472,9 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         // residual calculations
         //------------------------------------------------------
         rhs_p.noalias() -=
-            N_p.transpose() * b_m *
-                (S * p_dot_ip - beta_T_f * T_dot_ip +
-                 biot * identity2.transpose() * w_dot) *
-                ip_w -
+            N_p.transpose() * b_m * (S * p_dot_ip - beta_T_f * T_dot_ip) *
+                ip_w +
+            N_p.transpose() * biot * identity2.transpose() * w_dot * ip_w -
             dNdx_p.transpose() * b_m * q * ip_w;
 
         rhs_T.noalias() -= b_m * N_T.transpose() * Cp_f * T_dot_ip * ip_w -
