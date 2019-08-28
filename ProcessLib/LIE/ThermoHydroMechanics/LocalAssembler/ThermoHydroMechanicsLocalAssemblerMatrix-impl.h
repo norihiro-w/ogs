@@ -324,6 +324,11 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         // auto const drho_dp = drhos_dp * (1. - porosity) + porosity * drhof_dp;
         // auto const drho_dT = drhos_dT * (1. - porosity) + porosity * drhof_dT;
         auto const lambda = porosity * lambda_f + (1 - porosity) * lambda_s;
+/* Lauwerier benchmark needs anisotropic tensor
+        Eigen::MatrixXd lambda(GlobalDim, GlobalDim);
+        lambda.setZero();
+        lambda(1,1) = (1 - porosity) * lambda_s;
+*/
         auto const Cp =
             porosity * cp_f * rho_f + (1 - porosity) * cp_s * rho_s;
         // auto const dCp_dp =
