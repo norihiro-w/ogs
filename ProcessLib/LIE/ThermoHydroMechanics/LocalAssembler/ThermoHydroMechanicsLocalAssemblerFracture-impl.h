@@ -295,8 +295,8 @@ void ThermoHydroMechanicsLocalAssemblerFracture<ShapeFunctionDisplacement,
         Eigen::Ref<const Eigen::VectorXd> const& g_dot,
         Eigen::Ref<Eigen::VectorXd> rhs_p, Eigen::Ref<Eigen::VectorXd> rhs_T,
         Eigen::Ref<Eigen::VectorXd> rhs_g, Eigen::Ref<Eigen::MatrixXd> J_pp,
-        Eigen::Ref<Eigen::MatrixXd> J_pT, Eigen::Ref<Eigen::MatrixXd> J_pg,
-        Eigen::Ref<Eigen::MatrixXd> J_TT, Eigen::Ref<Eigen::MatrixXd> J_Tp,
+        Eigen::Ref<Eigen::MatrixXd> /*J_pT*/, Eigen::Ref<Eigen::MatrixXd> J_pg,
+        Eigen::Ref<Eigen::MatrixXd> J_TT, Eigen::Ref<Eigen::MatrixXd> /*J_Tp*/,
         Eigen::Ref<Eigen::MatrixXd> /*J_Tg*/, Eigen::Ref<Eigen::MatrixXd> J_gg,
         Eigen::Ref<Eigen::MatrixXd> J_gp, Eigen::Ref<Eigen::MatrixXd> /*J_gT*/)
 {

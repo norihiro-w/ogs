@@ -577,6 +577,12 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         mesh_prop_nodal_p->resize(mesh.getNumberOfNodes());
         _process_data.mesh_prop_nodal_p = mesh_prop_nodal_p;
 
+        auto mesh_prop_nodal_T = MeshLib::getOrCreateMeshProperty<double>(
+            const_cast<MeshLib::Mesh&>(mesh), "temperature_interpolated",
+            MeshLib::MeshItemType::Node, 1);
+        mesh_prop_nodal_T->resize(mesh.getNumberOfNodes());
+        _process_data.mesh_prop_nodal_T = mesh_prop_nodal_T;
+
         _process_data.mesh_prop_nodal_forces =
             MeshLib::getOrCreateMeshProperty<double>(
                 const_cast<MeshLib::Mesh&>(mesh), "NodalForces",

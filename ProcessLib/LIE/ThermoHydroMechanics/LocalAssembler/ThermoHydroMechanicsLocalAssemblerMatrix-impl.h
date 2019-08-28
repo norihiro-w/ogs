@@ -191,13 +191,13 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         Eigen::Ref<Eigen::MatrixXd>
             J_pp,
         Eigen::Ref<Eigen::MatrixXd>
-            J_pT,
+            /*J_pT*/,
         Eigen::Ref<Eigen::MatrixXd>
             J_pu,
         Eigen::Ref<Eigen::MatrixXd>
             J_TT,
         Eigen::Ref<Eigen::MatrixXd>
-            J_Tp,
+            /*J_Tp*/,
         Eigen::Ref<Eigen::MatrixXd>
             /*J_Tu*/,
         Eigen::Ref<Eigen::MatrixXd>
@@ -205,7 +205,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         Eigen::Ref<Eigen::MatrixXd>
             J_up,
         Eigen::Ref<Eigen::MatrixXd>
-            J_uT)
+            /*J_uT*/)
 {
     assert(this->_element.getDimension() == GlobalDim);
 
@@ -244,9 +244,9 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
                 dNdx_u, N_u, x_coord, _is_axially_symmetric);
 
         auto const p_dot_ip = N_p.dot(p_dot);
-        auto const dp_ip = p_dot_ip * dt;
+        // auto const dp_ip = p_dot_ip * dt;
         auto const p1_ip = N_p * p;
-        auto const p0_ip = p1_ip - dp_ip;
+        // auto const p0_ip = p1_ip - dp_ip;
         auto const grad_p1_ip = (dNdx_p * p).eval();
         auto const T_dot_ip = N_T.dot(T_dot);
         auto const dT_ip = T_dot_ip * dt;
@@ -259,7 +259,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         auto& eps_m = ip_data.eps_m;
         auto const& eps_m_prev = ip_data.eps_m_prev;
         auto& sigma = ip_data.sigma;
-        auto const& sigma_prev = ip_data.sigma_prev;
+        // auto const& sigma_prev = ip_data.sigma_prev;
         auto& sigma_eff = ip_data.sigma_eff;
         auto& sigma_eff_prev = ip_data.sigma_eff_prev;
         auto& q = ip_data.q;
@@ -301,8 +301,8 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         // solid properties
         //------------------------------------------------------
         auto const rho_s = _process_data.solid_density(t, x_position)[0];
-        auto const drhos_dp = 0.0;
-        auto const drhos_dT = 0.0;
+        // auto const drhos_dp = 0.0;
+        // auto const drhos_dT = 0.0;
         //double const rho_s = rho_sr * (1 - 3 * thermal_strain);
         double const alpha_T_s =
             _process_data.solid_linear_thermal_expansion_coefficient(
@@ -321,15 +321,15 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         auto const biot = _process_data.biot_coefficient(t, x_position)[0];
         auto const porosity = _process_data.porosity(t, x_position)[0];
         auto const rho = rho_s * (1. - porosity) + porosity * rho_f;
-        auto const drho_dp = drhos_dp * (1. - porosity) + porosity * drhof_dp;
-        auto const drho_dT = drhos_dT * (1. - porosity) + porosity * drhof_dT;
+        // auto const drho_dp = drhos_dp * (1. - porosity) + porosity * drhof_dp;
+        // auto const drho_dT = drhos_dT * (1. - porosity) + porosity * drhof_dT;
         auto const lambda = porosity * lambda_f + (1 - porosity) * lambda_s;
         auto const Cp =
             porosity * cp_f * rho_f + (1 - porosity) * cp_s * rho_s;
-        auto const dCp_dp =
-            porosity * cp_f * drhof_dp + (1 - porosity) * cp_s * drhos_dp;
-        auto const dCp_dT =
-            porosity * cp_f * drhof_dT + (1 - porosity) * cp_s * drhos_dT;
+        // auto const dCp_dp =
+        //     porosity * cp_f * drhof_dp + (1 - porosity) * cp_s * drhos_dp;
+        // auto const dCp_dT =
+        //     porosity * cp_f * drhof_dT + (1 - porosity) * cp_s * drhos_dT;
         auto const beta_T = porosity * beta_T_f + (1 - porosity) * beta_T_s;
 
         //------------------------------------------------------
@@ -341,6 +341,12 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         dq_dpi.noalias() += ki / mu / mu * dmu_dp * grad_p1_ip * N_p;
         auto dq_dTi = (ki / mu * drhof_dT * b * N_T).eval();
         dq_dTi.noalias() += ki / mu / mu * dmu_dT * grad_p1_ip * N_T;
+        if (_process_data.deactivate_matrix_in_flow)
+        {
+            q.setZero();
+            dq_dpi.setZero();
+            dq_dTi.setZero();
+        }
 
         //------------------------------------------------------
         // Heat flux calculation
@@ -349,13 +355,19 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         auto const jdiff = (- lambda * grad_T1_ip).eval();
         auto const djdiff_dTi = (- lambda * dNdx_T).eval();
         // advection
-        auto const djadv_dx = (q.transpose() * rho_f * cp_f * grad_T1_ip).eval();
+        auto djadv_dx = (q.transpose() * rho_f * cp_f * grad_T1_ip).eval();
         auto ddjadvdx_dpi = (q.transpose() * (drhof_dp * cp_f + rho_f * dcpf_dp ) * grad_T1_ip * N_p).eval();
         ddjadvdx_dpi.noalias() += dq_dpi.transpose() * rho_f * cp_f * grad_T1_ip;
         auto ddjadvdx_dTi = (q.transpose() * rho_f * cp_f * dNdx_T).eval();
         ddjadvdx_dTi.noalias() +=
             q.transpose() * (drhof_dT * cp_f + rho_f * dcpf_dT ) * grad_T1_ip * N_T;
         ddjadvdx_dTi.noalias() += dq_dTi.transpose() * rho_f * cp_f * grad_T1_ip;
+        if (_process_data.deactivate_matrix_in_flow)
+        {
+            djadv_dx.setZero();
+            ddjadvdx_dpi.setZero();
+            ddjadvdx_dTi.setZero();
+        }
 
         //------------------------------------------------------
         // strain calculation
@@ -480,7 +492,7 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
     computeSecondaryVariableConcreteWithBlockVectors(
         double const /*t*/,
         Eigen::Ref<const Eigen::VectorXd> const& p,
-        Eigen::Ref<const Eigen::VectorXd> const& /*T*/,
+        Eigen::Ref<const Eigen::VectorXd> const& T,
         Eigen::Ref<const Eigen::VectorXd> const& /*u*/)
 {
     int n = GlobalDim == 2 ? 4 : 6;
@@ -531,6 +543,11 @@ void ThermoHydroMechanicsLocalAssemblerMatrix<ShapeFunctionDisplacement,
         ShapeFunctionPressure, typename ShapeFunctionDisplacement::MeshElement,
         GlobalDim>(_element, _is_axially_symmetric, p,
                    *_process_data.mesh_prop_nodal_p);
+
+    NumLib::interpolateToHigherOrderNodes<
+        ShapeFunctionPressure, typename ShapeFunctionDisplacement::MeshElement,
+        GlobalDim>(_element, _is_axially_symmetric, T,
+                   *_process_data.mesh_prop_nodal_T);
 }
 
 template <typename ShapeFunctionDisplacement, typename ShapeFunctionPressure,
