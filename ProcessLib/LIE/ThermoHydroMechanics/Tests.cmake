@@ -25,7 +25,7 @@ AddTest(
 )
 
 AddTest(
-    NAME LIE_THM_Lauwerier
+    NAME LARGE_LIE_THM_Lauwerier
     PATH LIE/ThermoHydroMechanics
     RUNTIME 60
     EXECUTABLE ogs
@@ -37,4 +37,69 @@ AddTest(
     expected_Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
     expected_Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu temperature_interpolated temperature_interpolated 1e-12 1e-12
     expected_Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu Lauwerier_pcs_0_ts_2_t_4000000.000000.vtu velocity velocity 1e-12 1e-12
+)
+
+AddTest(
+    NAME LIE_THM_single_crack_inside_nomatflow
+    PATH LIE/ThermoHydroMechanics
+    RUNTIME 60
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS single_crack_inside_nomatflow.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT (OGS_USE_LIS OR OGS_USE_MPI)
+    DIFF_DATA
+    expected_single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
+    expected_single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu temperature_interpolated temperature_interpolated 1e-12 1e-12
+    expected_single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_nomatflow_pcs_0_ts_10_t_1.000000.vtu displacement_jump1 displacement_jump1 1e-12 1e-12
+)
+
+
+AddTest(
+    NAME LIE_THM_single_crack_inside_matflow
+    PATH LIE/ThermoHydroMechanics
+    RUNTIME 60
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS single_crack_inside_matflow.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT (OGS_USE_LIS OR OGS_USE_MPI)
+    DIFF_DATA
+    expected_single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
+    expected_single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu temperature_interpolated temperature_interpolated 1e-12 1e-12
+    expected_single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu single_crack_inside_matflow_pcs_0_ts_10_t_1.000000.vtu displacement_jump1 displacement_jump1 1e-12 1e-12
+)
+
+
+AddTest(
+    NAME LIE_THM_two_cracks_branch
+    PATH LIE/ThermoHydroMechanics
+    RUNTIME 60
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS two_cracks_branch.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT (OGS_USE_LIS OR OGS_USE_MPI)
+    DIFF_DATA
+    expected_two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
+    expected_two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu temperature_interpolated temperature_interpolated 1e-12 1e-12
+    expected_two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu displacement_jump1 displacement_jump1 1e-12 1e-12
+    expected_two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu two_cracks_branch_pcs_0_ts_10_t_1.000000.vtu displacement_jump2 displacement_jump2 1e-12 1e-12
+)
+
+AddTest(
+    NAME LIE_THM_two_cracks_junction
+    PATH LIE/ThermoHydroMechanics
+    RUNTIME 60
+    EXECUTABLE ogs
+    EXECUTABLE_ARGS two_cracks_junction.prj
+    WRAPPER time
+    TESTER vtkdiff
+    REQUIREMENTS NOT (OGS_USE_LIS OR OGS_USE_MPI)
+    DIFF_DATA
+    expected_two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu pressure_interpolated pressure_interpolated 1e-12 1e-12
+    expected_two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu temperature_interpolated temperature_interpolated 1e-12 1e-12
+    expected_two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu displacement_jump1 displacement_jump1 1e-12 1e-12
+    expected_two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu displacement_jump2 displacement_jump2 1e-12 1e-12
+    expected_two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu two_cracks_junction_pcs_0_ts_10_t_1.000000.vtu displacement_jump3 displacement_jump3 1e-12 1e-12
 )
