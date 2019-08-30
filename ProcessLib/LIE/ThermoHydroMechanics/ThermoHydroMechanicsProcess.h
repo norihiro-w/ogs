@@ -75,6 +75,7 @@ private:
 
     std::vector<MeshLib::Element*> _vec_matrix_elements;
     std::vector<int> _vec_fracture_mat_IDs;
+    std::vector<MeshLib::Element*> _vec_all_fracture_elements;
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_elements;
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> _vec_fracture_nodes;

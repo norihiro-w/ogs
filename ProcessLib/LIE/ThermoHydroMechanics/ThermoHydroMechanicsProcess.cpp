@@ -259,10 +259,12 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
     }
     else
     {
-        // TODO set elements including active nodes for pressure.
-        // cannot use ElementStatus
         for (auto& vec : _vec_fracture_matrix_elements)
-            vec_var_elements.push_back(&vec);
+            std::copy(vec.begin(), vec.end(),
+                    std::back_inserter(_vec_all_fracture_elements));
+        
+        BaseLib::makeVectorUnique(_vec_all_fracture_elements);
+        vec_var_elements.push_back(&_vec_all_fracture_elements);
     }
     // temperature
     vec_n_components.push_back(1);
