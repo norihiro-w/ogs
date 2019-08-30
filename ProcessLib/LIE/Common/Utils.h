@@ -46,8 +46,9 @@ template <typename Derived>
 MathLib::Point3d computePhysicalCoordinates(
     MeshLib::Element const& e, Eigen::MatrixBase<Derived> const& shape)
 {
+    assert(e.getNumberOfNodes() >= shape.cols());
     MathLib::Point3d pt;
-    for (unsigned i = 0; i < e.getNumberOfNodes(); i++)
+    for (unsigned i = 0; i < shape.cols(); i++)
     {
         MeshLib::Node const& node = *e.getNode(i);
         for (unsigned j = 0; j < 3; j++)
