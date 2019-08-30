@@ -73,6 +73,7 @@
 #include "ProcessLib/LIE/HydroMechanics/CreateHydroMechanicsProcess.h"
 #include "ProcessLib/LIE/SmallDeformation/CreateSmallDeformationProcess.h"
 #include "ProcessLib/LIE/ThermoHydroMechanics/CreateThermoHydroMechanicsProcess.h"
+#include "ProcessLib/LIE/TH/CreateTHProcess.h"
 #endif
 #ifdef OGS_BUILD_PROCESS_LIQUIDFLOW
 #include "ProcessLib/LiquidFlow/CreateLiquidFlowProcess.h"
@@ -824,6 +825,42 @@ void ProjectData::parseProcesses(BaseLib::ConfigTree const& processes_config,
                 default:
                     OGS_FATAL(
                         "THERMO_HYDRO_MECHANICS_WITH_LIE process does not support given "
+                        "dimension");
+            }
+        }
+        else
+            if (type == "TH_WITH_LIE")
+        {
+            //! \ogs_file_param{prj__processes__process__TH_WITH_LIE__dimension}
+            switch (process_config.getConfigParameter<int>("dimension"))
+            {
+                case 1:
+                    process = ProcessLib::LIE::TH::
+                        createTHProcess<1>(
+                            name, *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters,
+                            _local_coordinate_system, integration_order,
+                            process_config);
+                    break;
+                case 2:
+                    process = ProcessLib::LIE::TH::
+                        createTHProcess<2>(
+                            name, *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters,
+                            _local_coordinate_system, integration_order,
+                            process_config);
+                    break;
+                case 3:
+                    process = ProcessLib::LIE::TH::
+                        createTHProcess<3>(
+                            name, *_mesh_vec[0], std::move(jacobian_assembler),
+                            _process_variables, _parameters,
+                            _local_coordinate_system, integration_order,
+                            process_config);
+                    break;
+                default:
+                    OGS_FATAL(
+                        "TH_WITH_LIE process does not support given "
                         "dimension");
             }
         }
