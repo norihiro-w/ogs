@@ -52,7 +52,7 @@ SmallDeformationProcess<DisplacementDim>::SmallDeformationProcess(
     getFractureMatrixDataInMesh(mesh, _vec_matrix_elements,
                                 _vec_fracture_mat_IDs, _vec_fracture_elements,
                                 _vec_fracture_matrix_elements,
-                                _vec_fracture_nodes, vec_branch_nodeID_matIDs,
+                                _vec_fracture_nodes, _vec_fracture_nodes_with_tips, vec_branch_nodeID_matIDs,
                                 vec_junction_nodeID_matIDs);
 
     if (_vec_fracture_mat_IDs.size() !=

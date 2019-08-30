@@ -217,6 +217,7 @@ void getFractureMatrixDataInMesh(
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_elements,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_matrix_elements,
     std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes,
+    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes_with_tips,
     std::vector<std::pair<std::size_t, std::vector<int>>>&
         vec_branch_nodeID_matIDs,
     std::vector<std::pair<std::size_t, std::vector<int>>>&
@@ -271,26 +272,34 @@ void getFractureMatrixDataInMesh(
     }
 
     // get a vector of fracture nodes for each material
+    vec_fracture_nodes_with_tips.resize(vec_fracture_mat_IDs.size());
     vec_fracture_nodes.resize(vec_fracture_mat_IDs.size());
     for (unsigned frac_id = 0; frac_id < vec_fracture_mat_IDs.size(); frac_id++)
     {
-        std::vector<MeshLib::Node*>& vec_nodes = vec_fracture_nodes[frac_id];
+        std::vector<MeshLib::Node*>& vec_nodes_w_tips = vec_fracture_nodes_with_tips[frac_id];
+        std::vector<MeshLib::Node*>& vec_nodes_wo_tips = vec_fracture_nodes[frac_id];
         for (MeshLib::Element* e : vec_fracture_elements[frac_id])
         {
             for (unsigned i = 0; i < e->getNumberOfNodes(); i++)
             {
                 if (isCrackTip(*e->getNode(i)))
                 {
+                    vec_nodes_w_tips.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
                     continue;
                 }
-                vec_nodes.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
+                vec_nodes_wo_tips.push_back(const_cast<MeshLib::Node*>(e->getNode(i)));
             }
         }
         BaseLib::makeVectorUnique(
-            vec_nodes, [](MeshLib::Node* node1, MeshLib::Node* node2) {
+            vec_nodes_w_tips, [](MeshLib::Node* node1, MeshLib::Node* node2) {
                 return node1->getID() < node2->getID();
             });
-        DBUG("-> found %d nodes on the fracture %d", vec_nodes.size(), frac_id);
+        DBUG("-> found %d nodes on the fracture %d", vec_nodes_w_tips.size(), frac_id);
+        BaseLib::makeVectorUnique(
+            vec_nodes_wo_tips, [](MeshLib::Node* node1, MeshLib::Node* node2) {
+                return node1->getID() < node2->getID();
+            });
+        DBUG("-> found %d nodes (w/o tips) on the fracture %d", vec_nodes_wo_tips.size(), frac_id);
     }
 
     // find branch/junction nodes which connect to multiple fractures
@@ -314,10 +323,10 @@ void getFractureMatrixDataInMesh(
             for (unsigned i = 0; i < e->getNumberOfBaseNodes(); i++)
             {
                 MeshLib::Node const* node = e->getNode(i);
-                if (isCrackTip(*node))
-                {
-                    continue;
-                }
+                // if (isCrackTip(*node))
+                // {
+                //     continue;
+                // }
                 for (unsigned j = 0; j < node->getNumberOfElements(); j++)
                 {
                     // only matrix elements

@@ -47,6 +47,7 @@ void getFractureMatrixDataInMesh(
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_elements,
     std::vector<std::vector<MeshLib::Element*>>& vec_fracture_matrix_elements,
     std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes,
+    std::vector<std::vector<MeshLib::Node*>>& vec_fracture_nodes_with_tips,
     std::vector<std::pair<std::size_t, std::vector<int>>>&
         vec_branch_nodeID_matIDs,
     std::vector<std::pair<std::size_t, std::vector<int>>>&

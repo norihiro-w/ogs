@@ -86,6 +86,7 @@ private:
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_elements;
     std::vector<std::vector<MeshLib::Element*>> _vec_fracture_matrix_elements;
     std::vector<std::vector<MeshLib::Node*>> _vec_fracture_nodes;
+    std::vector<std::vector<MeshLib::Node*>> _vec_fracture_nodes_with_tips;
     std::vector<MeshLib::Node*> _vec_junction_nodes;
     std::vector<std::vector<MeshLib::Element*>>
         _vec_junction_fracture_matrix_elements;
