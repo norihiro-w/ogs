@@ -34,25 +34,25 @@ set(CONAN_REQUIRES
     boost_dynamic_bitset/1.66.0@bincrafters/stable
     boost_optional/1.66.0@bincrafters/stable
     boost_property_tree/1.66.0@bincrafters/stable
-    Eigen3/3.3.4@bilke/stable
-    VTK/8.1.1@bilke/stable
+    eigen/3.3.4@conan/stable
+    vtk/8.2.0@bilke/stable
     CACHE INTERNAL ""
 )
 
 set(CONAN_OPTIONS
     Boost:header_only=True
     Qt:qtxmlpatterns=True
-    VTK:minimal=True
-    VTK:ioxml=True
+    vtk:minimal=True
+    vtk:ioxml=True
     CACHE INTERNAL ""
 )
 
 if((UNIX AND NOT APPLE) AND BUILD_SHARED_LIBS)
-    set(CONAN_OPTIONS ${CONAN_OPTIONS} VTK:fPIC=True)
+    set(CONAN_OPTIONS ${CONAN_OPTIONS} vtk:fPIC=True)
 endif()
 
 if(OGS_USE_MPI)
-    set(CONAN_OPTIONS ${CONAN_OPTIONS} VTK:mpi_minimal=True)
+    set(CONAN_OPTIONS ${CONAN_OPTIONS} vtk:mpi_minimal=True)
 endif()
 
 if(OGS_USE_PETSC)
@@ -73,8 +73,8 @@ if(OGS_BUILD_GUI)
         Qt/5.11.2@bilke/stable
     )
     set(CONAN_OPTIONS ${CONAN_OPTIONS}
-        VTK:minimal=False
-        VTK:qt=True
+        vtk:minimal=False
+        vtk:qt=True
     )
 endif()
 
