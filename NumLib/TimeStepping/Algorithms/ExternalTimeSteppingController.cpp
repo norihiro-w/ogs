@@ -48,12 +48,22 @@ bool ExternalTimeSteppingController::next(const double /*solution_error*/)
     // prepare the next time step info
     std::size_t time_step_index;
     double time_step_size;
+    int count_fail_fopen = 0;
     DBUG("Reading %s", _timestep_file_path.c_str());
     while (true)
     {
         std::ifstream ifs(_timestep_file_path);
         if (!ifs.good())
-            OGS_FATAL("Failed to open %s", _timestep_file_path.c_str());
+        {
+            if (count_fail_fopen > 10)
+                OGS_FATAL("Failed to open %s", _timestep_file_path.c_str());
+            // sleep and try again
+            count_fail_fopen++;
+            Sleep(_sleep_duration_ms);
+            continue;
+        }
+        count_fail_fopen = 0; //reset
+
 
         ifs >> time_step_index >> time_step_size;
 
