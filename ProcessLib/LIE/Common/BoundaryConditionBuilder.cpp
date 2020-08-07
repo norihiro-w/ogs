@@ -60,7 +60,7 @@ BoundaryConditionBuilder::createBoundaryCondition(
         return ProcessLib::LIE::createNeumannBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             *config.component_id, integration_order, shapefunction_order,
-            bulk_mesh.getDimension(), parameters);
+            bulk_mesh.getDimension(), parameters, _fracture_prop);
     }
 
     if (type == "Python")
