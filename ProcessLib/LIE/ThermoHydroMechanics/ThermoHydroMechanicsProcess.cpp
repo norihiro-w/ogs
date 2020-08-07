@@ -171,6 +171,15 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
     // exists in the version 6.1.0 (e54815cc07ee89c81f953a4955b1c788595dd725)
     // and was removed due to lack of applications.
     //
+    // need to use a custom Neumann BC assembler for displacement jumps
+    for (ProcessVariable& pv : getProcessVariables())
+    {
+        if (pv.getName().find("displacement_jump") == std::string::npos)
+            continue;
+        pv.setBoundaryConditionBuilder(
+                    std::unique_ptr<ProcessLib::BoundaryConditionBuilder>(
+                        new BoundaryConditionBuilder(*_process_data.fracture_property.get())));
+    }
 
     if (!_process_data.deactivate_matrix_in_flow)
     {
@@ -262,7 +271,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
         for (auto& vec : _vec_fracture_matrix_elements)
             std::copy(vec.begin(), vec.end(),
                     std::back_inserter(_vec_all_fracture_elements));
-        
+
         BaseLib::makeVectorUnique(_vec_all_fracture_elements);
         vec_var_elements.push_back(&_vec_all_fracture_elements);
     }

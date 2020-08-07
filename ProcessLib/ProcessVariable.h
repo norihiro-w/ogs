@@ -35,6 +35,7 @@ namespace ProcessLib
 {
 class SourceTerm;
 class BoundaryCondition;
+class BoundaryConditionBuilder;
 class Process;
 }  // namespace ProcessLib
 
@@ -79,6 +80,11 @@ public:
         std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
             parameters,
         Process const& process);
+
+    void setBoundaryConditionBuilder(std::unique_ptr<BoundaryConditionBuilder> bc_builder)
+    {
+        _bc_builder = std::move(bc_builder);
+    }
 
     std::vector<std::unique_ptr<SourceTerm>> createSourceTerms(
         const NumLib::LocalToGlobalIndexMap& dof_table, const int variable_id,
@@ -127,6 +133,7 @@ private:
     ParameterLib::Parameter<double> const& _initial_condition;
 
     std::vector<BoundaryConditionConfig> _bc_configs;
+	std::unique_ptr<BoundaryConditionBuilder> _bc_builder;
     std::vector<SourceTermConfig> _source_term_configs;
 };
 

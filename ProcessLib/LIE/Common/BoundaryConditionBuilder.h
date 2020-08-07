@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2012-2019, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2012-2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -9,8 +9,7 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "ProcessLib/BoundaryCondition/CreateBoundaryCondition.h"
 
 namespace MeshLib
 {
@@ -21,20 +20,29 @@ namespace NumLib
 {
 class LocalToGlobalIndexMap;
 }
-namespace ParameterLib
-{
-struct ParameterBase;
-}
+
 namespace ProcessLib
 {
-class BoundaryCondition;
-struct BoundaryConditionConfig;
-class Process;
+namespace LIE
+{
+struct FractureProperty;
+}
+}  // namespace ProcessLib
 
-class BoundaryConditionBuilder
+namespace ProcessLib
+{
+namespace LIE
+{
+/// A boundary condition builder for displacement jumps. Boundary
+/// integration, e.g. for Neumann BC, should take into account the leveset
+/// function.
+class BoundaryConditionBuilder : public ProcessLib::BoundaryConditionBuilder
 {
 public:
-    virtual ~BoundaryConditionBuilder() = default;
+    explicit BoundaryConditionBuilder(FractureProperty const& fracture_prop)
+        : _fracture_prop(fracture_prop)
+    {
+    }
 
     virtual std::unique_ptr<BoundaryCondition> createBoundaryCondition(
         const BoundaryConditionConfig& config,
@@ -42,9 +50,10 @@ public:
         const MeshLib::Mesh& mesh, const int variable_id,
         const unsigned integration_order, const unsigned shapefunction_order,
         const std::vector<std::unique_ptr<ParameterLib::ParameterBase>>& parameters,
-        const Process& process);
+        const Process& process) override;
 
+    FractureProperty const& _fracture_prop;
 };
 
-
+}  // namespace LIE
 }  // namespace ProcessLib
