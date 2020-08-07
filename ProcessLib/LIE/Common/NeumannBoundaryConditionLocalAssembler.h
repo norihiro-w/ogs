@@ -10,10 +10,10 @@
 #pragma once
 
 #include "NumLib/DOF/DOFTableUtil.h"
-
+#include "NumLib/Fem/ShapeMatrixPolicy.h"
 #include "ProcessLib/BoundaryCondition/GenericNaturalBoundaryConditionLocalAssembler.h"
-#include "ProcessLib/Parameter/Parameter.h"
-
+#include "ParameterLib/Parameter.h"
+#include "ProcessLib/Utils/InitShapeMatrices.h"
 #include "ProcessLib/LIE/Common/LevelSetFunction.h"
 #include "ProcessLib/LIE/Common/Utils.h"
 
@@ -29,6 +29,8 @@ class NeumannBoundaryConditionLocalAssembler final
 {
     using Base = GenericNaturalBoundaryConditionLocalAssembler<
         ShapeFunction, IntegrationMethod, GlobalDim>;
+    using ShapeMatricesType = ShapeMatrixPolicyType<ShapeFunction, GlobalDim>;
+    using NodalVectorType = typename Base::NodalVectorType;
 
 public:
     /// The neumann_bc_value factor is directly integrated into the local
@@ -36,9 +38,9 @@ public:
     NeumannBoundaryConditionLocalAssembler(
         MeshLib::Element const& e,
         std::size_t const local_matrix_size,
-        bool is_axially_symmetric,
+        bool const is_axially_symmetric,
         unsigned const integration_order,
-        Parameter<double> const& neumann_bc_parameter,
+        ParameterLib::Parameter<double> const& neumann_bc_parameter,
         FractureProperty const& fracture_prop,
         int variable_id)
         : Base(e, is_axially_symmetric, integration_order),
@@ -53,31 +55,54 @@ public:
     void assemble(std::size_t const id,
                   NumLib::LocalToGlobalIndexMap const& dof_table_boundary,
                   double const t, const GlobalVector& /*x*/,
-                  GlobalMatrix& /*K*/, GlobalVector& b) override
+                  GlobalMatrix& /*K*/, GlobalVector& b,
+                  GlobalMatrix* /*Jac*/) override
     {
         _local_rhs.setZero();
 
         unsigned const n_integration_points =
             Base::_integration_method.getNumberOfPoints();
 
-        SpatialPosition pos;
-        pos.setElementID(id);
+//        SpatialPosition pos;
+//        pos.setElementID(id);
+
+        // Get element nodes for the interpolation from nodes to integration
+        // point.
+        NodalVectorType parameter_node_values =
+            _neumann_bc_parameter.getNodalValuesOnElement(Base::_element, t)
+                .template topRows<ShapeFunction::MeshElement::n_all_nodes>();
 
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
-            pos.setIntegrationPoint(ip);
-            auto const& sm = Base::_shape_matrices[ip];
-            auto const& wp = Base::_integration_method.getWeightedPoint(ip);
+            auto const& ip_data = Base::_ns_and_weights[ip];
 
             // levelset functions
             auto const ip_physical_coords =
-                computePhysicalCoordinates(_element, sm.N);
-            double const levelsets = calculateLevelSetFunction(
-                _fracture_prop, ip_physical_coords.getCoords());
+                 computePhysicalCoordinates(_element, ip_data.N);
+            // double const levelsets = calculateLevelSetFunction(
+            //      _fracture_prop, ip_physical_coords.getCoords());
+            // std::vector<double> const levelsets(uGlobalEnrichments(
+            //     e_fracture_props, e_junction_props, e_fracID_to_local, pt));
+            std::vector<double> const levelsets(uGlobalEnrichments(\
+                _fracture_props, _junction_props, _fracID_to_local, _e_center_coords));
 
-            _local_rhs.noalias() += sm.N * levelsets *
-                                    _neumann_bc_parameter(t, pos)[0] * sm.detJ *
-                                    wp.getWeight() * sm.integralMeasure;
+            _local_rhs.noalias() += ip_data.N * levelsets *
+                                    parameter_node_values.dot(ip_data.N) *
+                                    ip_data.weight;
+			
+            // pos.setIntegrationPoint(ip);
+            // auto const& sm = Base::_shape_matrices[ip];
+            // auto const& wp = Base::_integration_method.getWeightedPoint(ip);
+
+            // // levelset functions
+            // auto const ip_physical_coords =
+            //     computePhysicalCoordinates(_element, sm.N);
+            // double const levelsets = calculateLevelSetFunction(
+            //     _fracture_prop, ip_physical_coords.getCoords());
+
+            // _local_rhs.noalias() += sm.N * levelsets *
+            //                         _neumann_bc_parameter(t, pos)[0] * sm.detJ *
+            //                         wp.getWeight() * sm.integralMeasure;
         }
 
         auto const indices = NumLib::getIndices(id, dof_table_boundary);
@@ -87,11 +112,14 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
 private:
-    Parameter<double> const& _neumann_bc_parameter;
-    typename Base::NodalVectorType _local_rhs;
+    ParameterLib::Parameter<double> const& _neumann_bc_parameter;
+    NodalVectorType _local_rhs;
     MeshLib::Element const& _element;
     FractureProperty const& _fracture_prop;
     int const _variable_id;
+
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 }  // namespace LIE

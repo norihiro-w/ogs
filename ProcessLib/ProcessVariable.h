@@ -13,6 +13,7 @@
 
 #include "ParameterLib/Parameter.h"
 #include "ProcessLib/BoundaryCondition/BoundaryConditionConfig.h"
+#include "ProcessLib/BoundaryCondition/CreateBoundaryCondition.h"
 #include "ProcessLib/SourceTerms/SourceTermConfig.h"
 
 // DeactivatedSubdomain cannot be forwardly declared because that

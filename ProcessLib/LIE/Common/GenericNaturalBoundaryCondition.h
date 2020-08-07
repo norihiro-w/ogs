@@ -37,41 +37,35 @@ public:
     /// A local DOF-table, a subset of the given one, is constructed.
     template <typename Data>
     GenericNaturalBoundaryCondition(
-        typename std::enable_if<
-            std::is_same<typename std::decay<BoundaryConditionData>::type,
-                         typename std::decay<Data>::type>::value,
-            bool>::type is_axially_symmetric,
         unsigned const integration_order, unsigned const shapefunction_order,
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, int const component_id,
-        unsigned const global_dim, std::vector<MeshLib::Element*>&& elements,
-        Data&& data, FractureProperty const& fracture_prop);
-
-    ~GenericNaturalBoundaryCondition() override;
+        unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data,
+		FractureProperty const& fracture_prop);
 
     /// Calls local assemblers which calculate their contributions to the global
     /// matrix and the right-hand-side.
-    void applyNaturalBC(const double t,
-                        GlobalVector const& x,
-                        GlobalMatrix& K,
-                        GlobalVector& b) override;
+    void applyNaturalBC(const double t, GlobalVector const& x, GlobalMatrix& K,
+                        GlobalVector& b, GlobalMatrix* Jac) override;
 
 private:
     /// Data used in the assembly of the specific boundary condition.
     BoundaryConditionData _data;
 
-    /// Vector of lower-dimensional elements on which the boundary condition is
-    /// defined.
-    std::vector<MeshLib::Element*> _elements;
+    /// A lower-dimensional mesh on which the boundary condition is defined.
+    MeshLib::Mesh const& _bc_mesh;
+//    /// Vector of lower-dimensional elements on which the boundary condition is
+//    /// defined.
+//    std::vector<MeshLib::Element*> _elements;
 
-    std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_all_nodes;
+//    std::unique_ptr<MeshLib::MeshSubset const> _mesh_subset_all_nodes;
 
     /// Local dof table, a subset of the global one restricted to the
-    /// participating #_elements of the boundary condition.
+    /// participating number of _elements of the boundary condition.
     std::unique_ptr<NumLib::LocalToGlobalIndexMap> _dof_table_boundary;
 
     /// Integration order for integration over the lower-dimensional elements
-    unsigned const _integration_order;
+    //unsigned const _integration_order;
 
     /// Local assemblers for each element of #_elements.
     std::vector<
