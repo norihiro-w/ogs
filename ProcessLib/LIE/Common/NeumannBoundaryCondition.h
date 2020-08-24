@@ -42,7 +42,9 @@ std::unique_ptr<NeumannBoundaryCondition> createNeumannBoundaryCondition(
     unsigned const shapefunction_order, unsigned const global_dim,
     std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const&
         parameters,
-    FractureProperty const& fracture_prop);
+    std::vector<FractureProperty*> const& fracture_props,
+    std::vector<JunctionProperty*> const& junction_props,
+    std::unordered_map<int, int> const& fracID_to_local);
 
 // std::unique_ptr<BoundaryCondition> createNeumannBoundaryCondition(
 //     BaseLib::ConfigTree const& config, MeshLib::Mesh const& bc_mesh,

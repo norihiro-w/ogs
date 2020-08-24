@@ -10,6 +10,7 @@
 #pragma once
 
 #include "ProcessLib/BoundaryCondition/CreateBoundaryCondition.h"
+#include "JunctionProperty.h"
 
 namespace MeshLib
 {
@@ -39,8 +40,13 @@ namespace LIE
 class BoundaryConditionBuilder : public ProcessLib::BoundaryConditionBuilder
 {
 public:
-    explicit BoundaryConditionBuilder(FractureProperty const& fracture_prop)
-        : _fracture_prop(fracture_prop)
+    explicit BoundaryConditionBuilder(
+        std::vector<FractureProperty*> const& fracture_props,
+        std::vector<JunctionProperty*> const& junction_props,
+        std::unordered_map<int, int> const& fracID_to_local)
+        : _fracture_props(fracture_props),
+        _junction_props(junction_props),
+        _fracID_to_local(fracID_to_local)
     {
     }
 
@@ -52,7 +58,9 @@ public:
         const std::vector<std::unique_ptr<ParameterLib::ParameterBase>>& parameters,
         const Process& process) override;
 
-    FractureProperty const& _fracture_prop;
+    std::vector<FractureProperty*> const& _fracture_props;
+    std::vector<JunctionProperty*> const& _junction_props;
+    std::unordered_map<int, int> const& _fracID_to_local;
 };
 
 }  // namespace LIE

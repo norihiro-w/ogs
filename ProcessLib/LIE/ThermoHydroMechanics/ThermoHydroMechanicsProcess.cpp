@@ -176,9 +176,13 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
     {
         if (pv.getName().find("displacement_jump") == std::string::npos)
             continue;
+        std::unordered_map<int, int> fracID_to_local;
         pv.setBoundaryConditionBuilder(
                     std::unique_ptr<ProcessLib::BoundaryConditionBuilder>(
-                        new BoundaryConditionBuilder(*_process_data.fracture_property.get())));
+                        new BoundaryConditionBuilder(
+                            _process_data.fracture_properties,
+                            _process_data.junction_properties,
+                            fracID_to_local)));
     }
 
     if (!_process_data.deactivate_matrix_in_flow)

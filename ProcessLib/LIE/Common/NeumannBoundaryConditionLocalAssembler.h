@@ -41,13 +41,17 @@ public:
         bool const is_axially_symmetric,
         unsigned const integration_order,
         ParameterLib::Parameter<double> const& neumann_bc_parameter,
-        FractureProperty const& fracture_prop,
+        std::vector<FractureProperty*> const& fracture_props,
+        std::vector<JunctionProperty*> const& junction_props,
+        std::unordered_map<int, int> const& fracID_to_local,
         int variable_id)
         : Base(e, is_axially_symmetric, integration_order),
           _neumann_bc_parameter(neumann_bc_parameter),
           _local_rhs(local_matrix_size),
           _element(e),
-          _fracture_prop(fracture_prop),
+          _fracture_props(fracture_props),
+          _junction_props(junction_props),
+          _fracID_to_local(fracID_to_local),
           _variable_id(variable_id)
     {
     }
@@ -79,14 +83,17 @@ public:
             // levelset functions
             auto const ip_physical_coords =
                  computePhysicalCoordinates(_element, ip_data.N);
+            Eigen::Vector3d const pt(ip_physical_coords.getCoords());
             // double const levelsets = calculateLevelSetFunction(
             //      _fracture_prop, ip_physical_coords.getCoords());
             // std::vector<double> const levelsets(uGlobalEnrichments(
             //     e_fracture_props, e_junction_props, e_fracID_to_local, pt));
             std::vector<double> const levelsets(uGlobalEnrichments(\
-                _fracture_props, _junction_props, _fracID_to_local, _e_center_coords));
+                _fracture_props, _junction_props, _fracID_to_local, 
+                pt));
+            int fracid;
 
-            _local_rhs.noalias() += ip_data.N * levelsets *
+            _local_rhs.noalias() += ip_data.N * levelsets[fracid] *
                                     parameter_node_values.dot(ip_data.N) *
                                     ip_data.weight;
 			
@@ -115,7 +122,9 @@ private:
     ParameterLib::Parameter<double> const& _neumann_bc_parameter;
     NodalVectorType _local_rhs;
     MeshLib::Element const& _element;
-    FractureProperty const& _fracture_prop;
+    std::vector<FractureProperty*> const& _fracture_props;
+    std::vector<JunctionProperty*> const& _junction_props;
+    std::unordered_map<int, int> const& _fracID_to_local;
     int const _variable_id;
 
 public:
