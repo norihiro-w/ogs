@@ -176,7 +176,7 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
     const int process_id = 0;
     for (ProcessVariable& pv : getProcessVariables(process_id))
     {
-        if (pv.getName() != "displacement_jump")
+        if (pv.getName().find("displacement_jump") == std::string::npos)
             continue;
         std::vector<unsigned> frac_ids(1);
         char dummy[128];
