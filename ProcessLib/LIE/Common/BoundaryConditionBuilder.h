@@ -40,13 +40,13 @@ namespace LIE
 class BoundaryConditionBuilder : public ProcessLib::BoundaryConditionBuilder
 {
 public:
-    explicit BoundaryConditionBuilder(
-        std::vector<FractureProperty*> const& fracture_props,
-        std::vector<JunctionProperty*> const& junction_props,
-        std::unordered_map<int, int> const& fracID_to_local)
+    BoundaryConditionBuilder(
+        std::vector<std::unique_ptr<FractureProperty>> const& fracture_props,
+        std::vector<JunctionProperty> const& junction_props,
+        std::vector<unsigned> const& frac_ids)
         : _fracture_props(fracture_props),
         _junction_props(junction_props),
-        _fracID_to_local(fracID_to_local)
+        _frac_ids(frac_ids)
     {
     }
 
@@ -58,9 +58,9 @@ public:
         const std::vector<std::unique_ptr<ParameterLib::ParameterBase>>& parameters,
         const Process& process) override;
 
-    std::vector<FractureProperty*> const& _fracture_props;
-    std::vector<JunctionProperty*> const& _junction_props;
-    std::unordered_map<int, int> const& _fracID_to_local;
+    std::vector<std::unique_ptr<FractureProperty>> const& _fracture_props;
+    std::vector<JunctionProperty> const& _junction_props;
+    std::vector<unsigned> const& _frac_ids;
 };
 
 }  // namespace LIE

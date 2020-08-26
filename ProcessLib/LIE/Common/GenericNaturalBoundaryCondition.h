@@ -42,9 +42,9 @@ public:
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, int const component_id,
         unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data,
-        std::vector<FractureProperty*> const& fracture_props,
-        std::vector<JunctionProperty*> const& junction_props,
-        std::unordered_map<int, int> const& fracID_to_local);
+        std::vector<std::unique_ptr<FractureProperty>> const& fracture_props,
+        std::vector<JunctionProperty> const& junction_props,
+        std::vector<unsigned> const& fracids);
 
     /// Calls local assemblers which calculate their contributions to the global
     /// matrix and the right-hand-side.

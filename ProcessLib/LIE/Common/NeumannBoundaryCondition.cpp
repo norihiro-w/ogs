@@ -29,9 +29,9 @@ std::unique_ptr<NeumannBoundaryCondition> createNeumannBoundaryCondition(
     int const component_id, unsigned const integration_order,
     unsigned const shapefunction_order, unsigned const global_dim,
     std::vector<std::unique_ptr<ParameterLib::ParameterBase>> const& parameters,
-    std::vector<FractureProperty*> const& fracture_props,
-    std::vector<JunctionProperty*> const& junction_props,
-    std::unordered_map<int, int> const& fracID_to_local)
+    std::vector<std::unique_ptr<FractureProperty>> const& fracture_props,
+    std::vector<JunctionProperty> const& junction_props,
+    std::vector<unsigned> const& frac_ids)
 {
     DBUG("Constructing Neumann BC from config.");
     //! \ogs_file_param{prj__process_variables__process_variable__boundary_conditions__boundary_condition__type}
@@ -60,7 +60,7 @@ std::unique_ptr<NeumannBoundaryCondition> createNeumannBoundaryCondition(
 
     return std::make_unique<NeumannBoundaryCondition>(
         integration_order, shapefunction_order, dof_table, variable_id,
-        component_id, global_dim, bc_mesh, param, fracture_props, junction_props, fracID_to_local);
+        component_id, global_dim, bc_mesh, param, fracture_props, junction_props, frac_ids);
 }
 
 // std::unique_ptr<BoundaryCondition> createNeumannBoundaryCondition(

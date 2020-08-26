@@ -33,7 +33,7 @@ BoundaryConditionBuilder::createBoundaryCondition(
     const MeshLib::Mesh& bulk_mesh, const int variable_id,
     const unsigned integration_order, const unsigned shapefunction_order,
     const std::vector<std::unique_ptr<ParameterLib::ParameterBase>>& parameters,
-    const Process& process)
+    const Process& /*process*/)
 {
     // Surface mesh and bulk mesh must have equal axial symmetry flags!
     if (config.boundary_mesh.isAxiallySymmetric() !=
@@ -60,8 +60,8 @@ BoundaryConditionBuilder::createBoundaryCondition(
         return ProcessLib::LIE::createNeumannBoundaryCondition(
             config.config, config.boundary_mesh, dof_table, variable_id,
             *config.component_id, integration_order, shapefunction_order,
-            bulk_mesh.getDimension(), parameters, 
-            _fracture_props, _junction_props, _fracID_to_local);
+            bulk_mesh.getDimension(), parameters,
+            _fracture_props, _junction_props, _frac_ids);
     }
 
     if (type == "Python")

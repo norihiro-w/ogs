@@ -181,7 +181,9 @@ MeshComponentMap MeshComponentMap::getSubset(
             {
                 if (is_base_node)
                 {
-                    OGS_FATAL(
+                    //OGS_FATAL
+
+                    WARN(
                         "Could not find a global index for global component %d "
                         "for the mesh '%s', node %d, in the corresponding bulk "
                         "mesh '%s' and node %d. This happens because the "

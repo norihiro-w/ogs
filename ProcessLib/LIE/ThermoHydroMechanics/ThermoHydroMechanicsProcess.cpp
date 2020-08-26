@@ -13,6 +13,7 @@
 
 #include "ParameterLib/MeshElementParameter.h"
 
+#include "ProcessLib/LIE/Common/BoundaryConditionBuilder.h"
 #include "ProcessLib/LIE/Common/BranchProperty.h"
 #include "ProcessLib/LIE/Common/JunctionProperty.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
@@ -172,17 +173,21 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
     // and was removed due to lack of applications.
     //
     // need to use a custom Neumann BC assembler for displacement jumps
-    for (ProcessVariable& pv : getProcessVariables())
+    const int process_id = 0;
+    for (ProcessVariable& pv : getProcessVariables(process_id))
     {
-        if (pv.getName().find("displacement_jump") == std::string::npos)
+        if (pv.getName() != "displacement_jump")
             continue;
-        std::unordered_map<int, int> fracID_to_local;
+        std::vector<unsigned> frac_ids(1);
+        char dummy[128];
+        sscanf(pv.getName().c_str(), "%s%d", dummy, &frac_ids[0]);
+        INFO("fid = %d", frac_ids[0]);
         pv.setBoundaryConditionBuilder(
                     std::unique_ptr<ProcessLib::BoundaryConditionBuilder>(
                         new BoundaryConditionBuilder(
                             _process_data.fracture_properties,
                             _process_data.junction_properties,
-                            fracID_to_local)));
+                            frac_ids)));
     }
 
     if (!_process_data.deactivate_matrix_in_flow)

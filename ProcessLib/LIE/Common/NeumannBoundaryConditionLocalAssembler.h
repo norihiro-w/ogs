@@ -41,19 +41,26 @@ public:
         bool const is_axially_symmetric,
         unsigned const integration_order,
         ParameterLib::Parameter<double> const& neumann_bc_parameter,
-        std::vector<FractureProperty*> const& fracture_props,
-        std::vector<JunctionProperty*> const& junction_props,
-        std::unordered_map<int, int> const& fracID_to_local,
+        std::vector<std::unique_ptr<FractureProperty>> const& fracture_properties,
+        std::vector<JunctionProperty> const& /*junction_properties*/,
+        std::vector<unsigned> const& frac_ids,
         int variable_id)
         : Base(e, is_axially_symmetric, integration_order),
           _neumann_bc_parameter(neumann_bc_parameter),
           _local_rhs(local_matrix_size),
           _element(e),
-          _fracture_props(fracture_props),
-          _junction_props(junction_props),
-          _fracID_to_local(fracID_to_local),
           _variable_id(variable_id)
     {
+        for (auto fid : frac_ids)
+        {
+            _fracID_to_local.insert({fid, _fracture_props.size()});
+            _fracture_props.push_back(&*fracture_properties[fid]);
+        }
+
+        // for (auto jid : vec_ele_connected_junctionIDs[e.getID()])
+        // {
+        //     _junction_props.push_back(&junction_properties[jid]);
+        // }
     }
 
     void assemble(std::size_t const id,
@@ -89,14 +96,18 @@ public:
             // std::vector<double> const levelsets(uGlobalEnrichments(
             //     e_fracture_props, e_junction_props, e_fracID_to_local, pt));
             std::vector<double> const levelsets(uGlobalEnrichments(\
-                _fracture_props, _junction_props, _fracID_to_local, 
+                _fracture_props, _junction_props, _fracID_to_local,
                 pt));
-            int fracid;
 
-            _local_rhs.noalias() += ip_data.N * levelsets[fracid] *
-                                    parameter_node_values.dot(ip_data.N) *
-                                    ip_data.weight;
-			
+            for (unsigned ifrac=0; ifrac<_fracID_to_local.size(); ifrac++)
+            {
+                _local_rhs.noalias() += ip_data.N * levelsets[ifrac] *
+                                        parameter_node_values.dot(ip_data.N) *
+                                        ip_data.weight;
+
+            }
+
+
             // pos.setIntegrationPoint(ip);
             // auto const& sm = Base::_shape_matrices[ip];
             // auto const& wp = Base::_integration_method.getWeightedPoint(ip);
@@ -122,9 +133,9 @@ private:
     ParameterLib::Parameter<double> const& _neumann_bc_parameter;
     NodalVectorType _local_rhs;
     MeshLib::Element const& _element;
-    std::vector<FractureProperty*> const& _fracture_props;
-    std::vector<JunctionProperty*> const& _junction_props;
-    std::unordered_map<int, int> const& _fracID_to_local;
+    std::vector<FractureProperty*> _fracture_props;
+    std::vector<JunctionProperty*> _junction_props;
+    std::unordered_map<int, int> _fracID_to_local;
     int const _variable_id;
 
 public:

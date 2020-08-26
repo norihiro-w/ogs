@@ -29,9 +29,9 @@ GenericNaturalBoundaryCondition<BoundaryConditionData,
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, int const component_id,
         unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data,
-        std::vector<FractureProperty*> const& fracture_props,
-        std::vector<JunctionProperty*> const& junction_props,
-        std::unordered_map<int, int> const& fracID_to_local)
+        std::vector<std::unique_ptr<FractureProperty>> const& fracture_props,
+        std::vector<JunctionProperty> const& junction_props,
+        std::vector<unsigned> const& frac_ids)
     : _data(std::forward<Data>(data)), _bc_mesh(bc_mesh)
 {
     static_assert(std::is_same<typename std::decay<BoundaryConditionData>::type,
@@ -82,7 +82,7 @@ GenericNaturalBoundaryCondition<BoundaryConditionData,
     createLocalAssemblers<LocalAssemblerImplementation>(
         global_dim, _bc_mesh.getElements(), *_dof_table_boundary,
         shapefunction_order, _local_assemblers, _bc_mesh.isAxiallySymmetric(),
-        integration_order, _data, fracture_props, junction_props, fracID_to_local,
+        integration_order, _data, fracture_props, junction_props, frac_ids,
         variable_id);
 }
 
@@ -96,7 +96,7 @@ GenericNaturalBoundaryCondition<BoundaryConditionData,
 //         unsigned const integration_order, unsigned const shapefunction_order,
 //         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
 //         int const variable_id, int const component_id,
-//         unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data, 
+//         unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data,
 // 		FractureProperty const& fracture_prop)
 //     : _data(std::forward<Data>(data)), _bc_mesh(bc_mesh)
 // //      _elements(std::move(elements)),
