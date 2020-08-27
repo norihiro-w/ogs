@@ -48,7 +48,8 @@ public:
         std::vector<unsigned> const& frac_ids)
         : Base(e, is_axially_symmetric, integration_order),
           _dofIndex_to_localIndex(dofIndex_to_localIndex),
-          _local_rhs(n_variables * ShapeFunction::NPOINTS * GlobalDim),
+          _local_rhs(n_variables * ShapeFunction::NPOINTS),
+          //_local_rhs(n_variables * ShapeFunction::NPOINTS * GlobalDim),
           _local_rhs_active(local_matrix_size),
           _neumann_bc_parameter(neumann_bc_parameter),
           _element(e),
