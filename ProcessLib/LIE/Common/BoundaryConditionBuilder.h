@@ -60,7 +60,7 @@ public:
 
     std::vector<std::unique_ptr<FractureProperty>> const& _fracture_props;
     std::vector<JunctionProperty> const& _junction_props;
-    std::vector<unsigned> const& _frac_ids;
+    std::vector<unsigned> const _frac_ids;
 };
 
 }  // namespace LIE

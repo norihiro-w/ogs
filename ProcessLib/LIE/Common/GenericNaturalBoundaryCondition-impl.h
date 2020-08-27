@@ -12,7 +12,8 @@
 #include "MeshLib/MeshSearch/NodeSearch.h"  // for getUniqueNodes
 
 #include "ProcessLib/BoundaryCondition/GenericNaturalBoundaryConditionLocalAssembler.h"
-#include "ProcessLib/Utils/CreateLocalAssemblers.h"
+//#include "ProcessLib/Utils/CreateLocalAssemblers.h"
+#include "CreateBCLocalAssemblers.h"
 
 namespace ProcessLib
 {
@@ -25,7 +26,7 @@ template <typename Data>
 GenericNaturalBoundaryCondition<BoundaryConditionData,
                                 LocalAssemblerImplementation>::
     GenericNaturalBoundaryCondition(
-        unsigned const integration_order, unsigned const shapefunction_order,
+        unsigned const integration_order, unsigned const /*shapefunction_order*/,
         NumLib::LocalToGlobalIndexMap const& dof_table_bulk,
         int const variable_id, int const component_id,
         unsigned const global_dim, MeshLib::Mesh const& bc_mesh, Data&& data,
@@ -79,11 +80,19 @@ GenericNaturalBoundaryCondition<BoundaryConditionData,
     _dof_table_boundary.reset(dof_table_bulk.deriveBoundaryConstrainedMap(
         variable_id, {component_id}, std::move(bc_mesh_subset)));
 
-    createLocalAssemblers<LocalAssemblerImplementation>(
-        global_dim, _bc_mesh.getElements(), *_dof_table_boundary,
-        shapefunction_order, _local_assemblers, _bc_mesh.isAxiallySymmetric(),
-        integration_order, _data, fracture_props, junction_props, frac_ids,
-        variable_id);
+    std::vector<MeshLib::Element*> active_elements;
+    for (std::size_t i=0; i<_bc_mesh.getElements().size(); i++)
+        if (_dof_table_boundary->getNumberOfElementDOF(i) > 0)
+            active_elements.push_back(_bc_mesh.getElements()[i]);
+
+
+    //TODO dim is fixed to 1
+    createBCLocalAssemblers<
+        2, LocalAssemblerImplementation>(
+        active_elements, *_dof_table_boundary, variable_id, component_id,
+        _local_assemblers, _bc_mesh.isAxiallySymmetric(),
+        integration_order, _data, fracture_props, junction_props, frac_ids
+        );
 }
 
 // template <typename BoundaryConditionData,

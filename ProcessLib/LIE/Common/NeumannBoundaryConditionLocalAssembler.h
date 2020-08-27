@@ -37,19 +37,22 @@ public:
     /// element matrix.
     NeumannBoundaryConditionLocalAssembler(
         MeshLib::Element const& e,
+        std::size_t const n_variables,
         std::size_t const local_matrix_size,
+        std::vector<unsigned> const& dofIndex_to_localIndex,
         bool const is_axially_symmetric,
         unsigned const integration_order,
         ParameterLib::Parameter<double> const& neumann_bc_parameter,
         std::vector<std::unique_ptr<FractureProperty>> const& fracture_properties,
         std::vector<JunctionProperty> const& /*junction_properties*/,
-        std::vector<unsigned> const& frac_ids,
-        int variable_id)
+        std::vector<unsigned> const& frac_ids)
         : Base(e, is_axially_symmetric, integration_order),
+          _dofIndex_to_localIndex(dofIndex_to_localIndex),
+          _local_rhs(n_variables * ShapeFunction::NPOINTS * GlobalDim),
+          _local_rhs_active(local_matrix_size),
           _neumann_bc_parameter(neumann_bc_parameter),
-          _local_rhs(local_matrix_size),
           _element(e),
-          _variable_id(variable_id)
+          _frac_ids(frac_ids)
     {
         for (auto fid : frac_ids)
         {
@@ -63,12 +66,13 @@ public:
         // }
     }
 
-    void assemble(std::size_t const id,
+    void assemble(std::size_t const /*id*/,
                   NumLib::LocalToGlobalIndexMap const& dof_table_boundary,
                   double const t, const GlobalVector& /*x*/,
                   GlobalMatrix& /*K*/, GlobalVector& b,
                   GlobalMatrix* /*Jac*/) override
     {
+        //if (_local_rhs.size()==0) return;
         _local_rhs.setZero();
 
         unsigned const n_integration_points =
@@ -123,20 +127,25 @@ public:
             //                         wp.getWeight() * sm.integralMeasure;
         }
 
-        auto const indices = NumLib::getIndices(id, dof_table_boundary);
-        b.add(indices, _local_rhs);
+        for (unsigned i = 0; i < _local_rhs_active.size(); i++)
+            _local_rhs_active[i] = _local_rhs[_dofIndex_to_localIndex[i]];
+
+        auto const indices = NumLib::getIndices(_element.getID(), dof_table_boundary);
+        b.add(indices, _local_rhs_active);
     }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
 private:
+    std::vector<unsigned> const _dofIndex_to_localIndex;
+    Eigen::VectorXd _local_rhs;
+    NodalVectorType _local_rhs_active;
     ParameterLib::Parameter<double> const& _neumann_bc_parameter;
-    NodalVectorType _local_rhs;
     MeshLib::Element const& _element;
+    std::vector<unsigned> const _frac_ids;
     std::vector<FractureProperty*> _fracture_props;
     std::vector<JunctionProperty*> _junction_props;
     std::unordered_map<int, int> _fracID_to_local;
-    int const _variable_id;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;

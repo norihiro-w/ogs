@@ -179,9 +179,12 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
         if (pv.getName().find("displacement_jump") == std::string::npos)
             continue;
         std::vector<unsigned> frac_ids(1);
-        char dummy[128];
-        sscanf(pv.getName().c_str(), "%s%d", dummy, &frac_ids[0]);
-        INFO("fid = %d", frac_ids[0]);
+        const std::string str0 = "displacement_jump";
+        std::string str = pv.getName();
+        frac_ids[0] = stoi(str.erase(0, str0.size())) - 1;
+        // char dummy[128];
+        // sscanf(pv.getName().c_str(), "%s%d", dummy, &frac_ids[0]);
+        INFO("%s: fid = %d", pv.getName().c_str(), frac_ids[0]);
         pv.setBoundaryConditionBuilder(
                     std::unique_ptr<ProcessLib::BoundaryConditionBuilder>(
                         new BoundaryConditionBuilder(
