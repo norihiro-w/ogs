@@ -379,6 +379,7 @@ std::vector<int> LocalToGlobalIndexMap::getElementVariableIDs(
         for (int j=0; j<getNumberOfVariableComponents(i); j++)
         {
             auto comp_id = getGlobalComponent(i, j);
+            if (comp_id >= _rows.cols()) break;
             if (!_rows(mesh_item_id, comp_id).empty())
             {
                 vec.push_back(i);
