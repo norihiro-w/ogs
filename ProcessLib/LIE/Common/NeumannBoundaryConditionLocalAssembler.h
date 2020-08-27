@@ -55,6 +55,7 @@ public:
           _element(e),
           _frac_ids(frac_ids)
     {
+        INFO("NeumannBoundaryConditionLocalAssembler()::local_matrix_size = %d", local_matrix_size);
         for (auto fid : frac_ids)
         {
             _fracID_to_local.insert({fid, _fracture_props.size()});
@@ -73,6 +74,7 @@ public:
                   GlobalMatrix& /*K*/, GlobalVector& b,
                   GlobalMatrix* /*Jac*/) override
     {
+        INFO("-> NeumannBoundaryConditionLocalAssembler::assemble() start");
         //if (_local_rhs.size()==0) return;
         _local_rhs.setZero();
 
@@ -88,6 +90,7 @@ public:
             _neumann_bc_parameter.getNodalValuesOnElement(Base::_element, t)
                 .template topRows<ShapeFunction::MeshElement::n_all_nodes>();
 
+        INFO("-> integration start");
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
             auto const& ip_data = Base::_ns_and_weights[ip];
@@ -128,11 +131,20 @@ public:
             //                         wp.getWeight() * sm.integralMeasure;
         }
 
+        INFO("-> integration end");
+        INFO("-> set _local_rhs_active");
+        INFO("_local_rhs.size() = %d", _local_rhs.size());
+        INFO("_local_rhs_active.size() = %d", _local_rhs_active.size());
         for (unsigned i = 0; i < _local_rhs_active.size(); i++)
+        {
+            INFO("_dofIndex_to_localIndex[%d] = %d", i, _dofIndex_to_localIndex[i]);
             _local_rhs_active[i] = _local_rhs[_dofIndex_to_localIndex[i]];
+        }
 
+        INFO("-> set global b");
         auto const indices = NumLib::getIndices(_element.getID(), dof_table_boundary);
         b.add(indices, _local_rhs_active);
+        INFO("-> NeumannBoundaryConditionLocalAssembler::assemble() end");
     }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;

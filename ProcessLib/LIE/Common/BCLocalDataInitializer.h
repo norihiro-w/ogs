@@ -182,14 +182,15 @@ public:
         }
 
         auto const n_local_dof = _dof_table.getNumberOfElementDOF(eid);
-        std::cout << _dof_table << std::endl;
+        //std::cout << _dof_table << std::endl;
         // auto const n_global_components =
         //     _dof_table.getNumberOfElementComponents(id);
         //auto const varIDs = _dof_table.getElementVariableIDs(eid);
 
 
-        std::vector<unsigned> dofIndex_to_localIndex;
-        dofIndex_to_localIndex.resize(n_local_dof);
+        INFO("n_local_dof = %d", n_local_dof);
+        std::vector<unsigned> dofIndex_to_localIndex(n_local_dof, 0);
+        //dofIndex_to_localIndex.resize(n_local_dof);
         unsigned dof_id = 0;
         unsigned local_id = 0;
 
@@ -206,10 +207,12 @@ public:
             if (global_index != NumLib::MeshComponentMap::nop)
             {
                 dofIndex_to_localIndex[dof_id++] = local_id;
+                INFO("e=%d, k=%d, node=%d", mesh_item.getID(), k, mesh_item.getNodeIndex(k));
             }
             local_id++;
         }
         const unsigned nvar = 1; //TODO
+        INFO("n_local_dof = %d", n_local_dof);
         data_ptr = it->second(mesh_item, nvar, n_local_dof,
                               dofIndex_to_localIndex,
                               std::forward<ConstructorArgs>(args)...);
@@ -266,6 +269,7 @@ private:
                   std::vector<unsigned> const& dofIndex_to_localIndex,
                   ConstructorArgs&&... args)
         {
+            INFO("makeLocalAssemblerBuilder::local_matrix_size = %d", local_matrix_size);
             return LADataIntfPtr{new LAData<ShapeFunction>{
                 e, n_variables, local_matrix_size, dofIndex_to_localIndex,
                 std::forward<ConstructorArgs>(args)...}};
