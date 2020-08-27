@@ -13,6 +13,7 @@
 
 #include "ParameterLib/MeshElementParameter.h"
 
+#include "ProcessLib/LIE/Common/LIEBoundaryConditionBuilder.h"
 #include "ProcessLib/LIE/Common/BranchProperty.h"
 #include "ProcessLib/LIE/Common/JunctionProperty.h"
 #include "ProcessLib/LIE/Common/MeshUtils.h"
@@ -171,6 +172,27 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
     // exists in the version 6.1.0 (e54815cc07ee89c81f953a4955b1c788595dd725)
     // and was removed due to lack of applications.
     //
+    // need to use a custom Neumann BC assembler for displacement jumps
+    const int process_id = 0;
+    for (ProcessVariable& pv : getProcessVariables(process_id))
+    {
+        if (pv.getName().find("displacement_jump") == std::string::npos)
+            continue;
+
+        //TODO currently it does not support a case when multiple fractures
+        //are crossing the same boundary
+        std::vector<unsigned> frac_ids(1);
+        const std::string str0 = "displacement_jump";
+        std::string str = pv.getName();
+        frac_ids[0] = stoi(str.erase(0, str0.size())) - 1;
+        //INFO("%s: fid = %d", pv.getName().c_str(), frac_ids[0]);
+        pv.setBoundaryConditionBuilder(
+                    std::unique_ptr<ProcessLib::BoundaryConditionBuilder>(
+                        new LIEBoundaryConditionBuilder(
+                            _process_data.fracture_properties,
+                            _process_data.junction_properties,
+                            frac_ids)));
+    }
 
     if (!_process_data.deactivate_matrix_in_flow)
     {
@@ -262,7 +284,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
         for (auto& vec : _vec_fracture_matrix_elements)
             std::copy(vec.begin(), vec.end(),
                     std::back_inserter(_vec_all_fracture_elements));
-        
+
         BaseLib::makeVectorUnique(_vec_all_fracture_elements);
         vec_var_elements.push_back(&_vec_all_fracture_elements);
     }
