@@ -20,7 +20,7 @@
 #include "MeshLib/Node.h"
 #include "ParameterLib/Utils.h"
 #include "ProcessLib/BoundaryCondition/BoundaryCondition.h"
-#include "ProcessLib/BoundaryCondition/CreateBoundaryCondition.h"
+#include "ProcessLib/BoundaryCondition/BoundaryConditionBuilder.h"
 #include "ProcessLib/BoundaryCondition/DirichletBoundaryConditionWithinTimeInterval.h"
 #include "ProcessLib/SourceTerms/CreateSourceTerm.h"
 #include "ProcessLib/SourceTerms/SourceTerm.h"
@@ -104,7 +104,8 @@ ProcessVariable::ProcessVariable(
       _initial_condition(ParameterLib::findParameter<double>(
           //! \ogs_file_param{prj__process_variables__process_variable__initial_condition}
           config.getConfigParameter<std::string>("initial_condition"),
-          parameters, _n_components, &mesh))
+          parameters, _n_components, &mesh)),
+	  _bc_builder(std::make_unique<BoundaryConditionBuilder>())
 {
     DBUG("Constructing process variable %s", _name.c_str());
 
@@ -182,7 +183,8 @@ ProcessVariable::ProcessVariable(ProcessVariable&& other)
       _deactivated_subdomains(std::move(other._deactivated_subdomains)),
       _initial_condition(std::move(other._initial_condition)),
       _bc_configs(std::move(other._bc_configs)),
-      _source_term_configs(std::move(other._source_term_configs))
+      _source_term_configs(std::move(other._source_term_configs)),
+	  _bc_builder(std::move(other._bc_builder))
 {
 }
 
@@ -209,7 +211,7 @@ ProcessVariable::createBoundaryConditions(
 
     for (auto& config : _bc_configs)
     {
-        auto bc = createBoundaryCondition(
+        auto bc = _bc_builder->createBoundaryCondition(
             config, dof_table, _mesh, variable_id, integration_order,
             _shapefunction_order, parameters, process);
 #ifdef USE_PETSC

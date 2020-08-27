@@ -7,7 +7,7 @@
  *
  */
 
-#include "CreateBoundaryCondition.h"
+#include "BoundaryConditionBuilder.h"
 
 #include "BoundaryCondition.h"
 #include "BoundaryConditionConfig.h"
@@ -29,7 +29,8 @@
 
 namespace ProcessLib
 {
-std::unique_ptr<BoundaryCondition> createBoundaryCondition(
+std::unique_ptr<BoundaryCondition>
+BoundaryConditionBuilder::createBoundaryCondition(
     const BoundaryConditionConfig& config,
     const NumLib::LocalToGlobalIndexMap& dof_table,
     const MeshLib::Mesh& bulk_mesh, const int variable_id,
