@@ -52,11 +52,11 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
         vec_branch_nodeID_matIDs;
     std::vector<std::pair<std::size_t, std::vector<int>>>
         vec_junction_nodeID_matIDs;
-    getFractureMatrixDataInMesh(mesh, _vec_matrix_elements,
-                                _vec_fracture_mat_IDs, _vec_fracture_elements,
-                                _vec_fracture_matrix_elements,
-                                _vec_fracture_nodes, _vec_fracture_nodes_with_tips, vec_branch_nodeID_matIDs,
-                                vec_junction_nodeID_matIDs);
+    getFractureMatrixDataInMesh(
+        mesh, _vec_matrix_elements, _vec_fracture_mat_IDs,
+        _vec_fracture_elements, _vec_fracture_matrix_elements,
+        _vec_fracture_nodes, _vec_fracture_nodes_with_tips,
+        vec_branch_nodeID_matIDs, vec_junction_nodeID_matIDs);
 
     if (_vec_fracture_mat_IDs.size() !=
         _process_data.fracture_properties.size())
@@ -108,10 +108,10 @@ ThermoHydroMechanicsProcess<GlobalDim>::ThermoHydroMechanicsProcess(
         auto slave_matId = vec_branch_nodeID_matID.second[1];
         auto& master_frac =
             *_process_data.fracture_properties
-                [_process_data.map_materialID_to_fractureID[master_matId]];
+                 [_process_data.map_materialID_to_fractureID[master_matId]];
         auto& slave_frac =
             *_process_data.fracture_properties
-                [_process_data.map_materialID_to_fractureID[slave_matId]];
+                 [_process_data.map_materialID_to_fractureID[slave_matId]];
 
         master_frac.branches_master.push_back(
             createBranchProperty(*mesh.getNode(vec_branch_nodeID_matID.first),
@@ -299,17 +299,17 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
     for (auto& ms : _mesh_subset_fracture_nodes)
     {
         vec_n_components.push_back(GlobalDim);
-        std::generate_n(std::back_inserter(all_mesh_subsets),
-                        GlobalDim,
-                        [&]() { return *ms; });
+        std::generate_n(std::back_inserter(all_mesh_subsets), GlobalDim, [&]() {
+            return *ms;
+        });
     }
     if (!_vec_junction_nodes.empty())
     {
-        std::generate_n(std::back_inserter(all_mesh_subsets),
-                        GlobalDim,
-                        [&]() { return *_mesh_subset_junction_nodes; });
-        for (unsigned i=0; i<_vec_junction_nodes.size(); i++)
-        vec_n_components.push_back(GlobalDim);
+        std::generate_n(std::back_inserter(all_mesh_subsets), GlobalDim, [&]() {
+            return *_mesh_subset_junction_nodes;
+        });
+        for (unsigned i = 0; i < _vec_junction_nodes.size(); i++)
+            vec_n_components.push_back(GlobalDim);
     }
 
     vec_var_elements.push_back(&_vec_matrix_elements);
@@ -328,7 +328,11 @@ void ThermoHydroMechanicsProcess<GlobalDim>::constructDofTable()
             std::move(all_mesh_subsets),
             vec_n_components,
             vec_var_elements,
+#ifdef USE_PETSC
+            NumLib::ComponentOrder::BY_LOCATION);
+#else
             NumLib::ComponentOrder::BY_COMPONENT);
+#endif
 
     DBUG("created %d DoF", _local_to_global_index_map->size());
 }
@@ -349,10 +353,11 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         ThermoHydroMechanicsLocalAssemblerFracture>(
         mesh.getElements(), dof_table,
         // use displacment process variable for shapefunction order
-        getProcessVariables(
-            monolithic_process_id)[monolithic_pv_id_u].get().getShapeFunctionOrder(),
-            _local_assemblers, mesh.isAxiallySymmetric(), integration_order,
-            _process_data);
+        getProcessVariables(monolithic_process_id)[monolithic_pv_id_u]
+            .get()
+            .getShapeFunctionOrder(),
+        _local_assemblers, mesh.isAxiallySymmetric(), integration_order,
+        _process_data);
 
     auto mesh_prop_sigma_xx = MeshLib::getOrCreateMeshProperty<double>(
         const_cast<MeshLib::Mesh&>(mesh), "stress_xx",
@@ -438,7 +443,8 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
     mesh_prop_velocity->resize(mesh.getNumberOfElements() * 3);
     _process_data.mesh_prop_velocity = mesh_prop_velocity;
 
-    auto const n_enrich_var = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
+    auto const n_enrich_var = _process_data.fracture_properties.size() +
+                              _process_data.junction_properties.size();
 
     if (!_vec_fracture_elements.empty())
     {
@@ -454,18 +460,20 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
             std::unordered_map<int, int> e_fracID_to_local;
             unsigned tmpi = 0;
             for (auto fid :
-                _process_data.vec_ele_connected_fractureIDs[e->getID()])
+                 _process_data.vec_ele_connected_fractureIDs[e->getID()])
             {
-                e_fracture_props.push_back(&*_process_data.fracture_properties[fid]);
+                e_fracture_props.push_back(
+                    &*_process_data.fracture_properties[fid]);
                 e_fracID_to_local.insert({fid, tmpi++});
             }
             std::vector<JunctionProperty*> e_junction_props;
             std::unordered_map<int, int> e_juncID_to_local;
             tmpi = 0;
             for (auto fid :
-                _process_data.vec_ele_connected_junctionIDs[e->getID()])
+                 _process_data.vec_ele_connected_junctionIDs[e->getID()])
             {
-                e_junction_props.push_back(&_process_data.junction_properties[fid]);
+                e_junction_props.push_back(
+                    &_process_data.junction_properties[fid]);
                 e_juncID_to_local.insert({fid, tmpi++});
             }
             std::vector<double> const levelsets(uGlobalEnrichments(
@@ -473,22 +481,25 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
 
             for (unsigned i = 0; i < e_fracture_props.size(); i++)
             {
-                auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
-                    const_cast<MeshLib::Mesh&>(mesh),
-                    "levelset" +
-                        std::to_string(e_fracture_props[i]->fracture_id + 1),
-                    MeshLib::MeshItemType::Cell, 1);
+                auto mesh_prop_levelset =
+                    MeshLib::getOrCreateMeshProperty<double>(
+                        const_cast<MeshLib::Mesh&>(mesh),
+                        "levelset" + std::to_string(
+                                         e_fracture_props[i]->fracture_id + 1),
+                        MeshLib::MeshItemType::Cell, 1);
                 mesh_prop_levelset->resize(mesh.getNumberOfElements());
                 (*mesh_prop_levelset)[e->getID()] = levelsets[i];
             }
             for (unsigned i = 0; i < e_junction_props.size(); i++)
             {
-                auto mesh_prop_levelset = MeshLib::getOrCreateMeshProperty<double>(
-                    const_cast<MeshLib::Mesh&>(mesh),
-                    "levelset" +
-                        std::to_string(e_junction_props[i]->junction_id + 1 +
-                                    _process_data.fracture_properties.size()),
-                    MeshLib::MeshItemType::Cell, 1);
+                auto mesh_prop_levelset =
+                    MeshLib::getOrCreateMeshProperty<double>(
+                        const_cast<MeshLib::Mesh&>(mesh),
+                        "levelset" +
+                            std::to_string(
+                                e_junction_props[i]->junction_id + 1 +
+                                _process_data.fracture_properties.size()),
+                        MeshLib::MeshItemType::Cell, 1);
                 mesh_prop_levelset->resize(mesh.getNumberOfElements());
                 (*mesh_prop_levelset)[e->getID()] =
                     levelsets[i + e_fracture_props.size()];
@@ -515,7 +526,7 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
         {
             for (MeshLib::Element const* e : _mesh.getElements())
             {
-                if (e->getDimension() != GlobalDim-1)
+                if (e->getDimension() != GlobalDim - 1)
                     continue;
                 if (mesh_prop_matid[e->getID()] != frac->mat_id)
                     continue;
@@ -607,14 +618,15 @@ void ThermoHydroMechanicsProcess<GlobalDim>::initializeConcreteProcess(
                GlobalDim * mesh.getNumberOfNodes());
 
         _process_data.vec_mesh_prop_nodal_forces_jump.resize(n_enrich_var);
-        for (unsigned ig=0; ig<n_enrich_var; ig++)
+        for (unsigned ig = 0; ig < n_enrich_var; ig++)
         {
             _process_data.vec_mesh_prop_nodal_forces_jump[ig] =
                 MeshLib::getOrCreateMeshProperty<double>(
-                    const_cast<MeshLib::Mesh&>(mesh), "NodalForcesJump" + std::to_string(ig+1),
+                    const_cast<MeshLib::Mesh&>(mesh),
+                    "NodalForcesJump" + std::to_string(ig + 1),
                     MeshLib::MeshItemType::Node, GlobalDim);
             assert(_process_data.vec_mesh_prop_nodal_forces_jump[ig]->size() ==
-                GlobalDim * mesh.getNumberOfNodes());
+                   GlobalDim * mesh.getNumberOfNodes());
         }
 
         _process_data.mesh_prop_hydraulic_flow =
@@ -645,25 +657,28 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
             getProcessVariables(process_id)[0];
 
         GlobalExecutor::executeSelectedMemberOnDereferenced(
-            &ThermoHydroMechanicsLocalAssemblerInterface::computeSecondaryVariable,
-            _local_assemblers, pv.getActiveElementIDs(),
-            dof_table, t, x, _coupled_solutions);
+            &ThermoHydroMechanicsLocalAssemblerInterface::
+                computeSecondaryVariable,
+            _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
+            _coupled_solutions);
     }
 
     // Copy displacement jumps in a solution vector to mesh property
     // Remark: the copy is required because mesh properties for primary
     // variables are set during output and are not ready yet when this function
     // is called.
-    auto const n_enrich_vars = _vec_fracture_nodes.size() + _vec_junction_nodes.size();
+    auto const n_enrich_vars =
+        _vec_fracture_nodes.size() + _vec_junction_nodes.size();
     std::vector<int> vec_g_variable_id(n_enrich_vars);
     {
         const int monolithic_process_id = 0;
         auto const& pvs = getProcessVariables(monolithic_process_id);
-        for (unsigned i=0; i<n_enrich_vars; i++)
+        for (unsigned i = 0; i < n_enrich_vars; i++)
         {
-            auto const displacement_jump_name_i = "displacement_jump" + std::to_string(i+1);
-            auto const it =
-                std::find_if(pvs.begin(), pvs.end(), [&](ProcessVariable const& pv) {
+            auto const displacement_jump_name_i =
+                "displacement_jump" + std::to_string(i + 1);
+            auto const it = std::find_if(
+                pvs.begin(), pvs.end(), [&](ProcessVariable const& pv) {
                     return pv.getName() == displacement_jump_name_i;
                 });
             if (it == pvs.end())
@@ -672,7 +687,8 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
                     "Didn't find expected 'displacement_jump1' process "
                     "variable.");
             }
-            vec_g_variable_id[i] = static_cast<int>(std::distance(pvs.begin(), it));
+            vec_g_variable_id[i] =
+                static_cast<int>(std::distance(pvs.begin(), it));
         }
     }
 
@@ -688,13 +704,13 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
             _mesh, pv_g.getName(), MeshLib::MeshItemType::Node, num_comp);
         for (int component_id = 0; component_id < num_comp; ++component_id)
         {
-            auto const& mesh_subset = dof_table.getMeshSubset(
-                g_variable_id, component_id);
+            auto const& mesh_subset =
+                dof_table.getMeshSubset(g_variable_id, component_id);
             auto const mesh_id = mesh_subset.getMeshID();
             for (auto const* node : mesh_subset.getNodes())
             {
                 MeshLib::Location const l(mesh_id, MeshLib::MeshItemType::Node,
-                                        node->getID());
+                                          node->getID());
 
                 auto const global_index =
                     dof_table.getGlobalIndex(l, g_variable_id, component_id);
@@ -710,14 +726,14 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
 
     Eigen::VectorXd g(GlobalDim);
     Eigen::VectorXd w(GlobalDim);
-    for (unsigned frac_id=0; frac_id<_vec_fracture_nodes.size(); frac_id++)
+    for (unsigned frac_id = 0; frac_id < _vec_fracture_nodes.size(); frac_id++)
     {
         auto const& R = _process_data.fracture_properties[frac_id]->R;
         auto const& b0 = _process_data.fracture_properties[frac_id]->aperture0;
         auto compute_nodal_aperture = [&](std::size_t const node_id,
-                                        double const w_n) {
-            // skip aperture computation for element-wise defined b0 because there
-            // are jumps on the nodes between the element's values.
+                                          double const w_n) {
+            // skip aperture computation for element-wise defined b0 because
+            // there are jumps on the nodes between the element's values.
             if (dynamic_cast<ParameterLib::MeshElementParameter<double> const*>(
                     &b0))
             {
@@ -738,16 +754,18 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
             // find connecting fracture elements
             //---------------------------------------------------------------
             MeshLib::Element const* e = nullptr;
-            for (unsigned i=0; i<node->getNumberOfElements(); i++)
+            for (unsigned i = 0; i < node->getNumberOfElements(); i++)
             {
-                if (node->getElement(i)->getDimension()==GlobalDim-1)
+                if (node->getElement(i)->getDimension() == GlobalDim - 1)
                 {
                     e = node->getElement(i);
-                    if (frac_elements.end() != std::find(frac_elements.begin(), frac_elements.end(), e))
+                    if (frac_elements.end() != std::find(frac_elements.begin(),
+                                                         frac_elements.end(),
+                                                         e))
                         break;
                 }
             }
-            assert(e!=nullptr);
+            assert(e != nullptr);
 
             //---------------------------------------------------------------
             // calc levelsets
@@ -757,29 +775,32 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
             std::unordered_map<int, int> e_fracID_to_local;
             unsigned tmpi = 0;
             for (auto fid :
-                _process_data.vec_ele_connected_fractureIDs[e->getID()])
+                 _process_data.vec_ele_connected_fractureIDs[e->getID()])
             {
-                e_fracture_props.push_back(&*_process_data.fracture_properties[fid]);
+                e_fracture_props.push_back(
+                    &*_process_data.fracture_properties[fid]);
                 e_fracID_to_local.insert({fid, tmpi++});
             }
             std::vector<JunctionProperty*> e_junction_props;
             std::unordered_map<int, int> e_juncID_to_local;
             tmpi = 0;
             for (auto fid :
-                _process_data.vec_ele_connected_junctionIDs[e->getID()])
+                 _process_data.vec_ele_connected_junctionIDs[e->getID()])
             {
-                e_junction_props.push_back(&_process_data.junction_properties[fid]);
+                e_junction_props.push_back(
+                    &_process_data.junction_properties[fid]);
                 e_juncID_to_local.insert({fid, tmpi++});
             }
-            std::vector<double> const levelsets(duGlobalEnrichments(
-                frac_id, e_fracture_props, e_junction_props,
-                e_fracID_to_local, pt));
+            std::vector<double> const levelsets(
+                duGlobalEnrichments(frac_id, e_fracture_props, e_junction_props,
+                                    e_fracID_to_local, pt));
 
             std::vector<int> localVarId_to_pvId(levelsets.size());
-            for (unsigned i=0; i<e_fracture_props.size(); i++)
+            for (unsigned i = 0; i < e_fracture_props.size(); i++)
                 localVarId_to_pvId[i] = e_fracture_props[i]->fracture_id;
-            for (unsigned i=0; i<e_junction_props.size(); i++)
-                localVarId_to_pvId[i+e_fracture_props.size()] = e_junction_props[i]->junction_id;
+            for (unsigned i = 0; i < e_junction_props.size(); i++)
+                localVarId_to_pvId[i + e_fracture_props.size()] =
+                    e_junction_props[i]->junction_id;
 
             //---------------------------------------------------------------
             // calc true g
@@ -787,11 +808,13 @@ void ThermoHydroMechanicsProcess<GlobalDim>::computeSecondaryVariableConcrete(
             g.setZero();
             for (unsigned i = 0; i < levelsets.size(); i++)
             {
-                auto const g_variable_id = vec_g_variable_id[localVarId_to_pvId[i]];
-                ProcessVariable& pv_g =
-                    this->getProcessVariables(monolithic_process_id)[g_variable_id];
+                auto const g_variable_id =
+                    vec_g_variable_id[localVarId_to_pvId[i]];
+                ProcessVariable& pv_g = this->getProcessVariables(
+                    monolithic_process_id)[g_variable_id];
                 auto& mesh_prop_g = *MeshLib::getOrCreateMeshProperty<double>(
-                    _mesh, pv_g.getName(), MeshLib::MeshItemType::Node, pv_g.getNumberOfComponents());
+                    _mesh, pv_g.getName(), MeshLib::MeshItemType::Node,
+                    pv_g.getNumberOfComponents());
                 for (int k = 0; k < GlobalDim; k++)
                 {
                     g[k] += levelsets[i] * mesh_prop_g[node_id * GlobalDim + k];
@@ -834,10 +857,16 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleConcreteProcess(
 }
 
 template <int GlobalDim>
-void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess(
-    const double t, GlobalVector const& x, GlobalVector const& xdot,
-    const double dxdot_dx, const double dx_dx, GlobalMatrix& M, GlobalMatrix& K,
-    GlobalVector& b, GlobalMatrix& Jac)
+void ThermoHydroMechanicsProcess<
+    GlobalDim>::assembleWithJacobianConcreteProcess(const double t,
+                                                    GlobalVector const& x,
+                                                    GlobalVector const& xdot,
+                                                    const double dxdot_dx,
+                                                    const double dx_dx,
+                                                    GlobalMatrix& M,
+                                                    GlobalMatrix& K,
+                                                    GlobalVector& b,
+                                                    GlobalMatrix& Jac)
 {
     DBUG("AssembleWithJacobian ThermoHydroMechanicsProcess.");
 
@@ -847,11 +876,11 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
 
     // Call global assembler for each local assembly item.
     std::vector<std::reference_wrapper<NumLib::LocalToGlobalIndexMap>>
-       dof_table = {std::ref(*_local_to_global_index_map)};
+        dof_table = {std::ref(*_local_to_global_index_map)};
     GlobalExecutor::executeSelectedMemberDereferenced(
         _global_assembler, &VectorMatrixAssembler::assembleWithJacobian,
-        _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x,
-        xdot, dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
+        _local_assemblers, pv.getActiveElementIDs(), dof_table, t, x, xdot,
+        dxdot_dx, dx_dx, M, K, b, Jac, _coupled_solutions);
 
     // b.write("b.txt");
     // Jac.write("J.txt");
@@ -864,9 +893,10 @@ void ThermoHydroMechanicsProcess<GlobalDim>::assembleWithJacobianConcreteProcess
     copyRhs(0, *_process_data.mesh_prop_hydraulic_flow);
     copyRhs(1, *_process_data.mesh_prop_thermal_flow);
     copyRhs(2, *_process_data.mesh_prop_nodal_forces);
-    const auto n_pv_g = _process_data.fracture_properties.size() + _process_data.junction_properties.size();
-    for (unsigned i=0; i<n_pv_g; i++)
-        copyRhs(i+3, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);
+    const auto n_pv_g = _process_data.fracture_properties.size() +
+                        _process_data.junction_properties.size();
+    for (unsigned i = 0; i < n_pv_g; i++)
+        copyRhs(i + 3, *_process_data.vec_mesh_prop_nodal_forces_jump[i]);
 }
 
 template <int GlobalDim>
@@ -882,9 +912,9 @@ void ThermoHydroMechanicsProcess<GlobalDim>::preTimestepConcreteProcess(
     ProcessLib::ProcessVariable const& pv = getProcessVariables(process_id)[0];
 
     GlobalExecutor::executeSelectedMemberOnDereferenced(
-        &ThermoHydroMechanicsLocalAssemblerInterface::preTimestep, _local_assemblers,
-        pv.getActiveElementIDs(), *_local_to_global_index_map,
-        x, t, dt);
+        &ThermoHydroMechanicsLocalAssemblerInterface::preTimestep,
+        _local_assemblers, pv.getActiveElementIDs(),
+        *_local_to_global_index_map, x, t, dt);
 }
 
 // ------------------------------------------------------------------------------------
