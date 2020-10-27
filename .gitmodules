@@ -37,3 +37,6 @@
 [submodule "ThirdParty/exprtk"]
 	path = ThirdParty/exprtk
 	url = https://github.com/ArashPartow/exprtk.git
+[submodule "ThirdParty/--force"]
+	path = ThirdParty/--force
+	url = https://github.com/ArashPartow/exprtk.git
