@@ -638,9 +638,21 @@ void NodePartitionedMeshReader::setElements(
                 mesh_elems[i + id_offset_ghost] =
                     new MeshLib::Line(elem_nodes, mat_idx);
                 break;
+            case 3:
+                mesh_elems[i + id_offset_ghost] =
+                    new MeshLib::Line3(elem_nodes, mat_idx);
+                break;
             case 6:
                 mesh_elems[i + id_offset_ghost] =
                     new MeshLib::Quad(elem_nodes, mat_idx);
+                break;
+            case 7:
+                mesh_elems[i + id_offset_ghost] =
+                    new MeshLib::Quad8(elem_nodes, mat_idx);
+                break;
+            case 8:
+                mesh_elems[i + id_offset_ghost] =
+                    new MeshLib::Quad9(elem_nodes, mat_idx);
                 break;
             case 11:
                 mesh_elems[i + id_offset_ghost] =
@@ -649,6 +661,10 @@ void NodePartitionedMeshReader::setElements(
             case 4:
                 mesh_elems[i + id_offset_ghost] =
                     new MeshLib::Tri(elem_nodes, mat_idx);
+                break;
+            case 5:
+                mesh_elems[i + id_offset_ghost] =
+                    new MeshLib::Tri6(elem_nodes, mat_idx);
                 break;
             case 9:
                 mesh_elems[i + id_offset_ghost] =
